@@ -1,4 +1,4 @@
-# 04-wireframes.md
+    # 04-wireframes.md
 
 # 🎯 Wireframes & Component Layouts — Key Pages (ASCII + React skeletons)
 

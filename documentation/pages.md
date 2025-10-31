@@ -97,16 +97,18 @@ This document lists every user-facing page (Customer & Admin), key components, r
 ## `/admin/services` — Manage Services
 **Purpose:** CRUD services, link inventory items and quantities.
 **Main components:** ServicesTable, ServiceFormModal (add/edit), ServiceInventoryEditor.
-**API calls:** `GET /api/services`, `POST /api/services`, `PUT /api/services/:id`, `POST /api/services/:id/inventory`
+**API calls:** `GET /api/services`, `POST /api/services`, `PUT /api/services/:id`, `POST /api/services/:id/inventory`, `DELETE /api/services/:id/inventory/:inventoryId`
 **Acceptance:** Admin can add/edit service and link required inventory items.
+**MVP note:** Phase 2 surfaces these forms within the authenticated dashboard while dedicated `/admin/services` route is still pending.
 
 ---
 
 ## `/admin/inventory` — Inventory Management
 **Purpose:** Manage stock quantities, set thresholds, view logs.
 **Main components:** InventoryTable, StockEditModal, InventoryLogView.
-**API calls:** `GET /api/inventory`, `PUT /api/inventory/:id`, `GET /api/inventory/logs`
+**API calls:** `GET /api/inventory`, `POST /api/inventory`, `PUT /api/inventory/:id`, `GET /api/inventory/logs`
 **Acceptance:** Admin can modify stock; logs created for each change.
+**MVP note:** Phase 2 delivers add/update flows within the dashboard module; log view arrives with analytics phase.
 
 ---
 

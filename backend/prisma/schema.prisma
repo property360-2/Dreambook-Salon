@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String
+  passwordHash  String
+  role          String        @default("CUSTOMER")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  appointments  Appointment[] @relation("CustomerAppointments")
+  createdServices Service[]   @relation("ServiceCreatedBy")
+}
+
+model Service {
+  id             String        @id @default(cuid())
+  name           String
+  description    String?
+  durationMinutes Int
+  priceCents     Int
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  appointments   Appointment[]
+  createdBy      User?         @relation("ServiceCreatedBy", fields: [createdById], references: [id])
+  createdById    String?
+  inventoryLinks ServiceInventory[]
+}
+
+model Appointment {
+  id             String             @id @default(cuid())
+  status         String             @default("PENDING")
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  notes          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  customer       User?              @relation("CustomerAppointments", fields: [customerId], references: [id])
+  customerId     String?
+  service        Service?           @relation(fields: [serviceId], references: [id])
+  serviceId      String?
+}
+
+model Inventory {
+  id           String             @id @default(cuid())
+  name         String
+  description  String?
+  stock        Int                @default(0)
+  unit         String?
+  threshold    Int                @default(0)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  serviceLinks ServiceInventory[]
+}
+
+model ServiceInventory {
+  id           String    @id @default(cuid())
+  quantity     Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  service      Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId    String
+  inventory    Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  inventoryId  String
+
+  @@unique([serviceId, inventoryId])
+}

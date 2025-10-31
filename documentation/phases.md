@@ -98,6 +98,7 @@ This document breaks the project into clear phases. Each phase contains goals, d
 
 - Inventory CRUD API, admin pages to manage inventory and service-inventory links.
 - Updated Prisma schema & seed data.
+- Status: Phase 2 foundations delivered in dashboard (Oct 31 2025) with inventory links and sample data.
 
 ---
 
