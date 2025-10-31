@@ -16,6 +16,11 @@ export const createServiceSchema = z.object({
       invalid_type_error: 'priceCents must be a number',
     })
     .min(0),
+  imageUrl: z
+    .string()
+    .url('imageUrl must be a valid URL')
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   isActive: z.boolean().optional(),
 });
 

@@ -113,6 +113,127 @@ button {
   background-color: #1d4ed8;
 }
 
+.button.secondary {
+  background-color: transparent;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.button.danger {
+  background-color: #dc2626;
+}
+
+.button.danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.button.link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  padding: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.tab-button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #2563eb;
+  transition: all 0.15s ease;
+}
+
+.tab-button:hover {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.tab-button.active {
+  background-color: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.toast-stack {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 1000;
+  max-width: 320px;
+}
+
+.toast {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 12px 30px -15px rgba(15, 23, 42, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast strong {
+  font-size: 0.95rem;
+}
+
+.toast p {
+  margin: 0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.toast-success {
+  border-color: #bbf7d0;
+  background-color: #ecfdf5;
+}
+
+.toast-error {
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+.toast-info {
+  border-color: #bfdbfe;
+  background-color: #eff6ff;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 1.5rem;
+}
+
+.modal {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  max-width: 420px;
+  width: min(420px, 100%);
+  box-shadow: 0 20px 45px -20px rgba(15, 23, 42, 0.6);
+}
+
 .muted {
   color: #6b7280;
 }
@@ -164,6 +285,31 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.service-card-image {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 0.75rem;
+}
+
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  max-width: 240px;
+}
+
+.image-preview img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
 }
 
 .service-card h3 {

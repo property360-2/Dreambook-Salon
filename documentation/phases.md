@@ -93,6 +93,7 @@ This document breaks the project into clear phases. Each phase contains goals, d
 - Admin can create inventory items and link them to services with quantities.
 - Validation prevents linking with negative quantities.
 - Frontend displays linked items inside service detail.
+- Service images can be uploaded and persist via the Cloudinary-backed media endpoint.
 
 ### Deliverables
 

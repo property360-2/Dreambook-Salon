@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '../hooks/useAuth.js';
@@ -13,6 +14,7 @@ const peso = new Intl.NumberFormat('en-PH', {
 export function Dashboard() {
   const { user, token } = useAuth();
   const isAdmin = user.role === 'ADMIN';
+  const [adminTab, setAdminTab] = useState('services');
   const serviceScope = isAdmin ? 'admin' : 'public';
   const {
     data: servicesData,
@@ -57,6 +59,13 @@ export function Dashboard() {
           <div className="service-grid">
             {servicesData.services.map((service) => (
               <article className="service-card" key={service.id}>
+                {service.imageUrl && (
+                  <img
+                    src={service.imageUrl}
+                    alt={`${service.name} preview`}
+                    className="service-card-image"
+                  />
+                )}
                 <h3>{service.name}</h3>
                 {service.description && (
                   <p className="muted" style={{ margin: 0 }}>
@@ -95,9 +104,32 @@ export function Dashboard() {
       </section>
 
       {isAdmin && (
-        <div className="flow">
-          <ServiceManager />
-          <InventoryManager />
+        <div>
+          <div className="tabs" role="tablist" aria-label="Admin management">
+            <button
+              type="button"
+              className={`tab-button ${adminTab === 'services' ? 'active' : ''}`}
+              onClick={() => setAdminTab('services')}
+              role="tab"
+              aria-selected={adminTab === 'services'}
+            >
+              Services
+            </button>
+            <button
+              type="button"
+              className={`tab-button ${
+                adminTab === 'inventory' ? 'active' : ''
+              }`}
+              onClick={() => setAdminTab('inventory')}
+              role="tab"
+              aria-selected={adminTab === 'inventory'}
+            >
+              Inventory
+            </button>
+          </div>
+
+          {adminTab === 'services' && <ServiceManager />}
+          {adminTab === 'inventory' && <InventoryManager />}
         </div>
       )}
     </div>

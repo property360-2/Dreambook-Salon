@@ -73,4 +73,12 @@ export const api = {
     update: (token, id, payload) =>
       request(`/inventory/${id}`, { method: 'PUT', data: payload, token }),
   },
+  uploads: {
+    serviceImage: (token, image) =>
+      request('/uploads/service-image', {
+        method: 'POST',
+        data: { image },
+        token,
+      }),
+  },
 };

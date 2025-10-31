@@ -19,6 +19,10 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().optional(),
   ADMIN_EMAIL: z.string().email().default('admin@dreambook.local'),
   ADMIN_PASSWORD: z.string().min(8).default('ChangeMe123!'),
+  CLOUDINARY_URL: z.string().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
 const rawEnv = envSchema.parse(process.env);
@@ -32,4 +36,9 @@ export const env = {
   corsOrigins,
   isProduction: rawEnv.NODE_ENV === 'production',
   isTest: rawEnv.NODE_ENV === 'test',
+  isCloudinaryConfigured:
+    Boolean(rawEnv.CLOUDINARY_URL) ||
+    (Boolean(rawEnv.CLOUDINARY_CLOUD_NAME) &&
+      Boolean(rawEnv.CLOUDINARY_API_KEY) &&
+      Boolean(rawEnv.CLOUDINARY_API_SECRET)),
 };

@@ -95,10 +95,10 @@ This document lists every user-facing page (Customer & Admin), key components, r
 ---
 
 ## `/admin/services` — Manage Services
-**Purpose:** CRUD services, link inventory items and quantities.
-**Main components:** ServicesTable, ServiceFormModal (add/edit), ServiceInventoryEditor.
-**API calls:** `GET /api/services`, `POST /api/services`, `PUT /api/services/:id`, `POST /api/services/:id/inventory`, `DELETE /api/services/:id/inventory/:inventoryId`
-**Acceptance:** Admin can add/edit service and link required inventory items.
+**Purpose:** CRUD services, upload hero imagery, and link required inventory items.
+**Main components:** ServicesTable, ServiceFormModal (add/edit), ServiceInventoryEditor, ImageUploader.
+**API calls:** `GET /api/services`, `POST /api/services`, `PUT /api/services/:id`, `POST /api/uploads/service-image`, `POST /api/services/:id/inventory`, `DELETE /api/services/:id/inventory/:inventoryId`
+**Acceptance:** Admin can add/edit service details, upload a cover image, and link required inventory items.
 **MVP note:** Phase 2 surfaces these forms within the authenticated dashboard while dedicated `/admin/services` route is still pending.
 
 ---

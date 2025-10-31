@@ -49,6 +49,8 @@ async function ensureSampleServices(adminId) {
           'Precision cut with wash, dry, and personalized styling advice.',
         durationMinutes: 60,
         priceCents: 2500,
+        imageUrl:
+          'https://res.cloudinary.com/demo/image/upload/v1690470332/haircut_female.jpg',
         isActive: true,
         createdAt: now,
         updatedAt: now,
@@ -60,6 +62,8 @@ async function ensureSampleServices(adminId) {
           'Long-lasting gel polish with cuticle care and hand massage.',
         durationMinutes: 45,
         priceCents: 1800,
+        imageUrl:
+          'https://res.cloudinary.com/demo/image/upload/v1690470332/nails_polish.jpg',
         isActive: true,
         createdAt: now,
         updatedAt: now,

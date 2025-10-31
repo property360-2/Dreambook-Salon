@@ -23,8 +23,12 @@ export async function register(req, res, next) {
     });
   } catch (error) {
     if (error.name === 'ZodError') {
-      error.status = 400;
-      error.message = error.errors?.[0]?.message ?? 'Invalid request payload';
+      const validationError = new Error(
+        error.errors?.[0]?.message ?? 'Invalid request payload',
+      );
+      validationError.status = 400;
+      validationError.details = error.errors;
+      return next(validationError);
     }
     next(error);
   }
@@ -46,8 +50,12 @@ export async function login(req, res, next) {
     });
   } catch (error) {
     if (error.name === 'ZodError') {
-      error.status = 400;
-      error.message = error.errors?.[0]?.message ?? 'Invalid request payload';
+      const validationError = new Error(
+        error.errors?.[0]?.message ?? 'Invalid request payload',
+      );
+      validationError.status = 400;
+      validationError.details = error.errors;
+      return next(validationError);
     }
     next(error);
   }

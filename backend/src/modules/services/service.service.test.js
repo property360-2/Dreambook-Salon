@@ -38,6 +38,7 @@ describe('service.service', () => {
         description: 'Basic cut',
         durationMinutes: 60,
         priceCents: 2000,
+        imageUrl: 'https://example.com/haircut.jpg',
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -64,6 +65,9 @@ describe('service.service', () => {
     const services = await listServices();
 
     expect(services).toHaveLength(1);
+    expect(services[0]).toMatchObject({
+      imageUrl: 'https://example.com/haircut.jpg',
+    });
     expect(services[0].inventoryRequirements).toEqual([
       expect.objectContaining({
         inventoryId: 'inv_1',
@@ -90,6 +94,7 @@ describe('service.service', () => {
       description: 'Basic cut',
       durationMinutes: 60,
       priceCents: 2000,
+      imageUrl: 'https://example.com/haircut.jpg',
       isActive: true,
       createdAt,
       updatedAt,
@@ -101,6 +106,7 @@ describe('service.service', () => {
         name: 'Haircut',
         durationMinutes: 60,
         priceCents: 2000,
+        imageUrl: 'https://example.com/haircut.jpg',
       },
       { id: 'usr_admin' },
     );
@@ -108,6 +114,7 @@ describe('service.service', () => {
     expect(service).toMatchObject({
       id: 'svc_1',
       name: 'Haircut',
+      imageUrl: 'https://example.com/haircut.jpg',
       inventoryRequirements: [],
     });
     expect(mockCreate).toHaveBeenCalledWith(

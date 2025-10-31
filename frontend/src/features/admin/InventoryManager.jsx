@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api.js';
 import { useAuth } from '../../hooks/useAuth.js';
+import { useToast } from '../../components/ToastProvider.jsx';
 
 const defaultValues = {
   name: '',
@@ -20,6 +21,7 @@ export function InventoryManager() {
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const { addToast } = useToast();
 
   const {
     data,
@@ -32,7 +34,12 @@ export function InventoryManager() {
     enabled: Boolean(token && isAdmin),
   });
 
-  const { register, handleSubmit, reset } = useForm({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues,
   });
 
@@ -56,8 +63,18 @@ export function InventoryManager() {
       setFormError(null);
       setEditingItem(null);
       reset(defaultValues);
+      addToast({
+        type: 'success',
+        title: editingItem ? 'Inventory updated' : 'Inventory added',
+        message: 'The inventory record was saved successfully.',
+      });
     },
     onError: (err) => {
+      addToast({
+        type: 'error',
+        title: 'Unable to save inventory',
+        message: err.message ?? 'Something went wrong.',
+      });
       setFormError(err.message ?? 'Unable to save inventory item');
     },
   });
@@ -105,6 +122,9 @@ export function InventoryManager() {
             type="text"
             {...register('name', { required: 'Name is required' })}
           />
+          {errors.name && (
+            <span className="field-error">{errors.name.message}</span>
+          )}
         </div>
 
         <div className="field">
@@ -130,8 +150,14 @@ export function InventoryManager() {
               type="number"
               min={0}
               step={1}
-              {...register('stock', { valueAsNumber: true })}
+              {...register('stock', {
+                valueAsNumber: true,
+                min: { value: 0, message: 'Stock cannot be negative' },
+              })}
             />
+            {errors.stock && (
+              <span className="field-error">{errors.stock.message}</span>
+            )}
           </div>
           <div className="field">
             <label htmlFor="inventory-unit">Unit</label>
@@ -148,8 +174,14 @@ export function InventoryManager() {
               type="number"
               min={0}
               step={1}
-              {...register('threshold', { valueAsNumber: true })}
+              {...register('threshold', {
+                valueAsNumber: true,
+                min: { value: 0, message: 'Threshold cannot be negative' },
+              })}
             />
+            {errors.threshold && (
+              <span className="field-error">{errors.threshold.message}</span>
+            )}
           </div>
         </div>
 
@@ -166,10 +198,10 @@ export function InventoryManager() {
 
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
-            className="button"
-            type="submit"
-            disabled={mutation.isPending}
-          >
+          className="button"
+          type="submit"
+          disabled={mutation.isPending}
+        >
             {editingItem ? 'Update inventory' : 'Add inventory item'}
           </button>
           {editingItem && (

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockUseQuery = vi.fn();
@@ -68,7 +68,7 @@ describe('Dashboard', () => {
     expect(screen.queryByTestId('service-manager')).not.toBeInTheDocument();
   });
 
-  it('renders admin management sections when user is admin', () => {
+  it('renders admin management tabs when user is admin', () => {
     mockUseQuery.mockReturnValue({
       data: { services: [] },
       isLoading: false,
@@ -82,7 +82,24 @@ describe('Dashboard', () => {
 
     render(<Dashboard />);
 
+    expect(screen.getByRole('tab', { name: /services/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     expect(screen.getByTestId('service-manager')).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('inventory-manager'),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: /inventory/i }));
+
+    expect(screen.getByRole('tab', { name: /inventory/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(
+      screen.queryByTestId('service-manager'),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('inventory-manager')).toBeInTheDocument();
   });
 });
