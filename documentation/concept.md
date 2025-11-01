@@ -73,6 +73,7 @@ Build a full-featured, pragmatic salon management system that covers booking, in
 - **Overlap prevention**:
   - When creating a new appointment, system checks active appointments for overlaps against the service duration.
   - Admin can configure **max concurrent appointments per time slot** (e.g., max 3)
+- Booking settings (maxConcurrentAppointments, ookingWindowDays) persist in the singleton Settings record while blackout windows are stored as BlockedRange entries used by the availability API.
 - Admin can block specific dates/times (e.g., holidays) where booking is disabled.
 
 ### Inventory Automation
@@ -97,6 +98,7 @@ Build a full-featured, pragmatic salon management system that covers booking, in
 - Lightweight bot implemented with simple rules/keyword matching.
 - Intended for quick answers: services, price ranges, booking flow, hours of operation.
 - Designed to be replaced or augmented by an LLM later; keep code modular.
+- Rules persist via the ChatbotRule model with admin CRUD endpoints (/api/chatbot/rules), while POST /api/chatbot/respond handles keyword matches with basic throttling.
 
 ---
 

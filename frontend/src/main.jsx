@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { ToastProvider } from './components/ToastProvider.jsx';
+import { BookingProvider } from './features/booking/BookingProvider.jsx';
 import './styles.css';
 
 const routerFutureFlags = {
@@ -27,7 +28,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter future={routerFutureFlags}>
-            <App />
+            <BookingProvider>
+              <App />
+            </BookingProvider>
           </BrowserRouter>
         </ToastProvider>
       </AuthProvider>

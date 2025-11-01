@@ -6,6 +6,10 @@ import { Dashboard } from './pages/Dashboard.jsx';
 import { Login } from './pages/Login.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { Register } from './pages/Register.jsx';
+import { Book } from './pages/Book.jsx';
+import { BookConfirm } from './pages/BookConfirm.jsx';
+import { BookComplete } from './pages/BookComplete.jsx';
+import { PaymentDemo } from './pages/PaymentDemo.jsx';
 
 function AppLayout() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -19,10 +23,14 @@ function AppLayout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
+        <div className="app-header-left">
           <h1>Dreambook Salon</h1>
           <p className="muted">Salon appointment & inventory system</p>
         </div>
+        <nav className="app-nav">
+          <Link to="/book">Book</Link>
+          {isAuthenticated ? <Link to="/">Dashboard</Link> : null}
+        </nav>
         <div>
           {isAuthenticated ? (
             <div
@@ -91,6 +99,10 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route index element={<Dashboard />} />
         </Route>
+        <Route path="book" element={<Book />} />
+        <Route path="book/confirm" element={<BookConfirm />} />
+        <Route path="book/complete" element={<BookComplete />} />
+        <Route path="payment/demo/:paymentId" element={<PaymentDemo />} />
         <Route
           path="login"
           element={

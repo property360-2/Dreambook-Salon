@@ -66,6 +66,77 @@ export const api = {
       method: 'DELETE',
       token,
     }),
+  appointments: {
+    list: (token, params = {}) => {
+      const search = new URLSearchParams();
+      if (Array.isArray(params.status) && params.status.length > 0) {
+        search.set('status', params.status.join(','));
+      }
+      if (params.from instanceof Date) {
+        search.set('from', params.from.toISOString());
+      }
+      if (params.to instanceof Date) {
+        search.set('to', params.to.toISOString());
+      }
+      const query = search.toString();
+      return request(`/appointments${query ? `?${query}` : ''}`, { token });
+    },
+    available: ({ serviceId, date }) => {
+      const search = new URLSearchParams({
+        serviceId,
+        date,
+      });
+      return request(`/appointments/available?${search.toString()}`);
+    },
+    create: (payload) =>
+      request('/appointments', { method: 'POST', data: payload }),
+    updateStatus: (token, id, payload) =>
+      request(`/appointments/${id}/status`, {
+        method: 'PUT',
+        data: payload,
+        token,
+      }),
+  },
+  settings: {
+    get: (token) => request('/settings', { token }),
+    update: (token, payload) =>
+      request('/settings', { method: 'PUT', data: payload, token }),
+    listBlocked: (token, params = {}) => {
+      const search = new URLSearchParams();
+      if (params.from instanceof Date) {
+        search.set('from', params.from.toISOString());
+      }
+      if (params.to instanceof Date) {
+        search.set('to', params.to.toISOString());
+      }
+      const query = search.toString();
+      return request(`/settings/blocked${query ? `?${query}` : ''}`, {
+        token,
+      });
+    },
+    createBlocked: (token, payload) =>
+      request('/settings/blocked', { method: 'POST', data: payload, token }),
+    deleteBlocked: (token, id) =>
+      request(`/settings/blocked/${id}`, { method: 'DELETE', token }),
+  },
+  payments: {
+    createDemo: (payload) =>
+      request('/payments/demo', { method: 'POST', data: payload }),
+    updateDemo: (id, payload) =>
+      request(`/payments/demo/${id}`, { method: 'PUT', data: payload }),
+    getDemo: (id) => request(`/payments/demo/${id}`),
+  },
+  chatbot: {
+    listRules: (token) => request('/chatbot/rules', { token }),
+    createRule: (token, payload) =>
+      request('/chatbot/rules', { method: 'POST', data: payload, token }),
+    updateRule: (token, id, payload) =>
+      request(`/chatbot/rules/${id}`, { method: 'PUT', data: payload, token }),
+    deleteRule: (token, id) =>
+      request(`/chatbot/rules/${id}`, { method: 'DELETE', token }),
+    respond: (payload) =>
+      request('/chatbot/respond', { method: 'POST', data: payload }),
+  },
   inventory: {
     list: (token) => request('/inventory', { token }),
     create: (token, payload) =>

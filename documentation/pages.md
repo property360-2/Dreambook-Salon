@@ -200,6 +200,17 @@ Use nested routes for admin. Use role-based redirects: non-admin trying to acces
 
 ---
 
+# API Updates (Phase 2)
+
+- `GET /api/appointments/available` — returns capacity-aware time slots per service/date, accounting for blocked ranges and salon concurrency limits.
+- `POST /api/appointments` — creates a booking, scaffolds customer accounts for new guests, and logs creation events; response includes optional temp credentials.
+- `PUT /api/appointments/:id/status` — transitions appointments through `PENDING`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`, triggering inventory deductions and timeline logs.
+- `GET /api/settings` / `PUT /api/settings` — surfaces salon-wide booking settings (`maxConcurrentAppointments`, `bookingWindowDays`) for admin control.
+- `POST /api/settings/blocked` / `DELETE /api/settings/blocked/:id` — manages blackout windows that immediately affect availability checks.
+- `POST /api/payments/demo` / `PUT /api/payments/demo/:id` — mock payment lifecycle that stamps demo transaction IDs and syncs appointment payment states.
+- `GET /api/chatbot/rules` + CRUD routes — admin rule management for the keyword bot; `POST /api/chatbot/respond` powers the UI widget with throttled keyword matching.
+---
+
 ## Appointment Completion → Inventory Deduction (Admin / Staff)
 1. Staff views `/admin/appointments` and clicks **Complete** for an appointment.
 2. Client shows arrival; staff clicks **Mark as Completed**.

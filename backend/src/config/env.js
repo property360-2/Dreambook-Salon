@@ -23,13 +23,52 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  SALON_MAX_CONCURRENT_DEFAULT: z.string().optional(),
+  SALON_BOOKING_WINDOW_DAYS: z.string().optional(),
+  SALON_CHATBOT_RATE_LIMIT: z.string().optional(),
+  SALON_CHATBOT_FALLBACK_REPLY: z.string().optional(),
 });
 
 const rawEnv = envSchema.parse(process.env);
 
+function parseOptionalInt(value, { fallback, min, max }) {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+
+  if (min !== undefined && parsed < min) {
+    return min;
+  }
+
+  if (max !== undefined && parsed > max) {
+    return max;
+  }
+
+  return parsed;
+}
+
 const corsOrigins = rawEnv.CORS_ORIGIN
   ? rawEnv.CORS_ORIGIN.split(',').map((origin) => origin.trim())
   : ['http://localhost:3000'];
+
+const salonMaxConcurrentDefault = parseOptionalInt(
+  rawEnv.SALON_MAX_CONCURRENT_DEFAULT,
+  { fallback: 1, min: 1, max: 20 },
+);
+const salonBookingWindowDaysDefault = parseOptionalInt(
+  rawEnv.SALON_BOOKING_WINDOW_DAYS,
+  { fallback: 30, min: 1, max: 180 },
+);
+const chatbotRateLimitMs = parseOptionalInt(rawEnv.SALON_CHATBOT_RATE_LIMIT, {
+  fallback: 800,
+  min: 200,
+  max: 5000,
+});
 
 export const env = {
   ...rawEnv,
@@ -41,4 +80,8 @@ export const env = {
     (Boolean(rawEnv.CLOUDINARY_CLOUD_NAME) &&
       Boolean(rawEnv.CLOUDINARY_API_KEY) &&
       Boolean(rawEnv.CLOUDINARY_API_SECRET)),
+  salonMaxConcurrentDefault,
+  salonBookingWindowDaysDefault,
+  chatbotRateLimitMs,
+  chatbotFallbackReply: rawEnv.SALON_CHATBOT_FALLBACK_REPLY ?? null,
 };

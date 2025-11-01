@@ -81,14 +81,16 @@ button {
   color: #1f2937;
 }
 
-.field input {
+.field input,
+.field textarea {
   padding: 0.65rem 0.75rem;
   border-radius: 0.5rem;
   border: 1px solid #d1d5db;
   font-size: 1rem;
 }
 
-.field input:focus {
+.field input:focus,
+.field textarea:focus {
   outline: 2px solid #2563eb;
   border-color: transparent;
 }
@@ -327,6 +329,109 @@ button {
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.field textarea {
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.flow-sm > * + * {
+  margin-top: 0.75rem;
+}
+
+.flow-md > * + * {
+  margin-top: 1.25rem;
+}
+
+.app-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.app-nav a {
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.app-nav a:hover {
+  text-decoration: underline;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.slot-button {
+  display: block;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.slot-button:hover {
+  border-color: #2563eb;
+  box-shadow: 0 12px 28px -18px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.slot-button.selected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.slot-time {
+  font-weight: 600;
+  display: block;
+}
+
+.slot-capacity {
+  font-size: 0.85rem;
+  color: #1d4ed8;
+  margin-top: 0.25rem;
+}
+
+.empty-state {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.radio-option input {
+  width: auto;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.credential-block {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 @media (max-width: 640px) {
