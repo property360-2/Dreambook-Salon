@@ -1,0 +1,7 @@
+<section id="booking" class="organism-booking-panel">
+  <h2 class="organism-booking-panel__title">Quick booking</h2>
+  {% include 'components/molecules/form_row.html' with fields=booking_fields %}
+  <div class="organism-booking-panel__actions">
+    {% include 'components/atoms/button.html' with label='Check availability' style='primary' type='submit' %}
+  </div>
+</section>

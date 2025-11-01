@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Dreambook Salon · Book with ease{% endblock title %}
+
+{% block content %}
+  <section class="page-home__hero">
+    <div class="page-home__hero-content">
+      <h1>Modern pampering for Manila creatives</h1>
+      <p>Discover our curated services and track availability without calling the front desk.</p>
+      <div class="page-home__hero-actions">
+        {% include 'components/atoms/button.html' with label='Plan an appointment' style='primary' %}
+        {% include 'components/atoms/button.html' with label='View services' style='ghost' %}
+      </div>
+    </div>
+  </section>
+
+  <section id="services" class="page-home__services">
+    <header class="page-home__section-header">
+      <h2>Featured services</h2>
+      <p>Handpicked treatments to kickstart the Dreambook experience.</p>
+    </header>
+    <div class="page-home__services-grid">
+      {% for service in featured_services %}
+        {% include 'components/molecules/service_card.html' with service=service %}
+      {% endfor %}
+    </div>
+  </section>
+
+  {% include 'components/organisms/inventory_table.html' with items=inventory_highlights %}
+
+  {% include 'components/organisms/booking_panel.html' with booking_fields=booking_fields %}
+{% endblock content %}

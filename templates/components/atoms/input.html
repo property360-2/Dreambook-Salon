@@ -1,0 +1,12 @@
+<label class="atom-input">
+  {% if field.label %}
+    <span class="atom-input__label">{{ field.label }}</span>
+  {% endif %}
+  <input
+    class="atom-input__control"
+    type="{{ field.type|default:'text' }}"
+    name="{{ field.name }}"
+    placeholder="{{ field.placeholder|default:'' }}"
+    value="{{ field.value|default:'' }}"
+  />
+</label>

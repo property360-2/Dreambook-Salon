@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Create account · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-auth">
+    <div class="page-auth__card">
+      <header class="page-auth__header">
+        <h1>Join Dreambook</h1>
+        <p>Set up your profile to start booking and collaborating.</p>
+      </header>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="page-auth__errors">
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% for field in form %}
+          {% include 'components/molecules/form_field.html' with field=field %}
+        {% endfor %}
+        <div class="page-auth__actions">
+          {% include 'components/atoms/button.html' with label='Create account' style='accent' type='submit' %}
+        </div>
+      </form>
+      <footer class="page-auth__footer">
+        <span>Already onboard?</span>
+        <a href="{% url 'core:login' %}">Sign in</a>
+      </footer>
+    </div>
+  </section>
+{% endblock content %}

@@ -1,0 +1,11 @@
+{% if href %}
+  <a class="atom-button atom-button--{{ style|default:'primary' }}" href="{{ href }}">
+    {% if icon %}<span class="atom-button__icon">{{ icon }}</span>{% endif %}
+    <span class="atom-button__label">{{ label }}</span>
+  </a>
+{% else %}
+  <button class="atom-button atom-button--{{ style|default:'primary' }}" type="{{ type|default:'button' }}">
+    {% if icon %}<span class="atom-button__icon">{{ icon }}</span>{% endif %}
+    <span class="atom-button__label">{{ label }}</span>
+  </button>
+{% endif %}
