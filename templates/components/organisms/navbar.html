@@ -1,0 +1,12 @@
+<nav class="organism-navbar">
+  <div class="organism-navbar__brand">Dreambook Salon</div>
+  <ul class="organism-navbar__links">
+    <li><a href="{% url 'core:home' %}">Home</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#inventory">Inventory</a></li>
+    <li><a href="#booking">Book Now</a></li>
+  </ul>
+  <div class="organism-navbar__cta">
+    {% include 'components/atoms/button.html' with label='Book an appointment' style='accent' %}
+  </div>
+</nav>

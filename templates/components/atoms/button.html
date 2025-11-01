@@ -1,0 +1,4 @@
+<button class="atom-button atom-button--{{ style|default:'primary' }}" type="{{ type|default:'button' }}">
+  {% if icon %}<span class="atom-button__icon">{{ icon }}</span>{% endif %}
+  <span class="atom-button__label">{{ label }}</span>
+</button>
