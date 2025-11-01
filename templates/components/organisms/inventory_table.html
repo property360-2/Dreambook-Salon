@@ -1,0 +1,21 @@
+<section id="inventory" class="organism-inventory-table">
+  <h2 class="organism-inventory-table__title">Inventory snapshot</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>
+            {% include 'components/atoms/badge.html' with text=item.status tone=item.badge %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>

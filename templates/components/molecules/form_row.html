@@ -1,0 +1,7 @@
+<div class="molecule-form-row">
+  {% for field in fields %}
+    <div class="molecule-form-row__field">
+      {% include 'components/atoms/input.html' with **field %}
+    </div>
+  {% endfor %}
+</div>

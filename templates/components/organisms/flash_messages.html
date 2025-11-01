@@ -1,0 +1,9 @@
+{% if messages %}
+  <div class="organism-flash-messages">
+    {% for message in messages %}
+      <div class="organism-flash-messages__item organism-flash-messages__item--{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
