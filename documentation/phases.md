@@ -1,419 +1,439 @@
-# 02-development-phases.md
+# 02-phases.md
 
-# 🚀 Development Phases — Salon Appointment & Inventory System
+# 💇‍♀️ Salon Appointment & Inventory System — **Development Phases (Django + CDN)**
 
-This document breaks the project into clear phases. Each phase contains goals, detailed tasks (backend / frontend / database / QA), acceptance criteria, and deliverables. Use these as standalone checklists for development sprints or to hand off to Codex/engineers.
-
----
-
-## Phase 1 — Core Setup & Authentication (Foundation)
-
-**Goal:** Create the project skeleton, user auth, and basic CRUD for users and services.
-
-### Tasks
-
-**Backend**
-
-- Initialize Node.js + Express project.
-- Configure Prisma and connect to database.
-- Implement user model & auth (JWT + bcrypt).
-- Create `users` CRUD APIs and role-based middleware.
-- Add basic logging & error handling.
-
-**Frontend**
-
-- Scaffold React app (Create React App or Next.js).
-- Implement auth pages: `/login`, `/register`.
-- Basic layout + navbar with role-aware links.
-
-**Database**
-
-- Create initial Prisma schema for `User`, `Service`, and `Appointment` stubs.
-- Run migrations and seed an admin user.
-
-**DevOps / Tooling**
-
-- Add ESLint, Prettier, and environment variable patterns (`.env.example`).
-- Setup basic `npm` scripts: `dev`, `start`, `migrate`.
-
-### API Endpoints (minimum)
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/users/me`
-- `GET /api/services`
-- `POST /api/services` (admin)
-
-### Acceptance Criteria
-
-- Users can register/login and receive JWT.
-- Role middleware blocks protected routes for unauthorized roles.
-- Admin seed user exists and can create services through API.
-- Frontend login/registration flows work with backend.
-
-### Deliverables
-
-- `backend/` skeleton, `src/index.js`, prisma schema, migrations.
-- `frontend/` skeleton with auth pages and protected-route example.
+> Target stack: **Django** (DRF optional), **PostgreSQL/MySQL**, **Django Templates with Atomic Components**, **CDN for static/media**.
+> Goal: Ship a clean MVP fast, keep code modular, and leave hooks for real payments + LLM later.
 
 ---
 
-## Phase 2 — Services, Inventory & Linking (Core Data Model)
+## 🧭 Phase Map
 
-**Goal:** Implement service management and inventory model including the `ServiceInventory` linkage.
+1. **Phase 0 — Foundations & DevOps**
+2. **Phase 1 — Project Bootstrap & Atomic UI**
+3. **Phase 2 — Auth, Users, RBAC**
+4. **Phase 3 — Services & Inventory**
+5. **Phase 4 — Appointments, Availability & Blocking**
+6. **Phase 5 — Demo Payments (GCash/PayMaya/Onsite)**
+7. **Phase 6 — Rule-based Chatbot**
+8. **Phase 7 — Analytics & Dashboard**
+9. **Phase 8 — Admin UX Polish & Notifications**
+10. **Phase 9 — QA, Seed Data, Test Coverage**
+11. **Phase 10 — CDN, Build, and Deployment**
+12. **Phase 11 — Post-MVP Backlog**
 
-### Tasks
-
-**Backend**
-
-- Implement Inventory model and CRUD APIs.
-- Implement ServiceInventory linking endpoints (attach/detach inventory to service).
-- Validate quantities and enforce business rules on linking.
-
-**Frontend**
-
-- Admin UI: Services CRUD with a form to add required inventory items and quantities.
-- Inventory management page: add/update stock, set threshold.
-
-**Database**
-
-- Extend Prisma schema with `Inventory` and `ServiceInventory`.
-- Seed sample inventory items and example service with linked items.
-
-**API Endpoints**
-
-- `GET /api/inventory`
-- `POST /api/inventory`
-- `PUT /api/inventory/:id`
-- `POST /api/services/:id/inventory` (link item + quantity)
-- `DELETE /api/services/:id/inventory/:inventoryId`
-
-### Acceptance Criteria
-
-- Admin can create inventory items and link them to services with quantities.
-- Validation prevents linking with negative quantities.
-- Frontend displays linked items inside service detail.
-- Service images can be uploaded and persist via the Cloudinary-backed media endpoint.
-
-### Deliverables
-
-- Inventory CRUD API, admin pages to manage inventory and service-inventory links.
-- Updated Prisma schema & seed data.
-- Status: Phase 2 foundations delivered in dashboard (Oct 31 2025) with inventory links and sample data.
+Each phase below includes: **Deliverables**, **Tasks**, **Routes/Models (if any)**, **Acceptance Criteria**, and **Notes**.
 
 ---
 
-## Phase 3 — Appointment Booking, Overlap Prevention & Admin Blocking
+## 0) Foundations & DevOps
 
-**Goal:** Robust appointment creation with concurrency checks, admin blocking, and appointment cap logic.
+**Deliverables**
 
-### Tasks
+* `.env.example` with DB creds, secret key, CDN bucket vars
+* `Makefile` / `justfile` with common commands
+* Pre-commit (black, isort, flake8, djlint)
+* GitHub Actions (lint, test)
 
-**Backend**
+**Tasks**
 
-- Implement `Appointment` model with `start_time`, `end_time`, `status`.
-- Add endpoints to fetch available slots and create appointments.
-- Implement overlap prevention and admin-configurable max concurrent appointment cap. Use DB transactions for atomic checks + creation.
-- Add endpoints to set blocked dates/times and slot caps.
+* Create virtualenv & base requirements
+* Add code style tooling + hooks
+* Decide DB engine (Postgres recommended)
+* Choose CDN (Cloudflare R2 / S3) + region
 
-**Frontend**
+**Acceptance**
 
-- Booking form with date/time picker and service selector.
-- Request available slots from backend and display them.
-- Admin settings page to set `maxConcurrentAppointments` and blocked ranges.
+* `make dev` runs server
+* `make test` runs tests
+* Linting passes in CI
 
-**Database**
+**Snippet (requirements.txt)**
 
-- Add `BlockedSlot` or `BlockedRange` model in Prisma.
-- Ensure appointment times stored in UTC.
-
-**API Endpoints**
-
-- `GET /api/appointments/available?serviceId=&date=`
-- `POST /api/appointments` (creates appointment after overlap check)
-- `POST /api/settings/blocked` (admin)
-- `PUT /api/settings/cap` (admin)
-
-### Acceptance Criteria
-
-- Backend correctly rejects overlapping bookings beyond capacity.
-- Admin can block dates/times and bookings for those ranges are denied.
-- Frontend shows available slots and prevents booking blocked times.
-
-### Deliverables
-
-- Appointment slot-checking logic, booking UI, admin blocking UI.
+```
+Django>=5.0
+psycopg[binary]
+django-environ
+django-storages
+boto3
+Pillow
+whitenoise
+python-dateutil
+```
 
 ---
 
-## Phase 4 — Inventory Automation on Completion & Race Conditions
+## 1) Project Bootstrap & Atomic UI
 
-**Goal:** When an appointment is completed, automatically decrement inventory safely and handle insufficient stock.
+**Deliverables**
 
-### Tasks
+* Django project `salon_system/`
+* Apps scaffolded: `core, services, inventory, appointments, payments, chatbot, analytics`
+* Base template + atomic directories
 
-**Backend**
+**Tasks**
 
-- Implement endpoint to mark appointment as `completed`.
-- On completion, fetch linked `ServiceInventory` items and decrement stock inside a DB transaction.
-- Handle insufficient stock behavior via config:
-  - Option A: Prevent completion and return error
-  - Option B (default): Allow completion but flag negative stock and generate alert/notification
-- Create audit logs for inventory changes.
+* `django-admin startproject salon_system`
+* Create apps & register in `INSTALLED_APPS`
+* `templates/components/{atoms,molecules,organisms}`, `templates/pages`
+* Base layout (navbar, flash messages, footer)
+* Static pipeline with CDN-ready `collectstatic`
 
-**Frontend**
+**Acceptance**
 
-- Admin / Staff UI to mark appointment status `in-progress`, `completed`, `no-show`.
-- Notification component for low-stock alerts.
+* Home page renders using atoms/molecules
+* Static files served locally & via `collectstatic` without errors
 
-**Database**
+**Atomic directories**
 
-- Add `InventoryLog` model for audit trails (`inventoryId`, `change`, `reason`, `performedBy`, `timestamp`).
-
-**API Endpoints**
-
-- `PUT /api/appointments/:id/complete`
-- `GET /api/inventory/low-stock`
-
-### Acceptance Criteria
-
-- Inventory is updated atomically when appointment completion occurs, even under concurrent completions.
-- Inventory logs exist for each deduction.
-- Low-stock alerts appear when thresholds crossed.
-
-### Deliverables
-
-- Atomic inventory deduction implementation, UI controls for completion, audit logs.
+```
+/templates/
+  /components/
+    /atoms/ (Button, Input, Badge, Avatar, Icon)
+    /molecules/ (FormRow, StatCard, ServiceCard)
+    /organisms/ (BookingPanel, InventoryTable, ChatbotWidget)
+  /pages/
+    home.html, admin_dashboard.html, booking.html, services.html, inventory.html
+```
 
 ---
 
-## Phase 5 — Demo Payment Flow & Payment Model
+## 2) Auth, Users, RBAC
 
-**Goal:** Add a mock payment module (GCash/PayMaya/Onsite demo) and link it with appointments.
+**Deliverables**
 
-### Tasks
+* Custom `User` model (roles: ADMIN, STAFF, CUSTOMER)
+* Session auth (Django auth) + optional DRF JWT for API
+* Login, logout, registration (customer)
+* Role-based decorators: `@role_required("ADMIN")`, etc.
 
-**Backend**
+**Models**
 
-- Add `Payment` model to Prisma.
-- Implement demo payment endpoints to create a mock transaction and update payment + appointment status.
-- Optionally allow randomized success/failure for test scenarios, and deterministic test mode.
+* `core.User(email, role, first_name, last_name, is_active)`
 
-**Frontend**
+**Routes**
 
-- Checkout flow: choose payment method, redirect to demo payment page, confirm/cancel buttons.
-- Show mock receipt and transaction id.
+* `GET /auth/login`, `POST /auth/login`
+* `POST /auth/logout`
+* `GET /auth/register` (customer)
 
-**Database**
+**Acceptance**
 
-- Add `Payment` relations and seed instructions for test cases.
-
-**API Endpoints**
-
-- `POST /api/payments/demo` (simulate)
-- `GET /api/payments/:id`
-
-### Acceptance Criteria
-
-- Demo payment creates a `Payment` record with `transactionId`.
-- Appointment `status` or `payment.status` updates to `paid` on success.
-- Frontend displays mock receipt and updates booking status.
-
-### Deliverables
-
-- Demo payment UI, backend demo endpoints, test scripts for both success and failure flows.
+* Users can log in/out
+* Admin can invite staff
+* Role-restricted pages redirect unauthenticated users
 
 ---
 
-## Phase 6 — Chatbot (Rule-based) & Lightweight Assistant
+## 3) Services & Inventory
 
-**Goal:** Provide an on-site chatbot with keyword-based rules to assist customers and reduce friction.
+**Deliverables**
 
-### Tasks
+* CRUD UI + APIs for Service and Inventory
+* Link table for service consumption
+* Threshold alerts in dashboard
 
-**Backend / Chatbot**
+**Models**
 
-- Create `chatbot` module with configurable rules (keyword -> response).
-- Expose `POST /api/chatbot/message` endpoint that returns replies.
-- Provide admin UI to edit rules/responses.
+* `services.Service(name, price, duration_minutes, is_active)`
+* `inventory.Item(name, unit, stock: float, threshold: float, is_active)`
+* `services.ServiceItem(service, item, qty_per_service: float)`
 
-**Frontend**
+**Routes (examples)**
 
-- Chat widget component, store chat logs in local storage and/or backend.
-- Quick actions: “Book now”, “Show services”, “Contact admin”.
+* Services: `GET/POST /admin/services`, `GET/POST /admin/services/{id}`
+* Inventory: `GET/POST /admin/inventory`
 
-**Database**
+**Acceptance**
 
-- Add `ChatRule` model for admin-editable rules (pattern, reply, priority).
+* Admin can create/edit services and link items
+* Low stock items appear on dashboard when `stock <= threshold`
 
-**API Endpoints**
+**Notes**
 
-- `GET /api/chatbot/rules` (admin)
-- `POST /api/chatbot/message`
-
-### Acceptance Criteria
-
-- Chatbot responds to basic queries (services, pricing, booking steps).
-- Admin can edit rules via UI and see effect immediately.
-
-### Deliverables
-
-- Chat widget, backend rule editor, sample rule set.
+* Use inline formset for Service + ServiceItem in Django admin or custom form.
 
 ---
 
-## Phase 7 — Analytics Dashboard & Reports
+## 4) Appointments, Availability & Blocking
 
-**Goal:** Implement admin analytics: revenue, bookings, popular services, stock usage.
+**Deliverables**
 
-### Tasks
+* Booking form (service, date, time)
+* Overlap prevention with **max concurrent appointments**
+* Blackout windows (blocked ranges)
+* Settings singleton for caps & booking window days
 
-**Backend**
+**Models**
 
-- Create analytics endpoints with aggregated queries:
-  - Revenue totals by day/week/month.
-  - Appointments per service.
-  - Top N services.
-  - Low-stock inventory list.
-- Implement caching or optimized queries for heavy aggregations.
+* `appointments.Appointment(customer, service, start_at, end_at, status)`
+* `appointments.BlockedRange(start_at, end_at, reason)`
+* `appointments.Settings(max_concurrent:int, booking_window_days:int, prevent_completion_on_insufficient_stock:bool)`
 
-**Frontend**
+**Logic**
 
-- Admin dashboard pages with charts (Chart.js / Recharts).
-- Filters for date ranges, services, payment methods.
+* Availability API checks overlaps within `[start_at, end_at)` and cap
+* Save hook validates not in a blocked range
 
-**Database**
+**Routes**
 
-- Ensure indices on `createdAt`, `serviceId`, `status` for performant queries.
+* `GET /api/availability?service_id=&date=`
+* `POST /book` (creates pending/confirmed appointment)
+* Admin: `GET/POST /admin/blocked-ranges`, `GET/POST /admin/settings`
 
-**API Endpoints**
+**Acceptance**
 
-- `GET /api/analytics/revenue?from=&to=`
-- `GET /api/analytics/top-services?limit=5`
-- `GET /api/analytics/low-stock`
-
-### Acceptance Criteria
-
-- Dashboard shows correct aggregated numbers and charts.
-- Filters work and API remains responsive for expected dataset sizes.
-
-### Deliverables
-
-- Analytics pages, endpoints, sample charts and dashboards.
+* Double-booking prevented
+* Admin can block dates and set caps
 
 ---
 
-## Phase 8 — QA, Security, & Hardening
+## 5) Demo Payments (GCash/PayMaya/Onsite)
 
-**Goal:** Stabilize the system: add testing, secure endpoints, and prepare for deployment.
+**Deliverables**
 
-### Tasks
+* Simulated payment endpoint + UI modal
+* Payment record linked to appointment
+* Deterministic mode (always success) + random mode
 
-**Testing**
+**Models**
 
-- Unit tests for critical business logic (overlap checks, inventory deduction).
-- Integration tests for API endpoints (appointments, payments).
-- E2E tests covering booking → demo payment → completion → inventory deduction.
+* `payments.Payment(appointment, method:enum, amount, status:enum[pending,paid,failed], txn_id)`
 
-**Security**
+**Routes**
 
-- Ensure password hashing, JWT expiry and refresh strategy.
-- Role-based access tests.
-- Input validation and rate limiting (especially on chatbot / demo endpoints).
+* `POST /payments/demo/initialize` → returns mock intent
+* `POST /payments/demo/confirm` → sets status + updates appointment payment_state
 
-**Performance / Resilience**
+**Acceptance**
 
-- Add DB connection pooling and basic monitoring.
-- Graceful error handling and retry for transient DB errors.
-
-### Acceptance Criteria
-
-- CI runs passing tests.
-- Penetration checklist completed (no obvious auth bypass).
-- Error rate and performance within acceptable ranges for MVP.
-
-### Deliverables
-
-- Test suite, CI pipeline config (GitHub Actions), security checklist.
+* Demo flow updates UI state (paid/failed)
+* Transactions visible in admin
 
 ---
 
-## Phase 9 — Deployment, Handover & Documentation
+## 6) Rule-based Chatbot
 
-**Goal:** Deploy to staging/production and prepare handover docs for the salon.
+**Deliverables**
 
-### Tasks
+* Minimal keyword matcher with admin CRUD
+* Throttled endpoint to respond
 
-**Deployment**
+**Models**
 
-- Prepare environment variable docs and `env.example`.
-- Deploy backend (Render/Railway) and frontend (Vercel).
-- Configure domain, HTTPS, and basic monitoring/alerts.
+* `chatbot.Rule(keyword, response, is_active)`
 
-**Handover**
+**Routes**
 
-- Create admin user guide: how to add services, inventory, block dates, mark completion.
-- Provide seed scripts and backup/restore instructions for DB.
-- Provide developer docs: API spec (OpenAPI / Postman collection), Prisma schema, and deployment steps.
+* `POST /api/chatbot/respond` → `{ message }` → `{ reply }`
+* Admin: `GET/POST /admin/chatbot/rules`
 
-### Acceptance Criteria
+**Acceptance**
 
-- Production apps live and reachable.
-- Admin guide available and tested.
-- Backup/restore tested on staging.
-
-### Deliverables
-
-- Live deployments, admin/dev docs, Postman collection, and final checklist.
+* Common queries answered (price range, hours, booking link)
+* Easily extendable ruleset
 
 ---
 
-## Phase 10 — Future Enhancements (Backlog)
+## 7) Analytics & Dashboard
 
-**Ideas for post-MVP**
+**Deliverables**
 
-- Real payment gateway integrations (PayMaya, GCash) with webhooks.
-- Multi-technician scheduling with skill matching.
-- LLM-based chatbot (context, memory, booking via chat).
-- Multi-location / franchise support.
-- Mobile app or PWA with offline booking capability.
-- POS integration for in-store card payments.
+* Revenue cards, top services, low stock list, appointment volume heatmap
+* Chart.js (CDN) integration
 
----
+**Queries**
 
-## Common Test Cases (applies across phases)
+* Revenue by day/month
+* Count by service
+* Inventory items under threshold
+* Appointments by hour/day
 
-- Create overlapping appointments concurrently — system should only allow within cap.
-- Mark completion when inventory insufficient — behavior follows configured policy.
-- Demo payment success/failure flows update appointment/payment correctly.
-- Admin blocks dates — bookings on those dates are prevented.
-- Inventory logs reflect every decrement and manual stock changes.
+**Acceptance**
+
+* Charts load under 1s with seed data
+* Export CSV for revenue & appointments
 
 ---
 
-## Notes & Implementation Tips
+## 8) Admin UX Polish & Notifications
 
-- Use DB transactions for any read-modify-write sequences (appointments/stock).
-- Store datetimes in UTC; convert to client timezone for UI.
-- Keep chatbot rules and demo payment behavior configurable via admin settings for testing.
-- Add feature flags for toggling demo payment / strict stock enforcement.
+**Deliverables**
+
+* Toasts, form validation, pagination, search
+* Optional email notifications (low stock, booking confirmation)
+
+**Acceptance**
+
+* Admin workflows < 3 clicks for common tasks
+* Low stock email triggered on threshold breach (if SMTP configured)
 
 ---
 
-## Ready-to-use Checklists (copy-paste friendly)
+## 9) QA, Seed Data, Test Coverage
 
-### Pre-launch checklist
+**Deliverables**
 
-- [ ] Seed admin user
-- [ ] Migrate DB
-- [ ] Configure `MAX_CONCURRENT_APPOINTMENTS` default
-- [ ] Add initial services & inventory
-- [ ] Verify demo payment flow
-- [ ] Run integration tests
+* Management command to seed demo data
+* Unit tests for availability and inventory deduction
+* E2E smoke tests (Django test client)
 
-### Launch checklist
+**Commands**
 
-- [ ] Deploy frontend & backend
-- [ ] Configure env variables & secrets
-- [ ] Smoke test full booking → payment → completion → inventory flow
-- [ ] Share admin guide with salon owner
+```
+python manage.py seed_demo
+python manage.py test
+```
+
+**Acceptance**
+
+* 80%+ coverage for core logic (appointments, inventory)
+* Demo data creates: 5 services, 20 items, 50 appointments
+
+---
+
+## 10) CDN, Build, and Deployment
+
+**Deliverables**
+
+* `collectstatic` to CDN bucket (Cloudflare R2 / S3)
+* Django `storages` configured for static & media
+* Production settings: security headers, `SECURE_*`, `ALLOWED_HOSTS`
+
+**Settings (example)**
+
+```python
+# settings.py (excerpt)
+STATIC_URL = "https://cdn.example.com/static/"
+MEDIA_URL = "https://cdn.example.com/media/"
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+}
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN")  # cdn domain
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=31536000, public"}
+```
+
+**Acceptance**
+
+* Static & media load from CDN domain
+* Cache headers applied; versioned builds work after `collectstatic`
+
+---
+
+## 11) Post-MVP Backlog
+
+* Real payment integrations (GCash/PayMaya)
+* Multi-branch/location support
+* Staff skill mapping & resource scheduling
+* LLM chatbot with context + RAG (FAQs, services)
+* SMS/Email reminders + calendar invites
+* PWA/offline & mobile-first optimizations
+* Audit trail & advanced permissions
+
+---
+
+## 🔌 API Sketch (if exposing JSON)
+
+**Endpoints (sample)**
+
+* `GET /api/services` — list services
+* `GET /api/inventory/low-stock` — dashboard list
+* `POST /api/appointments/availability` — timeslots per day
+* `POST /api/appointments` — create booking
+* `POST /api/appointments/{id}/complete` — triggers inventory deduction
+* `POST /api/payments/demo/confirm` — mark paid/failed
+* `POST /api/chatbot/respond` — rule-based reply
+
+---
+
+## 🔄 Inventory Deduction Flow (Detail)
+
+1. Staff sets appointment → `completed`.
+2. Transaction begins → fetch `ServiceItem` rows for `service_id`.
+3. For each item: decrement `Item.stock` by `qty_per_service`.
+4. If any would go < 0 → behavior depends on `prevent_completion_on_insufficient_stock`.
+5. Commit transaction; emit low-stock signals.
+
+---
+
+## 🧪 Availability Algorithm (Pseudocode)
+
+```
+# inputs: service_id, date, start_time
+service = Service.get(id)
+start = combine(date, start_time)
+end   = start + timedelta(minutes=service.duration)
+
+if BlockedRange.exists(overlaps=[start, end]):
+    return 409 BLOCKED
+
+active = Appointment.filter(start_at < end and end_at > start and status in ["pending","confirmed","in-progress"]).count()
+
+if active >= Settings.max_concurrent:
+    return 409 FULL
+
+return 200 AVAILABLE
+```
+
+---
+
+## 🧱 Minimal ERD (Text)
+
+```
+User (id, email, role)
+Service (id, name, price, duration_minutes)
+Item (id, name, unit, stock, threshold)
+ServiceItem (service_id, item_id, qty_per_service)
+Appointment (id, user_id, service_id, start_at, end_at, status, payment_state)
+BlockedRange (id, start_at, end_at, reason)
+Settings (singleton)
+Payment (id, appointment_id, method, amount, status, txn_id)
+Rule (id, keyword, response, is_active)
+```
+
+---
+
+## 🧰 Developer Commands (Makefile idea)
+
+```
+make dev            # runserver + watch static
+make migrate        # makemigrations & migrate
+make seed           # seed demo data
+make lint           # black, isort, flake8, djlint
+make collect        # collectstatic to CDN
+```
+
+---
+
+## ✅ Phase-by-Phase Exit Checklist
+
+* [ ] **P0**: CI green, lint/test scripts ok
+* [ ] **P1**: Atomic templates render; base navbar/footer
+* [ ] **P2**: Auth + RBAC working
+* [ ] **P3**: Services/Inventory CRUD + links
+* [ ] **P4**: Overlap prevention + blocking + settings
+* [ ] **P5**: Demo payments wired to appointments
+* [ ] **P6**: Chatbot rules CRUD + respond endpoint
+* [ ] **P7**: Dashboard charts & CSV export
+* [ ] **P8**: UX polish + notifications
+* [ ] **P9**: Seeds + tests ≥ 80% core coverage
+* [ ] **P10**: CDN live; cache headers verified
+
+---
+
+### Notes for Future You
+
+* Keep templates small: prefer atoms/molecules over monolithic pages.
+* Put cross-cutting concerns (signals, permissions) in `core/`.
+* Use `transaction.atomic()` around completion → inventory logic.
+* Store timestamps in UTC; format in templates.
+* Add feature flags (env-based) for demo payment modes.

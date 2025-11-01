@@ -1,188 +1,191 @@
-# 01-concept.md
+# 💇‍♀️ Salon Appointment & Inventory System — **Django + CDN Edition**
 
-# 💇‍♀️ Salon Appointment & Inventory System — Concept Document
+## 🎯 Project Vision
 
-## Project Vision
-
-Build a full-featured, pragmatic salon management system that covers booking, inventory automation, admin controls, a simple rule-based chatbot, analytics, and a demo online payment flow. The goal is to enable a salon to run day-to-day operations digitally with minimal manual stock tracking and fewer booking conflicts — while keeping the implementation simple enough for iterative development and future integrations (real payments, LLM chatbot, external POS).
-
----
-
-## Objectives
-
-- Provide a reliable customer booking experience with conflict/block prevention.
-- Automatically deduct inventory when services are completed.
-- Give admins flexible control: add services, link inventory items, set booking caps, block times/dates.
-- Provide a demo payment flow (GCash/PayMaya) for testing checkout UX without real money.
-- Include a basic rule-based chatbot to assist customers (easy to extend later).
-- Offer analytics that help make inventory and business decisions.
+A modular **salon management system** built on **Django**, emphasizing **clean component reuse (atomic design)**, automated **inventory deduction**, and smooth **appointment handling** with demo payment and chatbot support.
+Designed to be **fast, reliable, and CDN-ready**, supporting scalable frontend assets and modular backend logic.
 
 ---
 
-## Scope
+## ⚙️ Tech Stack Overview
 
-### In-Scope (MVP)
-
-- User authentication & roles (Admin / Staff / Customer)
-- Service CRUD (name, price, duration, linked inventory items & quantities)
-- Inventory CRUD (name, stock, unit, threshold)
-- Appointment booking UI + backend (slot selection, duration-based scheduling)
-- Overlap prevention & admin-configurable appointment cap per time-slot
-- Admin tools: manage services, inventory, appointments, settings
-- Auto-deduction of inventory when appointment status set to `completed`
-- Demo payment flow for `gcash` / `paymaya` / `onsite` (simulated success/failure)
-- Basic analytics pages: revenue, top services, low stock
-- Lightweight rule-based chatbot module (server-side or client-side JS)
-
-### Out-of-Scope (Phase 1 / later)
-
-- Real payment gateway integrations (PayMaya, GCash)
-- Advanced AI chatbot (LLM)
-- Multi-location / franchise management
-- Complex resource scheduling (multiple technicians & skill-matching) — can be added later
-- Offline sync / PWA features
+| Layer                  | Technology                                   | Description                                                                   |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Backend**            | **Django (Python)**                          | Main API and admin panel — REST or DRF-based for modular endpoints.           |
+| **Frontend Rendering** | Django Templates + CDN-hosted static files   | Uses atomic design components: atoms, molecules, organisms, templates, pages. |
+| **Database**           | PostgreSQL / MySQL                           | Core relational schema for appointments, inventory, and payments.             |
+| **Static Assets**      | CDN (Cloudflare / AWS S3 / Firebase Hosting) | For CSS, JS, images, media, chatbot assets, etc.                              |
+| **Auth & Security**    | Django Auth + JWT (optional DRF)             | Role-based access and secure sessions.                                        |
+| **Analytics Layer**    | Django ORM queries + Chart.js (CDN)          | Dashboard charts and insights.                                                |
 
 ---
 
-## Primary Users & Roles
+## 🧩 Objectives
 
-- **Admin**
-  - Full access: users, services, inventory, appointments, analytics, settings
-  - Can set appointment caps and blocked time ranges
-- **Staff**
-  - View today's appointments, mark appointments `in-progress` / `completed` / `no-show`
-  - See inventory usage and low-stock alerts
-- **Customer**
-  - Browse services, book appointments, simulate payments, chat with chatbot, view own booking history
+* Deliver a unified, responsive web platform for salon operations.
+* Eliminate booking overlaps and automate inventory deduction.
+* Provide a reusable, atomic frontend for scalability.
+* Enable easy extension (chatbot → LLM, payment → real gateways).
+* CDN-optimized performance for low-latency asset delivery.
 
 ---
 
-## Core Concepts & Business Rules
+## 🧱 Architecture Principles
 
-### Services & Required Inventory
+### 1. **Atomic Design System**
 
-- Each `Service` has:
-  - `name`, `price`, `duration` (minutes)
-  - `requiredItems`: list of inventory items + quantity consumed per single service
-- Example: `Rebond` → consumes `Rebond Cream (1 bottle)`, `Neutralizer (0.5 bottle)`
-- Inventory is decremented only when appointment status becomes `completed` (not on booking).
+* **Atoms**: Buttons, input fields, icons, text blocks.
+* **Molecules**: Form groups, booking cards, inventory badges.
+* **Organisms**: Booking panels, chatbot modules, analytics dashboards.
+* **Templates**: Page-level Django templates composing organisms.
+* **Pages**: Service list, booking form, admin dashboard, chatbot view.
 
-### Appointments & Blocking
+All components stored under `/templates/components/{atoms,molecules,organisms}` and reused in pages.
 
-- Appointments have: `customer`, `service`, `start_time`, `end_time`, `status`
-- **Overlap prevention**:
-  - When creating a new appointment, system checks active appointments for overlaps against the service duration.
-  - Admin can configure **max concurrent appointments per time slot** (e.g., max 3)
-- Booking settings (maxConcurrentAppointments, ookingWindowDays) persist in the singleton Settings record while blackout windows are stored as BlockedRange entries used by the availability API.
-- Admin can block specific dates/times (e.g., holidays) where booking is disabled.
+### 2. **Backend Modularity**
 
-### Inventory Automation
+* Each domain (appointments, services, inventory, chatbot, payments) lives in its own Django app.
+* Shared utilities (notifications, analytics, auth middleware) stored in a `/core` app.
+* Reusable serializers, signals, and management commands.
 
-- Trigger: When staff/admin marks appointment `completed`.
-- Action: For each `requiredItem` linked to the service, decrement the inventory `stock` by `quantity`.
-- If inventory would go negative, either:
-  - Prevent completion and show a warning, or
-  - Allow completion but flag inventory as negative and alert admin (configurable).
-- Low-stock: when `stock <= threshold` send admin alert or show on dashboard.
+### 3. **CDN Integration**
 
-### Demo Payment Behavior
-
-- Payment flow is simulated:
-  - Payment record created with `method`, `amount`, `status` (`pending` → `paid`/`failed`)
-  - TransactionId is a mock string (e.g., `TXN-123456`)
-  - Demo endpoint may optionally randomize success/failure or allow deterministic success for testing
-- Appointment `status` may update to `paid` upon demo success (or another bookkeeping field `payment.status` used)
-
-### Chatbot (Rule-based)
-
-- Lightweight bot implemented with simple rules/keyword matching.
-- Intended for quick answers: services, price ranges, booking flow, hours of operation.
-- Designed to be replaced or augmented by an LLM later; keep code modular.
-- Rules persist via the ChatbotRule model with admin CRUD endpoints (/api/chatbot/rules), while POST /api/chatbot/respond handles keyword matches with basic throttling.
+* All static files (CSS, JS, media, chatbot scripts) uploaded and versioned to CDN.
+* Django’s `collectstatic` configured to publish to CDN bucket.
+* Leverage caching headers and compression for instant delivery.
 
 ---
 
-## High-level Architecture (Concept)
+## 👥 User Roles
 
-- **Frontend**: React (or Next.js) single-page app (SPA) for customers & admin. Components: BookingForm, ServiceList, AdminDashboard, InventoryTable, ChatbotWidget, DemoPayment.
-- **Backend**: Node.js + Express API with Prisma ORM to MySQL/Postgres.
-- **Database**: Relational schema (Services, Inventory, ServiceInventory, Appointments, Users, Payments).
-- **Hosting**: Frontend on Vercel, Backend on Render/Railway or similar.
-- **Optional**: Webhooks later for actual payment providers.
-
----
-
-## Key Data Flows
-
-### Booking flow (high-level)
-
-1. Customer selects service + date/time.
-2. Frontend asks backend for available slots (backend checks overlaps & caps).
-3. If available → create appointment record with `status: pending` (or `confirmed`).
-4. Customer goes to demo payment (if selected), demo endpoint returns `paid` or `failed`.
-5. Payment status stored in `payment` record; appointment `status` updated accordingly.
-
-### Completion → Inventory deduction
-
-1. Staff marks appointment `completed`.
-2. Backend fetches linked `ServiceInventory` items for that service.
-3. For each item, `inventory.stock = inventory.stock - quantity`.
-4. If any `stock` <= `threshold`, create low-stock alert / dashboard flag.
+| Role         | Description                                                                      | Access   |
+| ------------ | -------------------------------------------------------------------------------- | -------- |
+| **Admin**    | Full system access — manages services, staff, inventory, appointments, analytics | All      |
+| **Staff**    | Limited to daily operations, appointment updates, and completion                 | Moderate |
+| **Customer** | Can browse services, book appointments, view payments, chat                      | Limited  |
 
 ---
 
-## Non-functional Requirements
+## 💡 Core Concepts
 
-- **Reliability**: Prevent double-booking and inconsistent stock updates (use DB transactions).
-- **Simplicity**: Keep chatbot and demo payment intentionally simple for MVP.
-- **Extensibility**: Clear separation of service <-> inventory linkage for future pricing or bundles.
-- **Security**: Passwords hashed (bcrypt), JWT for sessions, role-based authorization checks on routes.
-- **Performance**: Reasonable for small-medium salons; scale later if needed.
+### 1. **Service → Inventory Linkage**
 
----
+Each service defines its resource consumption.
 
-## Assumptions & Constraints
+| Field          | Description                          |
+| -------------- | ------------------------------------ |
+| Name           | Service name (e.g., “Hair Rebond”)   |
+| Duration       | Duration in minutes                  |
+| Price          | Service price                        |
+| Required Items | Inventory items + quantity deduction |
 
-- Single-location salon for MVP. Multi-location support is a future enhancement.
-- Only one technician resource is modeled implicitly via max concurrent appointment cap. No per-staff skill matching initially.
-- Inventory is tracked in the same units admin configures (no automatic unit conversions).
-- Demo payment is UI-only and non-financial; no PCI compliance required for demo.
+Trigger: When appointment marked as `completed`, system deducts from inventory.
 
 ---
 
-## Edge Cases & How to Handle
+### 2. **Appointment & Blocking**
 
-- **Concurrent completions**: Use database transactions / row locking when decrementing inventory to avoid race conditions.
-- **Stock insufficient at completion**: Config option: `prevent_completion_on_insufficient_stock: true|false`. Default: `false` (complete but alert).
-- **Timezones**: Store all timestamps in UTC; localize on frontend. (User's timezone should be configurable.)
-- **Partial consumption / fractional usage**: Inventory `stock` and `quantity` should be floats.
-
----
-
-## Acceptance Criteria (MVP)
-
-1. Admin can add services and link inventory items with specific quantities.
-2. Customer can book a service; system prevents overlapping based on service duration and admin cap.
-3. Staff can mark an appointment as `completed` and inventory is automatically decremented.
-4. Demo payment flow exists and updates payment status and appointment payment state.
-5. Basic analytics page shows revenue and low-stock items.
-6. Simple chatbot answers service & booking questions using pre-defined rules.
+* Appointments have `status` (`pending`, `confirmed`, `completed`, `no-show`).
+* Admin sets **max concurrent appointments per time block**.
+* Blocked time ranges stored as “Blackout Windows”.
+* Django signals validate availability before saving.
 
 ---
 
-## Success Metrics
+### 3. **Inventory Automation**
 
-- remove double-bookings to near-zero (measured by booking conflict logs).
-- Accurate inventory tracking for services used (match between expected deduction vs manual logs).
-- Admin adoption: admin uses dashboard daily for stock checks.
-- Customer bookings through web flow (demo payments used to exercise payment UX).
+* Auto deduction on completion.
+* Threshold notifications (below min stock).
+* Admin dashboard highlights low stock & negative stock.
+* Configurable “prevent completion if insufficient stock” toggle.
+
+---
+
+### 4. **Demo Payment Flow**
+
+Simulated payment workflow (GCash, PayMaya, Onsite):
+
+* Transaction generated with mock `TXN-XXXXXX` ID.
+* Random or deterministic success/failure for UX testing.
+* Stored as separate `Payment` model linked to appointment.
 
 ---
 
-## Glossary
+### 5. **Chatbot (Rule-Based)**
 
-- **ServiceInventory**: Link table that states how much of an inventory item a service consumes.
-- **Appointment Cap**: Admin-configured maximum concurrent bookings within overlapping periods.
-- **Demo Payment**: Mock payment flow for UX testing only; not a real payment processor.
+Simple keyword-response engine, stored in DB:
+
+* `ChatbotRule (keyword, response)`
+* API endpoint `/api/chatbot/respond`
+* Optional throttling
+* Modular design to later replace with LLM chatbot
 
 ---
+
+## 📊 Analytics & Dashboard
+
+* Revenue breakdown (daily/weekly/monthly)
+* Top services chart
+* Inventory usage summary
+* Low-stock & threshold alerts
+* Appointment volume heatmap (per day/time)
+
+Frontend uses Chart.js (served via CDN).
+
+---
+
+## 🗂 Django Apps Layout (Proposal)
+
+```
+/salon_system/
+│
+├── core/                   # Shared utilities, auth, models
+├── services/               # Service CRUD + inventory linkage
+├── inventory/              # Inventory items + thresholds
+├── appointments/           # Booking logic, blocking, statuses
+├── payments/               # Demo payment module
+├── chatbot/                # Rule-based chatbot endpoints
+├── analytics/              # Dashboard & reports
+├── static/                 # CDN-ready assets
+├── templates/
+│   ├── components/
+│   │   ├── atoms/
+│   │   ├── molecules/
+│   │   └── organisms/
+│   └── pages/
+└── manage.py
+```
+
+---
+
+## 🔒 Non-Functional Highlights
+
+* **Transactions:** Used during completion + inventory deduction.
+* **Caching:** Enabled for static assets (CDN + Django cache middleware).
+* **Scalability:** Horizontal scaling via CDN & modular apps.
+* **Security:** Django CSRF, hashed passwords, RBAC decorators.
+* **Extensibility:** Components designed for easy LLM/chatbot/payment upgrades.
+
+---
+
+## ✅ MVP Acceptance Criteria
+
+1. Customers can book a service, and system prevents overlap.
+2. Admin can add/edit services and link required inventory.
+3. Inventory auto-deducts when appointment marked `completed`.
+4. Demo payment works and updates appointment payment status.
+5. Admin sees analytics dashboard with revenue and low-stock alerts.
+6. Chatbot responds to pre-defined rules.
+
+---
+
+## 🚀 Future Extensions
+
+* Real GCash/PayMaya integration via APIs.
+* LLM-powered chatbot (e.g., GPT-based).
+* Multi-branch salon management.
+* Automated reminder system (SMS/email).
+* Role-based analytics (staff vs owner).
+
+---
+
