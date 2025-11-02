@@ -28,9 +28,5 @@
 
   {% include 'components/organisms/inventory_table.html' with items=inventory_highlights %}
 
-  {% include 'components/organisms/booking_panel.html' with booking_fields=[
-    {'name': 'service', 'label': 'Choose service', 'placeholder': 'Service name'},
-    {'name': 'date', 'label': 'Preferred date', 'type': 'date'},
-    {'name': 'time', 'label': 'Preferred time', 'type': 'time'},
-  ] %}
+  {% include 'components/organisms/booking_panel.html' with booking_fields=booking_fields %}
 {% endblock content %}

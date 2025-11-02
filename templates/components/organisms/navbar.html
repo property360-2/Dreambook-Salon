@@ -6,7 +6,17 @@
     <li><a href="#inventory">Inventory</a></li>
     <li><a href="#booking">Book Now</a></li>
   </ul>
-  <div class="organism-navbar__cta">
-    {% include 'components/atoms/button.html' with label='Book an appointment' style='accent' %}
+  <div class="organism-navbar__account">
+    {% if request.user.is_authenticated %}
+      <span class="organism-navbar__welcome">Hi, {{ request.user.first_name|default:request.user.email }}</span>
+      <form method="post" action="{% url 'core:logout' %}" class="organism-navbar__logout">
+        {% csrf_token %}
+        {% include 'components/atoms/button.html' with label='Sign out' style='ghost' type='submit' %}
+      </form>
+    {% else %}
+      <a class="organism-navbar__link" href="{% url 'core:register' %}">Create account</a>
+      {% url 'core:login' as login_url %}
+      {% include 'components/atoms/button.html' with label='Sign in' style='accent' href=login_url %}
+    {% endif %}
   </div>
 </nav>
