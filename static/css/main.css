@@ -11,6 +11,7 @@
   --radius-md: 12px;
   --radius-sm: 8px;
   --shadow-sm: 0 10px 30px rgba(51, 51, 78, 0.12);
+  --shadow-lg: 0 30px 60px rgba(31, 31, 40, 0.18);
 }
 
 body.layout {
@@ -65,11 +66,17 @@ body.layout {
 }
 
 .atom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
   border-radius: var(--radius-md);
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
@@ -93,6 +100,113 @@ body.layout {
 
 .atom-button:hover {
   transform: translateY(-2px);
+}
+
+.organism-navbar__account {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.organism-navbar__welcome {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.organism-navbar__logout {
+  margin: 0;
+  display: inline;
+}
+
+.organism-navbar__logout button {
+  padding: 0.5rem 1.2rem;
+}
+
+.organism-navbar__link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.organism-navbar__link:hover {
+  text-decoration: underline;
+}
+
+.molecule-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.molecule-form-field__errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+}
+
+.molecule-form-field__help {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.page-auth {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+}
+
+.page-auth__card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem;
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-auth__header h1 {
+  margin: 0 0 0.5rem;
+}
+
+.page-auth__header p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.page-auth__errors {
+  background: rgba(229, 93, 135, 0.1);
+  border: 1px solid rgba(229, 93, 135, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  color: var(--color-accent);
+  font-size: 0.9rem;
+}
+
+.page-auth__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.page-auth__footer {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.page-auth__footer a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.page-auth__footer a:hover {
+  text-decoration: underline;
 }
 
 .atom-input {
