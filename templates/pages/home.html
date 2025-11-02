@@ -21,7 +21,7 @@
     </header>
     <div class="page-home__services-grid">
       {% for service in featured_services %}
-        {% include 'components/molecules/service_card.html' with **service %}
+        {% include 'components/molecules/service_card.html' with name=service.name description=service.description duration=service.duration price=service.price %}
       {% endfor %}
     </div>
   </section>
