@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.name }} · Inventory · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-inventory-detail">
+    <header class="page-inventory-detail__header">
+      <h1>{{ item.name }}</h1>
+      {% if item.stock <= 0 %}
+        {% include 'components/atoms/badge.html' with label='Out of Stock' style='danger' %}
+      {% elif item.is_low_stock %}
+        {% include 'components/atoms/badge.html' with label='Low Stock' style='warning' %}
+      {% else %}
+        {% include 'components/atoms/badge.html' with label='In Stock' style='success' %}
+      {% endif %}
+    </header>
+
+    <div class="page-inventory-detail__content">
+      <div class="page-inventory-detail__main">
+        <h2>Item Information</h2>
+
+        <div class="page-inventory-detail__info">
+          <div class="page-inventory-detail__info-item">
+            <strong>Name:</strong> {{ item.name }}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Description:</strong> {{ item.description|default:"No description available." }}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Current Stock:</strong> {{ item.stock }} {{ item.unit }}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Low Stock Threshold:</strong> {{ item.threshold }} {{ item.unit }}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Unit:</strong> {{ item.unit }}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Status:</strong>
+            {% if item.is_active %}
+              {% include 'components/atoms/badge.html' with label='Active' style='success' %}
+            {% else %}
+              {% include 'components/atoms/badge.html' with label='Inactive' style='secondary' %}
+            {% endif %}
+          </div>
+          <div class="page-inventory-detail__info-item">
+            <strong>Stock Status:</strong> {{ item.stock_status }}
+          </div>
+        </div>
+
+        <div class="page-inventory-detail__adjust">
+          <h3>Adjust Stock</h3>
+          <form method="post" action="{% url 'inventory:adjust' item.id %}" class="page-inventory-detail__adjust-form">
+            {% csrf_token %}
+            <div class="page-inventory-detail__adjust-field">
+              <label for="adjustment">Adjustment Amount:</label>
+              <input type="number" id="adjustment" name="adjustment" step="0.01" placeholder="Enter positive or negative value" required class="atom-input">
+              <p class="page-inventory-detail__adjust-help">
+                Use positive numbers to add stock (e.g., +50) or negative numbers to remove stock (e.g., -20)
+              </p>
+            </div>
+            {% include 'components/atoms/button.html' with label='Update Stock' style='primary' type='submit' %}
+          </form>
+        </div>
+      </div>
+
+      <aside class="page-inventory-detail__sidebar">
+        <h3>Used in Services</h3>
+        {% if services_using_item %}
+          <ul class="page-inventory-detail__services-list">
+            {% for si in services_using_item %}
+              <li class="page-inventory-detail__service-item">
+                <a href="{% url 'services:detail' si.service.id %}">{{ si.service.name }}</a>
+                <span class="page-inventory-detail__service-qty">{{ si.qty_per_service }} {{ item.unit }} per service</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>This item is not currently used in any services.</p>
+        {% endif %}
+      </aside>
+    </div>
+
+    <div class="page-inventory-detail__back">
+      <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">
+        ← Back to Inventory
+      </a>
+    </div>
+  </section>
+{% endblock content %}

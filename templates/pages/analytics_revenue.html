@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Revenue Analytics · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-analytics-revenue">
+    <header class="page-analytics-revenue__header">
+      <h1>Revenue Analytics</h1>
+      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+        ← Back to Dashboard
+      </a>
+    </header>
+
+    <div class="page-analytics-revenue__overview">
+      <h2>Revenue Overview</h2>
+      <div class="page-analytics-revenue__cards">
+        <div class="page-analytics-revenue__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Revenue' value=total_revenue|default:'₱0.00' %}
+        </div>
+        <div class="page-analytics-revenue__card">
+          {% include 'components/molecules/stat_card.html' with title='Average per Appointment' value=average_revenue|default:'₱0.00' %}
+        </div>
+        <div class="page-analytics-revenue__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Paid Appointments' value=paid_count|default:0 %}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-analytics-revenue__period">
+      <h2>Revenue by Period</h2>
+      <div class="page-analytics-revenue__period-stats">
+        <div class="page-analytics-revenue__period-item">
+          <h3>Today</h3>
+          <p class="page-analytics-revenue__period-amount">₱{{ today_revenue|default:'0.00' }}</p>
+          <p class="page-analytics-revenue__period-count">{{ today_count|default:0 }} payment{{ today_count|pluralize }}</p>
+        </div>
+        <div class="page-analytics-revenue__period-item">
+          <h3>This Week</h3>
+          <p class="page-analytics-revenue__period-amount">₱{{ week_revenue|default:'0.00' }}</p>
+          <p class="page-analytics-revenue__period-count">{{ week_count|default:0 }} payment{{ week_count|pluralize }}</p>
+        </div>
+        <div class="page-analytics-revenue__period-item">
+          <h3>This Month</h3>
+          <p class="page-analytics-revenue__period-amount">₱{{ month_revenue|default:'0.00' }}</p>
+          <p class="page-analytics-revenue__period-count">{{ month_count|default:0 }} payment{{ month_count|pluralize }}</p>
+        </div>
+        <div class="page-analytics-revenue__period-item">
+          <h3>This Year</h3>
+          <p class="page-analytics-revenue__period-amount">₱{{ year_revenue|default:'0.00' }}</p>
+          <p class="page-analytics-revenue__period-count">{{ year_count|default:0 }} payment{{ year_count|pluralize }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-analytics-revenue__chart">
+      <h2>Daily Revenue Trend</h2>
+      {% if daily_revenue %}
+        <div class="page-analytics-revenue__chart-container">
+          <table class="page-analytics-revenue__table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Revenue</th>
+                <th>Payments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for day in daily_revenue %}
+                <tr>
+                  <td>{{ day.date|date:"M d, Y" }}</td>
+                  <td>₱{{ day.revenue|floatformat:2 }}</td>
+                  <td>{{ day.count }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p>No revenue data available for the chart.</p>
+      {% endif %}
+    </div>
+
+    <div class="page-analytics-revenue__services">
+      <h2>Revenue by Service</h2>
+      {% if service_revenue %}
+        <div class="page-analytics-revenue__services-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Bookings</th>
+                <th>Total Revenue</th>
+                <th>Average Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for service in service_revenue %}
+                <tr>
+                  <td>{{ service.name }}</td>
+                  <td>{{ service.booking_count }}</td>
+                  <td>₱{{ service.total_revenue|floatformat:2 }}</td>
+                  <td>₱{{ service.average_price|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p>No service revenue data available.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock content %}

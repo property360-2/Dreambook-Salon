@@ -11,7 +11,7 @@ from inventory.models import Item
 from services.models import Service
 
 
-class AnalyticsDashboardView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateView):
+class AnalyticsDashboardView(StaffOrAdminRequiredMixin, TemplateView):
     """Main analytics dashboard with revenue, services, and inventory insights."""
 
     template_name = 'pages/analytics_dashboard.html'
@@ -118,7 +118,7 @@ class AnalyticsDashboardView(LoginRequiredMixin, StaffOrAdminRequiredMixin, Temp
         return context
 
 
-class RevenueChartView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateView):
+class RevenueChartView(StaffOrAdminRequiredMixin, TemplateView):
     """Detailed revenue charts and trends."""
 
     template_name = 'pages/analytics_revenue.html'
@@ -179,7 +179,7 @@ class RevenueChartView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateVi
         return context
 
 
-class ServiceAnalyticsView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateView):
+class ServiceAnalyticsView(StaffOrAdminRequiredMixin, TemplateView):
     """Service performance analytics."""
 
     template_name = 'pages/analytics_services.html'
@@ -217,7 +217,7 @@ class ServiceAnalyticsView(LoginRequiredMixin, StaffOrAdminRequiredMixin, Templa
         return context
 
 
-class InventoryAnalyticsView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateView):
+class InventoryAnalyticsView(StaffOrAdminRequiredMixin, TemplateView):
     """Inventory usage and alerts analytics."""
 
     template_name = 'pages/analytics_inventory.html'

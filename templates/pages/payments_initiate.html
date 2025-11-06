@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Make Payment · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-payment-initiate">
+    <header class="page-payment-initiate__header">
+      <h1>Make Payment</h1>
+      <p>Complete your payment for this appointment</p>
+    </header>
+
+    <div class="page-payment-initiate__content">
+      <div class="page-payment-initiate__appointment">
+        <h2>Appointment Details</h2>
+        <div class="page-payment-initiate__appointment-info">
+          <div class="page-payment-initiate__info-item">
+            <strong>Service:</strong> {{ appointment.service.name }}
+          </div>
+          <div class="page-payment-initiate__info-item">
+            <strong>Date & Time:</strong> {{ appointment.start_at|date:"F d, Y g:i A" }}
+          </div>
+          <div class="page-payment-initiate__info-item">
+            <strong>Duration:</strong> {{ appointment.service.duration_minutes }} minutes
+          </div>
+          <div class="page-payment-initiate__info-item">
+            <strong>Amount:</strong> ₱{{ appointment.service.price }}
+          </div>
+        </div>
+      </div>
+
+      <form method="post" class="page-payment-initiate__form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="page-payment-initiate__errors">
+            {% for error in form.non_field_errors %}
+              <p class="page-payment-initiate__error">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="page-payment-initiate__fields">
+          {% for field in form %}
+            {% include 'components/molecules/form_field.html' with field=field %}
+          {% endfor %}
+        </div>
+
+        <div class="page-payment-initiate__payment-methods">
+          <h3>Select Payment Method</h3>
+          <div class="page-payment-initiate__methods">
+            <label class="page-payment-initiate__method">
+              <input type="radio" name="method" value="GCASH" required>
+              <span class="page-payment-initiate__method-name">GCash</span>
+              <span class="page-payment-initiate__method-desc">Pay via GCash mobile wallet</span>
+            </label>
+            <label class="page-payment-initiate__method">
+              <input type="radio" name="method" value="PAYMAYA" required>
+              <span class="page-payment-initiate__method-name">PayMaya</span>
+              <span class="page-payment-initiate__method-desc">Pay via PayMaya mobile wallet</span>
+            </label>
+            <label class="page-payment-initiate__method">
+              <input type="radio" name="method" value="ONSITE" required>
+              <span class="page-payment-initiate__method-name">Pay at Salon</span>
+              <span class="page-payment-initiate__method-desc">Pay cash at the salon</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="page-payment-initiate__actions">
+          {% include 'components/atoms/button.html' with label='Complete Payment' style='primary' type='submit' %}
+          <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">
+            Cancel
+          </a>
+        </div>
+      </form>
+
+      <aside class="page-payment-initiate__info">
+        <h3>Payment Information</h3>
+        <ul>
+          <li>All payments are processed securely</li>
+          <li>You will receive a confirmation email after payment</li>
+          <li>For online payments, you will be redirected to the payment provider</li>
+          <li>For onsite payments, please pay at the salon before your appointment</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+{% endblock content %}

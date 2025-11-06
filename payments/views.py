@@ -235,7 +235,7 @@ class PaymentRetryView(LoginRequiredMixin, View):
         return redirect('payments:detail', pk=new_payment.pk)
 
 
-class PaymentStatsView(LoginRequiredMixin, StaffOrAdminRequiredMixin, TemplateView):
+class PaymentStatsView(StaffOrAdminRequiredMixin, TemplateView):
     """Staff/Admin view for payment statistics."""
 
     template_name = 'pages/payments_stats.html'

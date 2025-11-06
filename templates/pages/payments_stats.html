@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Statistics · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-payments-stats">
+    <header class="page-payments-stats__header">
+      <h1>Payment Statistics</h1>
+      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+        View Dashboard
+      </a>
+    </header>
+
+    <div class="page-payments-stats__overview">
+      <h2>Revenue Overview</h2>
+      <div class="page-payments-stats__cards">
+        <div class="page-payments-stats__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Revenue' value=total_revenue|default:'₱0.00' %}
+        </div>
+        <div class="page-payments-stats__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Payments' value=total_count|default:0 %}
+        </div>
+        <div class="page-payments-stats__card">
+          {% include 'components/molecules/stat_card.html' with title='Successful Payments' value=paid_count|default:0 %}
+        </div>
+        <div class="page-payments-stats__card">
+          {% include 'components/molecules/stat_card.html' with title='Failed Payments' value=failed_count|default:0 %}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-payments-stats__breakdown">
+      <h2>Payment Method Breakdown</h2>
+      <div class="page-payments-stats__methods">
+        {% if method_breakdown %}
+          <table class="page-payments-stats__table">
+            <thead>
+              <tr>
+                <th>Payment Method</th>
+                <th>Count</th>
+                <th>Total Amount</th>
+                <th>Average</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for method in method_breakdown %}
+                <tr>
+                  <td>{{ method.method_display }}</td>
+                  <td>{{ method.count }}</td>
+                  <td>₱{{ method.total|floatformat:2 }}</td>
+                  <td>₱{{ method.average|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No payment method data available.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="page-payments-stats__status">
+      <h2>Payment Status Summary</h2>
+      <div class="page-payments-stats__status-grid">
+        <div class="page-payments-stats__status-item">
+          <h3>Pending</h3>
+          <p class="page-payments-stats__status-count">{{ pending_count|default:0 }}</p>
+          <p class="page-payments-stats__status-amount">₱{{ pending_amount|default:'0.00' }}</p>
+        </div>
+        <div class="page-payments-stats__status-item">
+          <h3>Paid</h3>
+          <p class="page-payments-stats__status-count">{{ paid_count|default:0 }}</p>
+          <p class="page-payments-stats__status-amount">₱{{ paid_amount|default:'0.00' }}</p>
+        </div>
+        <div class="page-payments-stats__status-item">
+          <h3>Failed</h3>
+          <p class="page-payments-stats__status-count">{{ failed_count|default:0 }}</p>
+          <p class="page-payments-stats__status-amount">₱{{ failed_amount|default:'0.00' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-payments-stats__recent">
+      <h2>Recent Payments</h2>
+      {% if recent_payments %}
+        <div class="page-payments-stats__recent-list">
+          {% for payment in recent_payments %}
+            <article class="page-payments-stats__recent-item">
+              <div class="page-payments-stats__recent-header">
+                <strong>{{ payment.txn_id }}</strong>
+                {% include 'components/atoms/badge.html' with label=payment.get_status_display style='primary' %}
+              </div>
+              <div class="page-payments-stats__recent-details">
+                <span>{{ payment.appointment.service.name }}</span>
+                <span>₱{{ payment.amount }}</span>
+                <span>{{ payment.created_at|date:"M d, Y" }}</span>
+              </div>
+              <a href="{% url 'payments:detail' payment.id %}" class="atom-button atom-button--ghost">View</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No recent payments.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock content %}

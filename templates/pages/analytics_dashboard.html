@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics Dashboard · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-analytics-dashboard">
+    <header class="page-analytics-dashboard__header">
+      <h1>Analytics Dashboard</h1>
+      <div class="page-analytics-dashboard__nav">
+        <a href="{% url 'analytics:revenue' %}" class="atom-button atom-button--ghost">Revenue</a>
+        <a href="{% url 'analytics:services' %}" class="atom-button atom-button--ghost">Services</a>
+        <a href="{% url 'analytics:inventory' %}" class="atom-button atom-button--ghost">Inventory</a>
+      </div>
+    </header>
+
+    <div class="page-analytics-dashboard__overview">
+      <h2>Revenue Overview</h2>
+      <div class="page-analytics-dashboard__revenue-cards">
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='Today Revenue' value=today_revenue|default:'₱0.00' %}
+        </div>
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='This Week' value=week_revenue|default:'₱0.00' %}
+        </div>
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='This Month' value=month_revenue|default:'₱0.00' %}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-analytics-dashboard__appointments">
+      <h2>Appointment Statistics</h2>
+      <div class="page-analytics-dashboard__appointment-cards">
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Appointments' value=total_appointments|default:0 %}
+        </div>
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='Pending' value=pending_appointments|default:0 %}
+        </div>
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='Confirmed' value=confirmed_appointments|default:0 %}
+        </div>
+        <div class="page-analytics-dashboard__card">
+          {% include 'components/molecules/stat_card.html' with title='Completed' value=completed_appointments|default:0 %}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-analytics-dashboard__content">
+      <div class="page-analytics-dashboard__main">
+        <div class="page-analytics-dashboard__section">
+          <h2>Top Services</h2>
+          {% if top_services %}
+            <div class="page-analytics-dashboard__services-list">
+              {% for service in top_services %}
+                <div class="page-analytics-dashboard__service-item">
+                  <div class="page-analytics-dashboard__service-info">
+                    <h4>{{ service.name }}</h4>
+                    <p>{{ service.booking_count }} booking{{ service.booking_count|pluralize }}</p>
+                  </div>
+                  <div class="page-analytics-dashboard__service-revenue">
+                    <strong>₱{{ service.total_revenue|floatformat:2 }}</strong>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p>No service data available.</p>
+          {% endif %}
+        </div>
+
+        <div class="page-analytics-dashboard__section">
+          <h2>Payment Methods</h2>
+          {% if payment_methods %}
+            <div class="page-analytics-dashboard__payment-methods">
+              {% for method in payment_methods %}
+                <div class="page-analytics-dashboard__payment-method">
+                  <span class="page-analytics-dashboard__method-name">{{ method.method_display }}</span>
+                  <span class="page-analytics-dashboard__method-count">{{ method.count }} payment{{ method.count|pluralize }}</span>
+                  <span class="page-analytics-dashboard__method-amount">₱{{ method.total|floatformat:2 }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p>No payment data available.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="page-analytics-dashboard__sidebar">
+        <div class="page-analytics-dashboard__alerts">
+          <h3>Low Stock Alerts</h3>
+          {% if low_stock_alerts %}
+            <ul class="page-analytics-dashboard__alerts-list">
+              {% for item in low_stock_alerts %}
+                <li class="page-analytics-dashboard__alert-item">
+                  <a href="{% url 'inventory:detail' item.id %}">{{ item.name }}</a>
+                  <span class="page-analytics-dashboard__alert-stock">{{ item.stock }} {{ item.unit }}</span>
+                  {% include 'components/atoms/badge.html' with label='Low' style='warning' %}
+                </li>
+              {% endfor %}
+            </ul>
+            <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+              View All Alerts
+            </a>
+          {% else %}
+            <p>No low stock alerts.</p>
+          {% endif %}
+        </div>
+      </aside>
+    </div>
+  </section>
+{% endblock content %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}All Appointments · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-staff-appointments">
+    <header class="page-staff-appointments__header">
+      <h1>All Appointments</h1>
+      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+        View Analytics
+      </a>
+    </header>
+
+    <form method="get" class="page-staff-appointments__filters">
+      <div class="page-staff-appointments__filters-row">
+        <div class="page-staff-appointments__filter">
+          <label>Status:</label>
+          <select name="status" class="atom-input">
+            <option value="">All</option>
+            <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+            <option value="CONFIRMED" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+            <option value="IN_PROGRESS" {% if request.GET.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+            <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+            <option value="NO_SHOW" {% if request.GET.status == 'NO_SHOW' %}selected{% endif %}>No Show</option>
+            <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+
+        <div class="page-staff-appointments__filter">
+          <label>From Date:</label>
+          <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="atom-input">
+        </div>
+
+        <div class="page-staff-appointments__filter">
+          <label>To Date:</label>
+          <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="atom-input">
+        </div>
+
+        <button type="submit" class="atom-button atom-button--primary">Filter</button>
+        <a href="{% url 'appointments:staff_list' %}" class="atom-button atom-button--ghost">Clear</a>
+      </div>
+    </form>
+
+    {% if appointments %}
+      <div class="page-staff-appointments__table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Customer</th>
+              <th>Service</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appointment in appointments %}
+              <tr>
+                <td>{{ appointment.start_at|date:"M d, Y g:i A" }}</td>
+                <td>{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
+                <td>{{ appointment.service.name }}</td>
+                <td>{% include 'components/atoms/badge.html' with label=appointment.get_status_display style='primary' %}</td>
+                <td>{% include 'components/atoms/badge.html' with label=appointment.get_payment_state_display style='secondary' %}</td>
+                <td>
+                  <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+        <nav class="page-staff-appointments__pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="page-staff-appointments__empty">
+        <p>No appointments found matching your filters.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

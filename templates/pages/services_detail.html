@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ service.name }} · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-service-detail">
+    <div class="page-service-detail__header">
+      <h1>{{ service.name }}</h1>
+      {% include 'components/atoms/badge.html' with label=service.price style='primary' %}
+    </div>
+
+    <div class="page-service-detail__content">
+      <div class="page-service-detail__main">
+        <h2>Description</h2>
+        <p>{{ service.description|default:"No description available." }}</p>
+
+        <div class="page-service-detail__meta">
+          <div class="page-service-detail__meta-item">
+            <strong>Duration:</strong> {{ service.duration_minutes }} minutes
+          </div>
+          <div class="page-service-detail__meta-item">
+            <strong>Price:</strong> ₱{{ service.price }}
+          </div>
+          <div class="page-service-detail__meta-item">
+            <strong>Status:</strong>
+            {% if service.is_active %}
+              {% include 'components/atoms/badge.html' with label='Active' style='success' %}
+            {% else %}
+              {% include 'components/atoms/badge.html' with label='Inactive' style='secondary' %}
+            {% endif %}
+          </div>
+        </div>
+
+        {% if user.is_authenticated %}
+          <div class="page-service-detail__actions">
+            <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="atom-button atom-button--primary">
+              Book This Service
+            </a>
+          </div>
+        {% else %}
+          <div class="page-service-detail__actions">
+            <a href="{% url 'core:login' %}?next={% url 'services:detail' service.id %}" class="atom-button atom-button--primary">
+              Login to Book
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="page-service-detail__sidebar">
+        {% if required_inventory %}
+          <div class="page-service-detail__inventory">
+            <h3>Required Inventory</h3>
+            <ul class="page-service-detail__inventory-list">
+              {% for si in required_inventory %}
+                <li class="page-service-detail__inventory-item">
+                  <span class="page-service-detail__inventory-name">{{ si.item.name }}</span>
+                  <span class="page-service-detail__inventory-qty">{{ si.qty_per_service }} {{ si.item.unit }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% else %}
+          <p>No inventory requirements for this service.</p>
+        {% endif %}
+      </aside>
+    </div>
+
+    <div class="page-service-detail__back">
+      <a href="{% url 'services:list' %}" class="atom-button atom-button--ghost">
+        ← Back to Services
+      </a>
+    </div>
+  </section>
+{% endblock content %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Services · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-services">
+    <header class="page-services__header">
+      <h1>Our Services</h1>
+      <p>Browse our complete range of salon services</p>
+    </header>
+
+    {% if services %}
+      <div class="page-services__grid">
+        {% for service in services %}
+          <a href="{% url 'services:detail' service.id %}" class="page-services__card-link">
+            {% include 'components/molecules/service_card.html' with service=service %}
+          </a>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+        <nav class="page-services__pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page=1" class="atom-button atom-button--ghost">First</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="atom-button atom-button--ghost">Previous</a>
+          {% endif %}
+
+          <span class="page-services__page-info">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="atom-button atom-button--ghost">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="atom-button atom-button--ghost">Last</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="page-services__empty">
+        <p>No services are currently available.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}
