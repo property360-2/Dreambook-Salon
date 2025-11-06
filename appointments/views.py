@@ -69,7 +69,7 @@ def check_availability(service, start_at, exclude_appointment_id=None):
     return True, None
 
 
-class AppointmentBookingView(LoginRequiredMixin, CustomerRequiredMixin, CreateView):
+class AppointmentBookingView(CustomerRequiredMixin, CreateView):
     """Customer booking view with availability checking."""
 
     model = Appointment
@@ -105,7 +105,7 @@ class AppointmentBookingView(LoginRequiredMixin, CustomerRequiredMixin, CreateVi
         return redirect(self.success_url)
 
 
-class MyAppointmentsView(LoginRequiredMixin, CustomerRequiredMixin, ListView):
+class MyAppointmentsView(CustomerRequiredMixin, ListView):
     """Customer's appointment list."""
 
     model = Appointment
@@ -166,7 +166,7 @@ class AppointmentCancelView(LoginRequiredMixin, View):
             return redirect('appointments:staff_list')
 
 
-class StaffAppointmentListView(LoginRequiredMixin, StaffOrAdminRequiredMixin, ListView):
+class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
     """Staff/Admin view to see all appointments."""
 
     model = Appointment
@@ -206,7 +206,7 @@ class StaffAppointmentListView(LoginRequiredMixin, StaffOrAdminRequiredMixin, Li
         return context
 
 
-class AppointmentCompleteView(LoginRequiredMixin, StaffOrAdminRequiredMixin, View):
+class AppointmentCompleteView(StaffOrAdminRequiredMixin, View):
     """Mark appointment as completed and deduct inventory."""
 
     def post(self, request, pk):
@@ -249,7 +249,7 @@ class AppointmentCompleteView(LoginRequiredMixin, StaffOrAdminRequiredMixin, Vie
         return redirect('appointments:detail', pk=pk)
 
 
-class AppointmentUpdateStatusView(LoginRequiredMixin, StaffOrAdminRequiredMixin, View):
+class AppointmentUpdateStatusView(StaffOrAdminRequiredMixin, View):
     """Update appointment status (for staff/admin)."""
 
     def post(self, request, pk):

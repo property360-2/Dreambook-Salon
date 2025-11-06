@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Low Stock Alerts · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-inventory-alerts">
+    <header class="page-inventory-alerts__header">
+      <h1>Low Stock Alerts</h1>
+      <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">
+        View All Inventory
+      </a>
+    </header>
+
+    <div class="page-inventory-alerts__summary">
+      <div class="page-inventory-alerts__stat">
+        <h3>Critical (Out of Stock)</h3>
+        <p class="page-inventory-alerts__stat-value">{{ critical_count|default:0 }}</p>
+      </div>
+      <div class="page-inventory-alerts__stat">
+        <h3>Low Stock</h3>
+        <p class="page-inventory-alerts__stat-value">{{ low_stock_count|default:0 }}</p>
+      </div>
+      <div class="page-inventory-alerts__stat">
+        <h3>Total Alerts</h3>
+        <p class="page-inventory-alerts__stat-value">{{ total_alerts|default:0 }}</p>
+      </div>
+    </div>
+
+    {% if critical_items or low_stock_items %}
+      {% if critical_items %}
+        <div class="page-inventory-alerts__section">
+          <h2>Critical - Out of Stock</h2>
+          <div class="page-inventory-alerts__table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Current Stock</th>
+                  <th>Unit</th>
+                  <th>Threshold</th>
+                  <th>Used in Services</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in critical_items %}
+                  <tr class="page-inventory-alerts__row--critical">
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.threshold }}</td>
+                    <td>{{ item.service_links.count }}</td>
+                    <td>
+                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
+                      <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="number" name="adjustment" placeholder="Add qty" step="0.01" required style="width: 80px;">
+                        {% include 'components/atoms/button.html' with label='Restock' style='primary' type='submit' %}
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if low_stock_items %}
+        <div class="page-inventory-alerts__section">
+          <h2>Low Stock Warning</h2>
+          <div class="page-inventory-alerts__table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Current Stock</th>
+                  <th>Unit</th>
+                  <th>Threshold</th>
+                  <th>Used in Services</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in low_stock_items %}
+                  <tr class="page-inventory-alerts__row--warning">
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.threshold }}</td>
+                    <td>{{ item.service_links.count }}</td>
+                    <td>
+                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
+                      <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="number" name="adjustment" placeholder="Add qty" step="0.01" required style="width: 80px;">
+                        {% include 'components/atoms/button.html' with label='Restock' style='primary' type='submit' %}
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="page-inventory-alerts__empty">
+        <p>No low stock alerts at this time. All inventory levels are healthy!</p>
+        <a href="{% url 'inventory:list' %}" class="atom-button atom-button--primary">
+          View All Inventory
+        </a>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

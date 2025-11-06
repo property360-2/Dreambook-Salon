@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Analytics · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-analytics-inventory">
+    <header class="page-analytics-inventory__header">
+      <h1>Inventory Analytics</h1>
+      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+        ← Back to Dashboard
+      </a>
+    </header>
+
+    <div class="page-analytics-inventory__overview">
+      <h2>Inventory Status Overview</h2>
+      <div class="page-analytics-inventory__cards">
+        <div class="page-analytics-inventory__card">
+          {% include 'components/molecules/stat_card.html' with title='Total Items' value=total_items|default:0 %}
+        </div>
+        <div class="page-analytics-inventory__card">
+          {% include 'components/molecules/stat_card.html' with title='In Stock' value=in_stock_count|default:0 %}
+        </div>
+        <div class="page-analytics-inventory__card">
+          {% include 'components/molecules/stat_card.html' with title='Low Stock' value=low_stock_count|default:0 %}
+        </div>
+        <div class="page-analytics-inventory__card">
+          {% include 'components/molecules/stat_card.html' with title='Out of Stock' value=out_of_stock_count|default:0 %}
+        </div>
+      </div>
+    </div>
+
+    <div class="page-analytics-inventory__status">
+      <h2>Stock Status Breakdown</h2>
+      <div class="page-analytics-inventory__status-chart">
+        <div class="page-analytics-inventory__status-item">
+          <div class="page-analytics-inventory__status-bar" style="width: {{ in_stock_percentage|default:0 }}%; background-color: #28a745;"></div>
+          <span>In Stock: {{ in_stock_percentage|default:0|floatformat:1 }}%</span>
+        </div>
+        <div class="page-analytics-inventory__status-item">
+          <div class="page-analytics-inventory__status-bar" style="width: {{ low_stock_percentage|default:0 }}%; background-color: #ffc107;"></div>
+          <span>Low Stock: {{ low_stock_percentage|default:0|floatformat:1 }}%</span>
+        </div>
+        <div class="page-analytics-inventory__status-item">
+          <div class="page-analytics-inventory__status-bar" style="width: {{ out_of_stock_percentage|default:0 }}%; background-color: #dc3545;"></div>
+          <span>Out of Stock: {{ out_of_stock_percentage|default:0|floatformat:1 }}%</span>
+        </div>
+      </div>
+    </div>
+
+    {% if low_stock_items or out_of_stock_items %}
+      <div class="page-analytics-inventory__alerts">
+        <h2>Stock Alerts</h2>
+
+        {% if out_of_stock_items %}
+          <div class="page-analytics-inventory__alert-section">
+            <h3>Critical - Out of Stock ({{ out_of_stock_items|length }})</h3>
+            <table class="page-analytics-inventory__table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Stock</th>
+                  <th>Threshold</th>
+                  <th>Used in Services</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in out_of_stock_items %}
+                  <tr class="page-analytics-inventory__row--critical">
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock }} {{ item.unit }}</td>
+                    <td>{{ item.threshold }} {{ item.unit }}</td>
+                    <td>{{ item.service_count|default:0 }}</td>
+                    <td>
+                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+
+        {% if low_stock_items %}
+          <div class="page-analytics-inventory__alert-section">
+            <h3>Warning - Low Stock ({{ low_stock_items|length }})</h3>
+            <table class="page-analytics-inventory__table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Stock</th>
+                  <th>Threshold</th>
+                  <th>Used in Services</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in low_stock_items %}
+                  <tr class="page-analytics-inventory__row--warning">
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.stock }} {{ item.unit }}</td>
+                    <td>{{ item.threshold }} {{ item.unit }}</td>
+                    <td>{{ item.service_count|default:0 }}</td>
+                    <td>
+                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+
+        <div class="page-analytics-inventory__alert-actions">
+          <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+            View All Alerts & Restock
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="page-analytics-inventory__usage">
+      <h2>Inventory Usage</h2>
+      {% if item_usage %}
+        <table class="page-analytics-inventory__table">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Current Stock</th>
+              <th>Used in Services</th>
+              <th>Estimated Usage per Day</th>
+              <th>Days Until Depleted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in item_usage %}
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.stock }} {{ item.unit }}</td>
+                <td>{{ item.service_count|default:0 }}</td>
+                <td>{{ item.daily_usage|default:'0'|floatformat:2 }} {{ item.unit }}</td>
+                <td>
+                  {% if item.days_until_depleted %}
+                    {{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No usage data available.</p>
+      {% endif %}
+    </div>
+
+    <div class="page-analytics-inventory__recommendations">
+      <h2>Recommendations</h2>
+      <div class="page-analytics-inventory__recommendations-list">
+        {% if items_to_restock %}
+          <div class="page-analytics-inventory__recommendation">
+            <h4>Items Requiring Immediate Restocking</h4>
+            <p>Based on current usage patterns, these items should be restocked soon:</p>
+            <ul>
+              {% for item in items_to_restock %}
+                <li>{{ item.name }} - Will run out in ~{{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if unused_items %}
+          <div class="page-analytics-inventory__recommendation">
+            <h4>Unused Inventory Items</h4>
+            <p>These items are not currently used in any services:</p>
+            <ul>
+              {% for item in unused_items %}
+                <li>{{ item.name }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock content %}

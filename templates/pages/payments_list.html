@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment History · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-payments-list">
+    <header class="page-payments-list__header">
+      <h1>Payment History</h1>
+      {% if user.role in 'STAFF,ADMIN' %}
+        <a href="{% url 'payments:stats' %}" class="atom-button atom-button--primary">
+          View Statistics
+        </a>
+      {% endif %}
+    </header>
+
+    <form method="get" class="page-payments-list__filters">
+      <div class="page-payments-list__filters-row">
+        <div class="page-payments-list__filter">
+          <label>Status:</label>
+          <select name="status" class="atom-input">
+            <option value="">All</option>
+            <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+            <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
+            <option value="FAILED" {% if request.GET.status == 'FAILED' %}selected{% endif %}>Failed</option>
+          </select>
+        </div>
+
+        <div class="page-payments-list__filter">
+          <label>Method:</label>
+          <select name="method" class="atom-input">
+            <option value="">All</option>
+            <option value="GCASH" {% if request.GET.method == 'GCASH' %}selected{% endif %}>GCash</option>
+            <option value="PAYMAYA" {% if request.GET.method == 'PAYMAYA' %}selected{% endif %}>PayMaya</option>
+            <option value="ONSITE" {% if request.GET.method == 'ONSITE' %}selected{% endif %}>Onsite</option>
+          </select>
+        </div>
+
+        <button type="submit" class="atom-button atom-button--primary">Filter</button>
+        <a href="{% url 'payments:list' %}" class="atom-button atom-button--ghost">Clear</a>
+      </div>
+    </form>
+
+    {% if payments %}
+      <div class="page-payments-list__table">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Date</th>
+              {% if user.role in 'STAFF,ADMIN' %}<th>Customer</th>{% endif %}
+              <th>Service</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+              <tr>
+                <td>{{ payment.txn_id }}</td>
+                <td>{{ payment.created_at|date:"M d, Y" }}</td>
+                {% if user.role in 'STAFF,ADMIN' %}
+                  <td>{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</td>
+                {% endif %}
+                <td>{{ payment.appointment.service.name }}</td>
+                <td>₱{{ payment.amount }}</td>
+                <td>{{ payment.get_method_display }}</td>
+                <td>{% include 'components/atoms/badge.html' with label=payment.get_status_display style='primary' %}</td>
+                <td>
+                  <a href="{% url 'payments:detail' payment.id %}" class="atom-button atom-button--ghost">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+        <nav class="page-payments-list__pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="page-payments-list__empty">
+        <p>No payments found matching your filters.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

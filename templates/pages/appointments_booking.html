@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Appointment · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-booking">
+    <header class="page-booking__header">
+      <h1>Book an Appointment</h1>
+      <p>Select a service and choose your preferred time</p>
+    </header>
+
+    <form method="post" class="page-booking__form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="page-booking__errors">
+          {% for error in form.non_field_errors %}
+            <p class="page-booking__error">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="page-booking__fields">
+        {% for field in form %}
+          {% include 'components/molecules/form_field.html' with field=field %}
+        {% endfor %}
+      </div>
+
+      <div class="page-booking__actions">
+        {% include 'components/atoms/button.html' with label='Book Appointment' style='primary' type='submit' %}
+        <a href="{% url 'appointments:my_appointments' %}" class="atom-button atom-button--ghost">
+          Cancel
+        </a>
+      </div>
+    </form>
+
+    <aside class="page-booking__info">
+      <h3>Booking Information</h3>
+      <ul>
+        <li>Appointments can be booked up to 30 days in advance</li>
+        <li>You will receive a confirmation after booking</li>
+        <li>Payment can be made online or at the salon</li>
+        <li>Cancellations can be made up until the appointment time</li>
+      </ul>
+    </aside>
+  </section>
+{% endblock content %}

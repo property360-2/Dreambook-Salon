@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}My Appointments · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-my-appointments">
+    <header class="page-my-appointments__header">
+      <h1>My Appointments</h1>
+      <a href="{% url 'appointments:book' %}" class="atom-button atom-button--primary">
+        Book New Appointment
+      </a>
+    </header>
+
+    {% if appointments %}
+      <div class="page-my-appointments__list">
+        {% for appointment in appointments %}
+          <article class="page-my-appointments__card">
+            <div class="page-my-appointments__card-header">
+              <h3>{{ appointment.service.name }}</h3>
+              {% include 'components/atoms/badge.html' with label=appointment.get_status_display style='primary' %}
+            </div>
+
+            <div class="page-my-appointments__card-content">
+              <div class="page-my-appointments__meta">
+                <div class="page-my-appointments__meta-item">
+                  <strong>Date & Time:</strong> {{ appointment.start_at|date:"F d, Y g:i A" }}
+                </div>
+                <div class="page-my-appointments__meta-item">
+                  <strong>Duration:</strong> {{ appointment.service.duration_minutes }} minutes
+                </div>
+                <div class="page-my-appointments__meta-item">
+                  <strong>Price:</strong> ₱{{ appointment.service.price }}
+                </div>
+                <div class="page-my-appointments__meta-item">
+                  <strong>Payment:</strong>
+                  {% include 'components/atoms/badge.html' with label=appointment.get_payment_state_display style='secondary' %}
+                </div>
+              </div>
+
+              {% if appointment.notes %}
+                <div class="page-my-appointments__notes">
+                  <strong>Notes:</strong> {{ appointment.notes }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="page-my-appointments__card-actions">
+              <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">
+                View Details
+              </a>
+              {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
+                <form method="post" action="{% url 'appointments:cancel' appointment.id %}" style="display: inline;">
+                  {% csrf_token %}
+                  {% include 'components/atoms/button.html' with label='Cancel' style='danger' type='submit' %}
+                </form>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+        <nav class="page-my-appointments__pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="atom-button atom-button--ghost">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="atom-button atom-button--ghost">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="page-my-appointments__empty">
+        <p>You don't have any appointments yet.</p>
+        <a href="{% url 'appointments:book' %}" class="atom-button atom-button--primary">
+          Book Your First Appointment
+        </a>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

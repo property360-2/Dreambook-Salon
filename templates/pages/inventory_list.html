@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory Management · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <section class="page-inventory-list">
+    <header class="page-inventory-list__header">
+      <h1>Inventory Management</h1>
+      <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+        Low Stock Alerts
+      </a>
+    </header>
+
+    <form method="get" class="page-inventory-list__filters">
+      <div class="page-inventory-list__filters-row">
+        <div class="page-inventory-list__filter">
+          <label>Stock Status:</label>
+          <select name="stock_status" class="atom-input">
+            <option value="">All</option>
+            <option value="low" {% if request.GET.stock_status == 'low' %}selected{% endif %}>Low Stock</option>
+            <option value="out" {% if request.GET.stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
+            <option value="in" {% if request.GET.stock_status == 'in' %}selected{% endif %}>In Stock</option>
+          </select>
+        </div>
+
+        <button type="submit" class="atom-button atom-button--primary">Filter</button>
+        <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">Clear</a>
+      </div>
+    </form>
+
+    {% if items %}
+      <div class="page-inventory-list__table">
+        <table>
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Stock</th>
+              <th>Unit</th>
+              <th>Threshold</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr class="{% if item.stock <= 0 %}page-inventory-list__row--out{% elif item.is_low_stock %}page-inventory-list__row--low{% endif %}">
+                <td>{{ item.name }}</td>
+                <td>{{ item.stock }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.threshold }}</td>
+                <td>
+                  {% if item.stock <= 0 %}
+                    {% include 'components/atoms/badge.html' with label='Out of Stock' style='danger' %}
+                  {% elif item.is_low_stock %}
+                    {% include 'components/atoms/badge.html' with label='Low Stock' style='warning' %}
+                  {% else %}
+                    {% include 'components/atoms/badge.html' with label='In Stock' style='success' %}
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
+                  <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="number" name="adjustment" placeholder="±qty" step="0.01" required style="width: 80px;">
+                    {% include 'components/atoms/button.html' with label='Adjust' style='primary' type='submit' %}
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+        <nav class="page-inventory-list__pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="page-inventory-list__empty">
+        <p>No inventory items found.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock content %}

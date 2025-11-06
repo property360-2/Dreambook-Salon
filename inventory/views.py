@@ -7,7 +7,7 @@ from core.mixins import StaffOrAdminRequiredMixin
 from .models import Item
 
 
-class InventoryListView(LoginRequiredMixin, StaffOrAdminRequiredMixin, ListView):
+class InventoryListView(StaffOrAdminRequiredMixin, ListView):
     """Staff/Admin view to list all inventory items."""
 
     model = Item
@@ -55,7 +55,7 @@ class InventoryListView(LoginRequiredMixin, StaffOrAdminRequiredMixin, ListView)
         return context
 
 
-class InventoryDetailView(LoginRequiredMixin, StaffOrAdminRequiredMixin, DetailView):
+class InventoryDetailView(StaffOrAdminRequiredMixin, DetailView):
     """Staff/Admin view to see item details and services using it."""
 
     model = Item
@@ -70,7 +70,7 @@ class InventoryDetailView(LoginRequiredMixin, StaffOrAdminRequiredMixin, DetailV
         return context
 
 
-class InventoryAdjustView(LoginRequiredMixin, StaffOrAdminRequiredMixin, View):
+class InventoryAdjustView(StaffOrAdminRequiredMixin, View):
     """Adjust inventory stock (add or remove)."""
 
     def post(self, request, pk):
@@ -107,7 +107,7 @@ class InventoryAdjustView(LoginRequiredMixin, StaffOrAdminRequiredMixin, View):
         return redirect('inventory:detail', pk=pk)
 
 
-class LowStockAlertsView(LoginRequiredMixin, StaffOrAdminRequiredMixin, ListView):
+class LowStockAlertsView(StaffOrAdminRequiredMixin, ListView):
     """View showing items with low or out of stock."""
 
     model = Item
