@@ -17,8 +17,17 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from chatbot.urls import api_urlpatterns as chatbot_api_urls
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
+    path("services/", include("services.urls")),
+    path("appointments/", include("appointments.urls")),
+    path("inventory/", include("inventory.urls")),
+    path("payments/", include("payments.urls")),
+    path("chatbot/", include("chatbot.urls")),
+    path("analytics/", include("analytics.urls")),
+    # API endpoints
+    path("api/", include(chatbot_api_urls)),
 ]

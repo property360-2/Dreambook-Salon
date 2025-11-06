@@ -10,22 +10,35 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+)
+
+# Read .env file if it exists
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-e$+2ymr2yrnf7*&w16jw08&gt$me#xg__dp^o+b77q97d&q%7o"
+SECRET_KEY = env(
+    "SECRET_KEY", default="django-insecure-e$+2ymr2yrnf7*&w16jw08&gt$me#xg__dp^o+b77q97d&q%7o"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 
 # Application definition
@@ -82,10 +95,10 @@ WSGI_APPLICATION = "salon_system.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": env.db(
+        "DATABASE_URL",
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    )
 }
 
 
@@ -134,3 +147,21 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Custom User Model
+AUTH_USER_MODEL = "core.User"
+
+# Application Settings
+SITE_NAME = env("SITE_NAME", default="Dreambook Salon")
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
+
+# Demo Payment Settings
+DEMO_PAYMENT_MODE = env("DEMO_PAYMENT_MODE", default="deterministic")
+DEMO_PAYMENT_SUCCESS_RATE = env.float("DEMO_PAYMENT_SUCCESS_RATE", default=0.8)
+
+# Appointment Settings
+PREVENT_COMPLETION_ON_INSUFFICIENT_STOCK = env.bool(
+    "PREVENT_COMPLETION_ON_INSUFFICIENT_STOCK", default=True
+)
+MAX_CONCURRENT_APPOINTMENTS = env.int("MAX_CONCURRENT_APPOINTMENTS", default=3)
+BOOKING_WINDOW_DAYS = env.int("BOOKING_WINDOW_DAYS", default=30)
