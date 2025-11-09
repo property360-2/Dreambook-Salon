@@ -67,23 +67,29 @@
               <h2 class="text-2xl font-bold text-dark-text">
                 Required Inventory Items
               </h2>
-              <span class="text-sm text-dark-muted">
-                Optional - items consumed when service is completed
-              </span>
+              <button type="button" id="add-item-btn" class="btn btn-primary text-sm">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Item
+              </button>
             </div>
+            <p class="text-sm text-dark-muted">
+              Optional - Select inventory items consumed when this service is completed
+            </p>
 
             {{ formset.management_form }}
 
             <div id="formset-container" class="space-y-4">
               {% for form in formset %}
-                <div class="formset-form p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                <div class="formset-form p-4 bg-dark-elevated rounded-xl border border-dark-border relative">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {{ form.id }}
-                    {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
 
                     <div>
                       <label class="block text-sm font-semibold text-dark-text mb-2">
                         {{ form.item.label }}
+                        {% if form.item.field.required %}<span class="text-red-400">*</span>{% endif %}
                       </label>
                       {{ form.item }}
                       {% if form.item.errors %}
@@ -94,22 +100,32 @@
                     <div>
                       <label class="block text-sm font-semibold text-dark-text mb-2">
                         {{ form.qty_per_service.label }}
+                        {% if form.qty_per_service.field.required %}<span class="text-red-400">*</span>{% endif %}
                       </label>
                       {{ form.qty_per_service }}
                       {% if form.qty_per_service.errors %}
                         <p class="mt-1 text-sm text-red-400">{{ form.qty_per_service.errors.0 }}</p>
                       {% endif %}
                     </div>
-
-                    {% if form.instance.pk %}
-                      <div class="md:col-span-2">
-                        <label class="flex items-center text-sm text-red-400">
-                          {{ form.DELETE }}
-                          <span class="ml-2">Delete this item</span>
-                        </label>
-                      </div>
-                    {% endif %}
                   </div>
+
+                  {% if form.instance.pk %}
+                    <!-- For existing items, show DELETE checkbox -->
+                    <div class="mt-3 pt-3 border-t border-dark-border">
+                      <label class="flex items-center text-sm text-red-400 cursor-pointer">
+                        {{ form.DELETE }}
+                        <span class="ml-2">Delete this item</span>
+                      </label>
+                    </div>
+                  {% else %}
+                    <!-- For new items, show remove button -->
+                    <button type="button" class="remove-form-btn absolute top-2 right-2 text-red-400 hover:text-red-300 transition-colors" style="display: none;">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                    {{ form.DELETE }}
+                  {% endif %}
                 </div>
               {% endfor %}
             </div>
@@ -134,4 +150,122 @@
       </div>
     </div>
   </div>
+
+  <!-- Dynamic Formset JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const addButton = document.getElementById('add-item-btn');
+      const formsetContainer = document.getElementById('formset-container');
+      const totalFormsInput = document.getElementById('id_service_items-TOTAL_FORMS');
+
+      // Function to update form indices
+      function updateFormIndices() {
+        const forms = formsetContainer.querySelectorAll('.formset-form');
+        forms.forEach((form, index) => {
+          // Update all input/select names and IDs with the correct index
+          const inputs = form.querySelectorAll('input, select, textarea');
+          inputs.forEach(input => {
+            if (input.name) {
+              input.name = input.name.replace(/service_items-\d+-/, `service_items-${index}-`);
+            }
+            if (input.id) {
+              input.id = input.id.replace(/id_service_items-\d+-/, `id_service_items-${index}-`);
+            }
+          });
+
+          // Update labels
+          const labels = form.querySelectorAll('label');
+          labels.forEach(label => {
+            if (label.htmlFor) {
+              label.htmlFor = label.htmlFor.replace(/id_service_items-\d+-/, `id_service_items-${index}-`);
+            }
+          });
+        });
+
+        // Update TOTAL_FORMS count
+        totalFormsInput.value = forms.length;
+
+        // Show/hide remove buttons
+        updateRemoveButtons();
+      }
+
+      // Function to show/hide remove buttons
+      function updateRemoveButtons() {
+        const forms = formsetContainer.querySelectorAll('.formset-form');
+        const removeButtons = formsetContainer.querySelectorAll('.remove-form-btn');
+
+        // Only show remove buttons if there's more than one form
+        removeButtons.forEach(btn => {
+          btn.style.display = forms.length > 1 ? 'block' : 'none';
+        });
+      }
+
+      // Add new form
+      if (addButton) {
+        addButton.addEventListener('click', function() {
+          const currentForms = formsetContainer.querySelectorAll('.formset-form');
+          const totalForms = currentForms.length;
+
+          // Clone the first empty form as template
+          const firstForm = currentForms[0];
+          const newForm = firstForm.cloneNode(true);
+
+          // Clear values in the cloned form
+          const inputs = newForm.querySelectorAll('input, select, textarea');
+          inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+              input.checked = false;
+            } else if (input.type !== 'hidden' || !input.name.includes('id_service_items')) {
+              input.value = '';
+            }
+          });
+
+          // Remove error messages
+          const errorMessages = newForm.querySelectorAll('.text-red-400');
+          errorMessages.forEach(msg => {
+            if (!msg.querySelector('svg')) { // Don't remove the required asterisk
+              msg.remove();
+            }
+          });
+
+          // Add the new form to container
+          formsetContainer.appendChild(newForm);
+
+          // Update form indices
+          updateFormIndices();
+
+          // Add remove functionality to the new form
+          setupRemoveButton(newForm);
+        });
+      }
+
+      // Setup remove button functionality
+      function setupRemoveButton(form) {
+        const removeBtn = form.querySelector('.remove-form-btn');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', function() {
+            // For new forms (not saved), just remove from DOM
+            const deleteCheckbox = form.querySelector('input[name*="DELETE"]');
+            if (deleteCheckbox && !form.querySelector('input[name*="-id"]').value) {
+              form.remove();
+              updateFormIndices();
+            } else {
+              // For existing forms, mark for deletion and hide
+              if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                form.style.display = 'none';
+              }
+            }
+          });
+        }
+      }
+
+      // Setup remove buttons for existing forms
+      const existingForms = formsetContainer.querySelectorAll('.formset-form');
+      existingForms.forEach(setupRemoveButton);
+
+      // Initial setup
+      updateRemoveButtons();
+    });
+  </script>
 {% endblock content %}
