@@ -20,9 +20,11 @@
             <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
             <li><a href="{% url 'appointments:staff_list' %}" class="navbar-link">All Appointments</a></li>
             <li><a href="{% url 'analytics:dashboard' %}" class="navbar-link">Analytics</a></li>
+            <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">🤖 AI Assistant</a></li>
           {% else %}
             <!-- Customer Only Links -->
             <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
+            <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">💬 Chat</a></li>
           {% endif %}
         {% endif %}
       </ul>

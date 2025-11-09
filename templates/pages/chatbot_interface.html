@@ -17,11 +17,22 @@
         <!-- Messages Area -->
         <div id="chatMessages" class="h-[500px] overflow-y-auto p-6 bg-dark-bg">
           <div class="text-center py-12">
-            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30">
-              <span class="text-white text-3xl">💬</span>
+            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30 animate-pulse-slow">
+              <span class="text-white text-3xl">🤖</span>
             </div>
-            <p class="text-dark-text font-semibold mb-2">Welcome! How can I help you today?</p>
-            <p class="text-dark-muted text-sm">Try asking about services, booking, or anything else!</p>
+            <h3 class="text-dark-text font-bold text-xl mb-2">AI Assistant</h3>
+            <p class="text-dark-muted text-sm mb-4">I can help you with real-time information!</p>
+            {% if user.is_authenticated and user.role in 'ADMIN,STAFF' %}
+              <div class="inline-block bg-primary-500/10 border border-primary-500/20 rounded-lg px-4 py-2 text-left">
+                <p class="text-primary-400 text-sm font-semibold mb-1">📊 Staff Mode Active</p>
+                <p class="text-dark-muted text-xs">Ask about revenue, analytics, inventory, or stats!</p>
+              </div>
+            {% else %}
+              <div class="inline-block bg-accent-500/10 border border-accent-500/20 rounded-lg px-4 py-2 text-left">
+                <p class="text-accent-400 text-sm font-semibold mb-1">💇 Customer Mode</p>
+                <p class="text-dark-muted text-xs">Ask about services, pricing, popular treatments!</p>
+              </div>
+            {% endif %}
           </div>
         </div>
 
@@ -114,17 +125,23 @@
     messageDiv.className = `flex mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
 
     const contentDiv = document.createElement('div');
-    contentDiv.className = `max-w-[70%] px-4 py-3 rounded-xl ${
+    contentDiv.className = `max-w-[70%] px-4 py-3 rounded-xl whitespace-pre-wrap ${
       sender === 'user'
         ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white'
         : 'bg-dark-elevated border border-dark-border text-dark-text'
     }`;
-    contentDiv.textContent = text;
+
+    // Format text: convert **bold** to <strong>, preserve newlines
+    let formattedText = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-primary-400">$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    contentDiv.innerHTML = formattedText;
 
     messageDiv.appendChild(contentDiv);
     chatMessages.appendChild(messageDiv);
 
-    // Scroll to bottom
+    // Scroll to bottom smoothly
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 

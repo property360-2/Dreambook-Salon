@@ -6,17 +6,18 @@ from django.utils.decorators import method_decorator
 from django.views import View
 import json
 from .models import Rule
+from .intelligent_bot import IntelligentChatbot
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_respond_api(request):
     """
-    API endpoint for chatbot responses.
+    Intelligent chatbot API endpoint with database queries and role-based responses.
 
     POST /api/chatbot/respond/
     Body: {"message": "user message"}
-    Returns: {"response": "bot response", "matched_rule": int or null}
+    Returns: {"response": "bot response", "intent": "detected_intent"}
     """
     try:
         # Parse request body
@@ -27,45 +28,27 @@ def chatbot_respond_api(request):
             return JsonResponse({
                 'error': 'Message is required',
                 'response': None,
-                'matched_rule': None
             }, status=400)
 
-        # Find matching rule (first match wins, ordered by priority)
-        matched_rule = None
-        for rule in Rule.objects.filter(is_active=True).order_by('-priority', 'keyword'):
-            if rule.matches(user_message):
-                matched_rule = rule
-                break
+        # Use intelligent chatbot with role-based responses
+        bot = IntelligentChatbot(user=request.user if request.user.is_authenticated else None)
+        response = bot.process_message(user_message)
 
-        if matched_rule:
-            return JsonResponse({
-                'response': matched_rule.response,
-                'matched_rule': matched_rule.id,
-                'error': None
-            })
-        else:
-            # Default response when no rule matches
-            default_response = (
-                "I'm not sure how to help with that. "
-                "You can ask me about our services, hours, booking, or contact information!"
-            )
-            return JsonResponse({
-                'response': default_response,
-                'matched_rule': None,
-                'error': None
-            })
+        return JsonResponse({
+            'response': response,
+            'error': None,
+            'is_staff': bot.is_staff,
+        })
 
     except json.JSONDecodeError:
         return JsonResponse({
             'error': 'Invalid JSON in request body',
             'response': None,
-            'matched_rule': None
         }, status=400)
     except Exception as e:
         return JsonResponse({
             'error': f'Server error: {str(e)}',
             'response': None,
-            'matched_rule': None
         }, status=500)
 
 
