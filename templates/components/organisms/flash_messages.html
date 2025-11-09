@@ -1,9 +1,11 @@
 {% if messages %}
-  <div class="organism-flash-messages">
-    {% for message in messages %}
-      <div class="organism-flash-messages__item organism-flash-messages__item--{{ message.tags }}">
-        {{ message }}
-      </div>
-    {% endfor %}
+  <div class="container-custom mt-6">
+    <div class="space-y-3">
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} animate-slide-up">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
   </div>
 {% endif %}

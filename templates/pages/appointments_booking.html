@@ -3,45 +3,130 @@
 {% block title %}Book Appointment · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-booking">
-    <header class="page-booking__header">
-      <h1>Book an Appointment</h1>
-      <p>Select a service and choose your preferred time</p>
-    </header>
+  <div class="container-custom py-12">
+    <div class="max-w-5xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-12 animate-slide-up">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gradient">Book an Appointment</h1>
+        <p class="text-xl text-dark-muted">Select a service and choose your preferred time</p>
+      </div>
 
-    <form method="post" class="page-booking__form">
-      {% csrf_token %}
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Booking Form -->
+        <div class="lg:col-span-2">
+          <div class="card p-8">
+            <form method="post" class="space-y-6">
+              {% csrf_token %}
 
-      {% if form.non_field_errors %}
-        <div class="page-booking__errors">
-          {% for error in form.non_field_errors %}
-            <p class="page-booking__error">{{ error }}</p>
-          {% endfor %}
+              {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                  {% for error in form.non_field_errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              {% for field in form %}
+                <div>
+                  <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                      <span class="text-red-400">*</span>
+                    {% endif %}
+                  </label>
+
+                  {% if field.field.widget.input_type == 'select' %}
+                    <select
+                      name="{{ field.name }}"
+                      id="{{ field.id_for_label }}"
+                      class="input {% if field.errors %}input-error{% endif %}"
+                      {% if field.field.required %}required{% endif %}
+                    >
+                      <option value="">Select {{ field.label }}</option>
+                      {% for value, label in field.field.choices %}
+                        {% if value %}
+                          <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+                  {% elif field.field.widget.input_type == 'textarea' %}
+                    <textarea
+                      name="{{ field.name }}"
+                      id="{{ field.id_for_label }}"
+                      class="input {% if field.errors %}input-error{% endif %}"
+                      rows="4"
+                      {% if field.field.required %}required{% endif %}
+                      placeholder="{{ field.label }}"
+                    >{{ field.value|default:'' }}</textarea>
+                  {% else %}
+                    <input
+                      type="{{ field.field.widget.input_type }}"
+                      name="{{ field.name }}"
+                      id="{{ field.id_for_label }}"
+                      class="input {% if field.errors %}input-error{% endif %}"
+                      {% if field.field.required %}required{% endif %}
+                      placeholder="{{ field.label }}"
+                      value="{{ field.value|default:'' }}"
+                    >
+                  {% endif %}
+
+                  {% if field.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
+                  {% endif %}
+                  {% if field.help_text %}
+                    <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+              <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <button type="submit" class="btn btn-primary flex-1">
+                  Book Appointment
+                </button>
+                <a href="{% url 'appointments:my_list' %}" class="btn btn-ghost flex-1 text-center">
+                  Cancel
+                </a>
+              </div>
+            </form>
+          </div>
         </div>
-      {% endif %}
 
-      <div class="page-booking__fields">
-        {% for field in form %}
-          {% include 'components/molecules/form_field.html' with field=field %}
-        {% endfor %}
+        <!-- Booking Information Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="card p-6 sticky top-24">
+            <h3 class="text-xl font-bold text-dark-text mb-4 flex items-center gap-2">
+              <span class="text-2xl">ℹ️</span>
+              Booking Information
+            </h3>
+            <ul class="space-y-3 text-sm text-dark-muted">
+              <li class="flex items-start gap-2">
+                <span class="text-primary-400 mt-1">•</span>
+                <span>Appointments can be booked up to 30 days in advance</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-primary-400 mt-1">•</span>
+                <span>You will receive a confirmation after booking</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-primary-400 mt-1">•</span>
+                <span>Payment can be made online or at the salon</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-primary-400 mt-1">•</span>
+                <span>Cancellations can be made up until the appointment time</span>
+              </li>
+            </ul>
+
+            <div class="mt-6 pt-6 border-t border-dark-border">
+              <h4 class="text-sm font-semibold text-dark-text mb-2">Need help?</h4>
+              <p class="text-sm text-dark-muted mb-3">Contact our support team for assistance</p>
+              <a href="#contact" class="btn btn-ghost text-sm w-full">
+                Contact Support
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div class="page-booking__actions">
-        {% include 'components/atoms/button.html' with label='Book Appointment' style='primary' type='submit' %}
-        <a href="{% url 'appointments:my_appointments' %}" class="atom-button atom-button--ghost">
-          Cancel
-        </a>
-      </div>
-    </form>
-
-    <aside class="page-booking__info">
-      <h3>Booking Information</h3>
-      <ul>
-        <li>Appointments can be booked up to 30 days in advance</li>
-        <li>You will receive a confirmation after booking</li>
-        <li>Payment can be made online or at the salon</li>
-        <li>Cancellations can be made up until the appointment time</li>
-      </ul>
-    </aside>
-  </section>
+    </div>
+  </div>
 {% endblock content %}

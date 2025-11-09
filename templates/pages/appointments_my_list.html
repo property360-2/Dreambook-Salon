@@ -3,80 +3,115 @@
 {% block title %}My Appointments · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-my-appointments">
-    <header class="page-my-appointments__header">
-      <h1>My Appointments</h1>
-      <a href="{% url 'appointments:book' %}" class="atom-button atom-button--primary">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">My Appointments</h1>
+        <p class="text-dark-muted">Manage and track your upcoming salon visits</p>
+      </div>
+      <a href="{% url 'appointments:booking' %}" class="btn btn-primary whitespace-nowrap">
         Book New Appointment
       </a>
-    </header>
+    </div>
 
     {% if appointments %}
-      <div class="page-my-appointments__list">
+      <!-- Appointments List -->
+      <div class="space-y-4 mb-8">
         {% for appointment in appointments %}
-          <article class="page-my-appointments__card">
-            <div class="page-my-appointments__card-header">
-              <h3>{{ appointment.service.name }}</h3>
-              {% include 'components/atoms/badge.html' with label=appointment.get_status_display style='primary' %}
-            </div>
+          <article class="card p-6 hover:border-primary-500/50 transition-all duration-300">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <!-- Main Info -->
+              <div class="flex-1">
+                <div class="flex items-start justify-between mb-4">
+                  <h3 class="text-2xl font-bold text-dark-text">{{ appointment.service.name }}</h3>
+                  {% if appointment.status == 'CONFIRMED' %}
+                    <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                  {% elif appointment.status == 'PENDING' %}
+                    <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                  {% elif appointment.status == 'COMPLETED' %}
+                    <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+                  {% else %}
+                    <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                  {% endif %}
+                </div>
 
-            <div class="page-my-appointments__card-content">
-              <div class="page-my-appointments__meta">
-                <div class="page-my-appointments__meta-item">
-                  <strong>Date & Time:</strong> {{ appointment.start_at|date:"F d, Y g:i A" }}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span class="text-dark-muted block mb-1">Date & Time</span>
+                    <span class="text-dark-text font-semibold">{{ appointment.start_at|date:"F d, Y" }}</span>
+                    <br>
+                    <span class="text-primary-400">{{ appointment.start_at|date:"g:i A" }}</span>
+                  </div>
+                  <div>
+                    <span class="text-dark-muted block mb-1">Duration</span>
+                    <span class="text-dark-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
+                  </div>
+                  <div>
+                    <span class="text-dark-muted block mb-1">Price</span>
+                    <span class="text-gradient font-bold text-lg">₱{{ appointment.service.price }}</span>
+                  </div>
+                  <div>
+                    <span class="text-dark-muted block mb-1">Payment</span>
+                    {% if appointment.payment_state == 'PAID' %}
+                      <span class="badge badge-success">{{ appointment.get_payment_state_display }}</span>
+                    {% else %}
+                      <span class="badge badge-warning">{{ appointment.get_payment_state_display }}</span>
+                    {% endif %}
+                  </div>
                 </div>
-                <div class="page-my-appointments__meta-item">
-                  <strong>Duration:</strong> {{ appointment.service.duration_minutes }} minutes
-                </div>
-                <div class="page-my-appointments__meta-item">
-                  <strong>Price:</strong> ₱{{ appointment.service.price }}
-                </div>
-                <div class="page-my-appointments__meta-item">
-                  <strong>Payment:</strong>
-                  {% include 'components/atoms/badge.html' with label=appointment.get_payment_state_display style='secondary' %}
-                </div>
+
+                {% if appointment.notes %}
+                  <div class="mt-4 p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                    <span class="text-dark-muted text-sm block mb-1">Notes:</span>
+                    <span class="text-dark-text text-sm">{{ appointment.notes }}</span>
+                  </div>
+                {% endif %}
               </div>
 
-              {% if appointment.notes %}
-                <div class="page-my-appointments__notes">
-                  <strong>Notes:</strong> {{ appointment.notes }}
-                </div>
-              {% endif %}
-            </div>
-
-            <div class="page-my-appointments__card-actions">
-              <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">
-                View Details
-              </a>
-              {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
-                <form method="post" action="{% url 'appointments:cancel' appointment.id %}" style="display: inline;">
-                  {% csrf_token %}
-                  {% include 'components/atoms/button.html' with label='Cancel' style='danger' type='submit' %}
-                </form>
-              {% endif %}
+              <!-- Actions -->
+              <div class="flex flex-row lg:flex-col gap-2 lg:min-w-[140px]">
+                <a href="{% url 'appointments:detail' appointment.id %}" class="btn btn-ghost text-sm flex-1 lg:flex-initial">
+                  View Details
+                </a>
+                {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
+                  <form method="post" action="{% url 'appointments:cancel' appointment.id %}" class="flex-1 lg:flex-initial">
+                    {% csrf_token %}
+                    <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm w-full">
+                      Cancel
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
             </div>
           </article>
         {% endfor %}
       </div>
 
+      <!-- Pagination -->
       {% if is_paginated %}
-        <nav class="page-my-appointments__pagination">
+        <nav class="flex items-center justify-center gap-2">
           {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" class="atom-button atom-button--ghost">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-ghost text-sm">Previous</a>
           {% endif %}
-          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          <span class="px-4 py-2 text-dark-text font-semibold">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="atom-button atom-button--ghost">Next</a>
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-ghost text-sm">Next</a>
           {% endif %}
         </nav>
       {% endif %}
     {% else %}
-      <div class="page-my-appointments__empty">
-        <p>You don't have any appointments yet.</p>
-        <a href="{% url 'appointments:book' %}" class="atom-button atom-button--primary">
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">📅</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">No appointments yet</h3>
+        <p class="text-dark-muted mb-6">Book your first appointment to get started!</p>
+        <a href="{% url 'appointments:booking' %}" class="btn btn-primary inline-block">
           Book Your First Appointment
         </a>
       </div>
     {% endif %}
-  </section>
+  </div>
 {% endblock content %}

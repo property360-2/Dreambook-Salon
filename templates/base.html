@@ -1,16 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Dreambook Salon{% endblock title %}</title>
-    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/output.css' %}" />
     {% block extra_head %}{% endblock extra_head %}
   </head>
-  <body class="layout">
+  <body class="min-h-screen bg-dark-bg">
     {% include 'components/organisms/navbar.html' %}
-    <main class="layout__main">
+    <main class="pt-20">
       {% include 'components/organisms/flash_messages.html' %}
       {% block content %}{% endblock content %}
     </main>

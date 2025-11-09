@@ -3,19 +3,24 @@
 {% block title %}Inventory Management · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-inventory-list">
-    <header class="page-inventory-list__header">
-      <h1>Inventory Management</h1>
-      <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Inventory Management</h1>
+        <p class="text-dark-muted">Track and manage your salon supplies</p>
+      </div>
+      <a href="{% url 'inventory:alerts' %}" class="btn btn-primary whitespace-nowrap">
         Low Stock Alerts
       </a>
-    </header>
+    </div>
 
-    <form method="get" class="page-inventory-list__filters">
-      <div class="page-inventory-list__filters-row">
-        <div class="page-inventory-list__filter">
-          <label>Stock Status:</label>
-          <select name="stock_status" class="atom-input">
+    <!-- Filters -->
+    <div class="card p-6 mb-8">
+      <form method="get" class="flex flex-col sm:flex-row gap-4 items-end">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-dark-text mb-2">Stock Status:</label>
+          <select name="stock_status" class="input">
             <option value="">All</option>
             <option value="low" {% if request.GET.stock_status == 'low' %}selected{% endif %}>Low Stock</option>
             <option value="out" {% if request.GET.stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
@@ -23,69 +28,98 @@
           </select>
         </div>
 
-        <button type="submit" class="atom-button atom-button--primary">Filter</button>
-        <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">Clear</a>
-      </div>
-    </form>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Filter</button>
+          <a href="{% url 'inventory:list' %}" class="btn btn-ghost flex-1 sm:flex-initial">Clear</a>
+        </div>
+      </form>
+    </div>
 
     {% if items %}
-      <div class="page-inventory-list__table">
-        <table>
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Stock</th>
-              <th>Unit</th>
-              <th>Threshold</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in items %}
-              <tr class="{% if item.stock <= 0 %}page-inventory-list__row--out{% elif item.is_low_stock %}page-inventory-list__row--low{% endif %}">
-                <td>{{ item.name }}</td>
-                <td>{{ item.stock }}</td>
-                <td>{{ item.unit }}</td>
-                <td>{{ item.threshold }}</td>
-                <td>
-                  {% if item.stock <= 0 %}
-                    {% include 'components/atoms/badge.html' with label='Out of Stock' style='danger' %}
-                  {% elif item.is_low_stock %}
-                    {% include 'components/atoms/badge.html' with label='Low Stock' style='warning' %}
-                  {% else %}
-                    {% include 'components/atoms/badge.html' with label='In Stock' style='success' %}
-                  {% endif %}
-                </td>
-                <td>
-                  <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
-                  <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
-                    {% csrf_token %}
-                    <input type="number" name="adjustment" placeholder="±qty" step="0.01" required style="width: 80px;">
-                    {% include 'components/atoms/button.html' with label='Adjust' style='primary' type='submit' %}
-                  </form>
-                </td>
+      <!-- Inventory Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Stock</th>
+                <th>Unit</th>
+                <th>Threshold</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for item in items %}
+                <tr class="{% if item.stock <= 0 %}bg-red-500/5{% elif item.is_low_stock %}bg-amber-500/5{% endif %}">
+                  <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                  <td>
+                    <span class="{% if item.stock <= 0 %}text-red-400{% elif item.is_low_stock %}text-amber-400{% else %}text-emerald-400{% endif %} font-bold">
+                      {{ item.stock }}
+                    </span>
+                  </td>
+                  <td class="text-dark-muted">{{ item.unit }}</td>
+                  <td class="text-dark-muted">{{ item.threshold }}</td>
+                  <td>
+                    {% if item.stock <= 0 %}
+                      <span class="badge badge-danger">Out of Stock</span>
+                    {% elif item.is_low_stock %}
+                      <span class="badge badge-warning">Low Stock</span>
+                    {% else %}
+                      <span class="badge badge-success">In Stock</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm transition-colors">
+                        View
+                      </a>
+                      <form method="post" action="{% url 'inventory:adjust' item.id %}" class="flex items-center gap-2">
+                        {% csrf_token %}
+                        <input
+                          type="number"
+                          name="adjustment"
+                          placeholder="±qty"
+                          step="0.01"
+                          required
+                          class="input text-sm py-1 px-2"
+                          style="width: 80px;"
+                        >
+                        <button type="submit" class="btn btn-primary text-sm py-1 px-3">
+                          Adjust
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- Pagination -->
       {% if is_paginated %}
-        <nav class="page-inventory-list__pagination">
+        <nav class="flex items-center justify-center gap-2 mt-8">
           {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Previous</a>
           {% endif %}
-          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          <span class="px-4 py-2 text-dark-text font-semibold">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Next</a>
           {% endif %}
         </nav>
       {% endif %}
     {% else %}
-      <div class="page-inventory-list__empty">
-        <p>No inventory items found.</p>
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">No inventory items found</h3>
+        <p class="text-dark-muted">Start by adding items to your inventory</p>
       </div>
     {% endif %}
-  </section>
+  </div>
 {% endblock content %}
