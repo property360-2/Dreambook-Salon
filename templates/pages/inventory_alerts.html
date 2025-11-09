@@ -3,114 +3,164 @@
 {% block title %}Low Stock Alerts · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-inventory-alerts">
-    <header class="page-inventory-alerts__header">
-      <h1>Low Stock Alerts</h1>
-      <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Low Stock Alerts</h1>
+        <p class="text-dark-muted">Monitor and manage items running low</p>
+      </div>
+      <a href="{% url 'inventory:list' %}" class="btn btn-ghost whitespace-nowrap">
         View All Inventory
       </a>
-    </header>
+    </div>
 
-    <div class="page-inventory-alerts__summary">
-      <div class="page-inventory-alerts__stat">
-        <h3>Critical (Out of Stock)</h3>
-        <p class="page-inventory-alerts__stat-value">{{ critical_count|default:0 }}</p>
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="stat-card bg-red-500/10 border-red-500/20">
+        <div class="stat-label text-red-400">Critical (Out of Stock)</div>
+        <div class="stat-value text-red-400">{{ critical_count|default:0 }}</div>
       </div>
-      <div class="page-inventory-alerts__stat">
-        <h3>Low Stock</h3>
-        <p class="page-inventory-alerts__stat-value">{{ low_stock_count|default:0 }}</p>
+      <div class="stat-card bg-amber-500/10 border-amber-500/20">
+        <div class="stat-label text-amber-400">Low Stock</div>
+        <div class="stat-value text-amber-400">{{ low_stock_count|default:0 }}</div>
       </div>
-      <div class="page-inventory-alerts__stat">
-        <h3>Total Alerts</h3>
-        <p class="page-inventory-alerts__stat-value">{{ total_alerts|default:0 }}</p>
+      <div class="stat-card">
+        <div class="stat-label">Total Alerts</div>
+        <div class="stat-value">{{ total_alerts|default:0 }}</div>
       </div>
     </div>
 
     {% if critical_items or low_stock_items %}
+      <!-- Critical Items Section -->
       {% if critical_items %}
-        <div class="page-inventory-alerts__section">
-          <h2>Critical - Out of Stock</h2>
-          <div class="page-inventory-alerts__table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Current Stock</th>
-                  <th>Unit</th>
-                  <th>Threshold</th>
-                  <th>Used in Services</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in critical_items %}
-                  <tr class="page-inventory-alerts__row--critical">
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.stock }}</td>
-                    <td>{{ item.unit }}</td>
-                    <td>{{ item.threshold }}</td>
-                    <td>{{ item.service_links.count }}</td>
-                    <td>
-                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
-                      <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="number" name="adjustment" placeholder="Add qty" step="0.01" required style="width: 80px;">
-                        {% include 'components/atoms/button.html' with label='Restock' style='primary' type='submit' %}
-                      </form>
-                    </td>
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-red-400 mb-4 flex items-center gap-2">
+            <span>🚨</span> Critical - Out of Stock
+          </h2>
+          <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Current Stock</th>
+                    <th>Unit</th>
+                    <th>Threshold</th>
+                    <th>Used in Services</th>
+                    <th>Actions</th>
                   </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {% for item in critical_items %}
+                    <tr class="bg-red-500/5">
+                      <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                      <td><span class="text-red-400 font-bold">{{ item.stock }}</span></td>
+                      <td class="text-dark-muted">{{ item.unit }}</td>
+                      <td class="text-dark-muted">{{ item.threshold }}</td>
+                      <td>
+                        <span class="badge badge-info">{{ item.service_links.count }} services</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                            View
+                          </a>
+                          <form method="post" action="{% url 'inventory:adjust' item.id %}" class="flex items-center gap-2">
+                            {% csrf_token %}
+                            <input
+                              type="number"
+                              name="adjustment"
+                              placeholder="Add qty"
+                              step="0.01"
+                              required
+                              class="input text-sm py-1 px-2"
+                              style="width: 80px;"
+                            >
+                            <button type="submit" class="btn btn-primary text-sm py-1 px-3">
+                              Restock
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       {% endif %}
 
+      <!-- Low Stock Items Section -->
       {% if low_stock_items %}
-        <div class="page-inventory-alerts__section">
-          <h2>Low Stock Warning</h2>
-          <div class="page-inventory-alerts__table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Current Stock</th>
-                  <th>Unit</th>
-                  <th>Threshold</th>
-                  <th>Used in Services</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in low_stock_items %}
-                  <tr class="page-inventory-alerts__row--warning">
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.stock }}</td>
-                    <td>{{ item.unit }}</td>
-                    <td>{{ item.threshold }}</td>
-                    <td>{{ item.service_links.count }}</td>
-                    <td>
-                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
-                      <form method="post" action="{% url 'inventory:adjust' item.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="number" name="adjustment" placeholder="Add qty" step="0.01" required style="width: 80px;">
-                        {% include 'components/atoms/button.html' with label='Restock' style='primary' type='submit' %}
-                      </form>
-                    </td>
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+            <span>⚠️</span> Low Stock Warning
+          </h2>
+          <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Current Stock</th>
+                    <th>Unit</th>
+                    <th>Threshold</th>
+                    <th>Used in Services</th>
+                    <th>Actions</th>
                   </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {% for item in low_stock_items %}
+                    <tr class="bg-amber-500/5">
+                      <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                      <td><span class="text-amber-400 font-bold">{{ item.stock }}</span></td>
+                      <td class="text-dark-muted">{{ item.unit }}</td>
+                      <td class="text-dark-muted">{{ item.threshold }}</td>
+                      <td>
+                        <span class="badge badge-info">{{ item.service_links.count }} services</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                            View
+                          </a>
+                          <form method="post" action="{% url 'inventory:adjust' item.id %}" class="flex items-center gap-2">
+                            {% csrf_token %}
+                            <input
+                              type="number"
+                              name="adjustment"
+                              placeholder="Add qty"
+                              step="0.01"
+                              required
+                              class="input text-sm py-1 px-2"
+                              style="width: 80px;"
+                            >
+                            <button type="submit" class="btn btn-primary text-sm py-1 px-3">
+                              Restock
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       {% endif %}
     {% else %}
-      <div class="page-inventory-alerts__empty">
-        <p>No low stock alerts at this time. All inventory levels are healthy!</p>
-        <a href="{% url 'inventory:list' %}" class="atom-button atom-button--primary">
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">✅</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">All inventory levels are healthy!</h3>
+        <p class="text-dark-muted mb-6">No low stock alerts at this time</p>
+        <a href="{% url 'inventory:list' %}" class="btn btn-primary inline-block">
           View All Inventory
         </a>
       </div>
     {% endif %}
-  </section>
+  </div>
 {% endblock content %}

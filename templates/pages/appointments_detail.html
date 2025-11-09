@@ -3,101 +3,137 @@
 {% block title %}Appointment Details · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-appointment-detail">
-    <header class="page-appointment-detail__header">
-      <h1>Appointment Details</h1>
-      <div class="page-appointment-detail__badges">
-        {% include 'components/atoms/badge.html' with label=appointment.get_status_display style='primary' %}
-        {% include 'components/atoms/badge.html' with label=appointment.get_payment_state_display style='secondary' %}
-      </div>
-    </header>
+  <div class="container-custom py-12">
+    <div class="max-w-5xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-4xl font-bold text-gradient">Appointment Details</h1>
+          <div class="flex items-center gap-2">
+            {% if appointment.status == 'CONFIRMED' %}
+              <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+            {% elif appointment.status == 'PENDING' %}
+              <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+            {% elif appointment.status == 'COMPLETED' %}
+              <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+            {% else %}
+              <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+            {% endif %}
 
-    <div class="page-appointment-detail__content">
-      <div class="page-appointment-detail__main">
-        <h2>{{ appointment.service.name }}</h2>
-
-        <div class="page-appointment-detail__info">
-          <div class="page-appointment-detail__info-item">
-            <strong>Customer:</strong> {{ appointment.customer.get_full_name|default:appointment.customer.email }}
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>Date & Time:</strong> {{ appointment.start_at|date:"F d, Y g:i A" }}
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>End Time:</strong> {{ appointment.end_at|date:"g:i A" }}
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>Duration:</strong> {{ appointment.service.duration_minutes }} minutes
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>Price:</strong> ₱{{ appointment.service.price }}
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>Status:</strong> {{ appointment.get_status_display }}
-          </div>
-          <div class="page-appointment-detail__info-item">
-            <strong>Payment Status:</strong> {{ appointment.get_payment_state_display }}
+            {% if appointment.payment_state == 'PAID' %}
+              <span class="badge badge-success">{{ appointment.get_payment_state_display }}</span>
+            {% else %}
+              <span class="badge badge-warning">{{ appointment.get_payment_state_display }}</span>
+            {% endif %}
           </div>
         </div>
-
-        {% if appointment.notes %}
-          <div class="page-appointment-detail__notes">
-            <h3>Notes</h3>
-            <p>{{ appointment.notes }}</p>
-          </div>
-        {% endif %}
-
-        <div class="page-appointment-detail__service-info">
-          <h3>Service Information</h3>
-          <p>{{ appointment.service.description|default:"No description available." }}</p>
-        </div>
-      </div>
-
-      <aside class="page-appointment-detail__actions">
-        {% if user.role == 'CUSTOMER' and appointment.customer == user %}
-          {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
-            <form method="post" action="{% url 'appointments:cancel' appointment.id %}">
-              {% csrf_token %}
-              {% include 'components/atoms/button.html' with label='Cancel Appointment' style='danger' type='submit' %}
-            </form>
-          {% endif %}
-
-          {% if appointment.payment_state == 'UNPAID' %}
-            <a href="{% url 'payments:initiate' appointment.id %}" class="atom-button atom-button--primary">
-              Make Payment
-            </a>
-          {% endif %}
-        {% endif %}
-
-        {% if user.role in 'STAFF,ADMIN' %}
-          {% if appointment.status == 'IN_PROGRESS' %}
-            <form method="post" action="{% url 'appointments:complete' appointment.id %}">
-              {% csrf_token %}
-              {% include 'components/atoms/button.html' with label='Mark as Completed' style='success' type='submit' %}
-            </form>
-          {% endif %}
-
-          <div class="page-appointment-detail__status-update">
-            <h4>Update Status</h4>
-            <form method="post" action="{% url 'appointments:update_status' appointment.id %}">
-              {% csrf_token %}
-              <select name="status" class="atom-input">
-                <option value="PENDING" {% if appointment.status == 'PENDING' %}selected{% endif %}>Pending</option>
-                <option value="CONFIRMED" {% if appointment.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
-                <option value="IN_PROGRESS" {% if appointment.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                <option value="COMPLETED" {% if appointment.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
-                <option value="NO_SHOW" {% if appointment.status == 'NO_SHOW' %}selected{% endif %}>No Show</option>
-                <option value="CANCELLED" {% if appointment.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
-              </select>
-              {% include 'components/atoms/button.html' with label='Update Status' style='primary' type='submit' %}
-            </form>
-          </div>
-        {% endif %}
-
-        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_appointments' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="atom-button atom-button--ghost">
+        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_list' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="text-primary-400 hover:text-primary-300 transition-colors">
           ← Back to Appointments
         </a>
-      </aside>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Service Card -->
+          <div class="card p-8">
+            <h2 class="text-3xl font-bold text-dark-text mb-6">{{ appointment.service.name }}</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <span class="text-dark-muted text-sm block mb-1">Customer</span>
+                <span class="text-dark-text font-semibold">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</span>
+              </div>
+              <div>
+                <span class="text-dark-muted text-sm block mb-1">Date & Time</span>
+                <span class="text-dark-text font-semibold">{{ appointment.start_at|date:"F d, Y" }}</span>
+                <br>
+                <span class="text-primary-400">{{ appointment.start_at|date:"g:i A" }} - {{ appointment.end_at|date:"g:i A" }}</span>
+              </div>
+              <div>
+                <span class="text-dark-muted text-sm block mb-1">Duration</span>
+                <span class="text-dark-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
+              </div>
+              <div>
+                <span class="text-dark-muted text-sm block mb-1">Price</span>
+                <span class="text-gradient font-bold text-2xl">₱{{ appointment.service.price }}</span>
+              </div>
+            </div>
+
+            {% if appointment.notes %}
+              <div class="mt-6 p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                <h3 class="text-lg font-bold text-dark-text mb-2">Notes</h3>
+                <p class="text-dark-muted">{{ appointment.notes }}</p>
+              </div>
+            {% endif %}
+
+            <div class="mt-6 p-4 bg-dark-elevated rounded-xl border border-dark-border">
+              <h3 class="text-lg font-bold text-dark-text mb-2">Service Information</h3>
+              <p class="text-dark-muted">{{ appointment.service.description|default:"No description available." }}</p>
+            </div>
+          </div>
+
+          <!-- Staff Actions (if applicable) -->
+          {% if user.role in 'STAFF,ADMIN' %}
+            <div class="card p-6">
+              <h3 class="text-xl font-bold text-dark-text mb-4">Staff Actions</h3>
+
+              {% if appointment.status == 'IN_PROGRESS' %}
+                <form method="post" action="{% url 'appointments:complete' appointment.id %}" class="mb-4">
+                  {% csrf_token %}
+                  <button type="submit" class="btn bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 w-full">
+                    Mark as Completed
+                  </button>
+                </form>
+              {% endif %}
+
+              <div>
+                <h4 class="text-sm font-semibold text-dark-text mb-2">Update Status</h4>
+                <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="flex gap-2">
+                  {% csrf_token %}
+                  <select name="status" class="input flex-1">
+                    <option value="PENDING" {% if appointment.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="CONFIRMED" {% if appointment.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                    <option value="IN_PROGRESS" {% if appointment.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                    <option value="COMPLETED" {% if appointment.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    <option value="NO_SHOW" {% if appointment.status == 'NO_SHOW' %}selected{% endif %}>No Show</option>
+                    <option value="CANCELLED" {% if appointment.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                  </select>
+                  <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="lg:col-span-1">
+          <div class="card p-6 sticky top-24 space-y-3">
+            <h3 class="text-lg font-bold text-dark-text mb-4">Actions</h3>
+
+            {% if user.role == 'CUSTOMER' and appointment.customer == user %}
+              {% if appointment.payment_state == 'UNPAID' %}
+                <a href="{% url 'payments:initiate' appointment.id %}" class="btn btn-primary w-full">
+                  Make Payment
+                </a>
+              {% endif %}
+
+              {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
+                <form method="post" action="{% url 'appointments:cancel' appointment.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 w-full">
+                    Cancel Appointment
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_list' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="btn btn-ghost w-full">
+              Back to List
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
 {% endblock content %}
