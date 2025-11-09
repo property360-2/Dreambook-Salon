@@ -3,88 +3,117 @@
 {% block title %}{{ item.name }} · Inventory · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-inventory-detail">
-    <header class="page-inventory-detail__header">
-      <h1>{{ item.name }}</h1>
-      {% if item.stock <= 0 %}
-        {% include 'components/atoms/badge.html' with label='Out of Stock' style='danger' %}
-      {% elif item.is_low_stock %}
-        {% include 'components/atoms/badge.html' with label='Low Stock' style='warning' %}
-      {% else %}
-        {% include 'components/atoms/badge.html' with label='In Stock' style='success' %}
-      {% endif %}
-    </header>
-
-    <div class="page-inventory-detail__content">
-      <div class="page-inventory-detail__main">
-        <h2>Item Information</h2>
-
-        <div class="page-inventory-detail__info">
-          <div class="page-inventory-detail__info-item">
-            <strong>Name:</strong> {{ item.name }}
-          </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Description:</strong> {{ item.description|default:"No description available." }}
-          </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Current Stock:</strong> {{ item.stock }} {{ item.unit }}
-          </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Low Stock Threshold:</strong> {{ item.threshold }} {{ item.unit }}
-          </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Unit:</strong> {{ item.unit }}
-          </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Status:</strong>
-            {% if item.is_active %}
-              {% include 'components/atoms/badge.html' with label='Active' style='success' %}
+  <div class="container-custom py-12">
+    <div class="max-w-5xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-4xl font-bold text-gradient">{{ item.name }}</h1>
+          <div class="flex items-center gap-2">
+            {% if item.stock <= 0 %}
+              <span class="badge badge-danger">Out of Stock</span>
+            {% elif item.is_low_stock %}
+              <span class="badge badge-warning">Low Stock</span>
             {% else %}
-              {% include 'components/atoms/badge.html' with label='Inactive' style='secondary' %}
+              <span class="badge badge-success">In Stock</span>
+            {% endif %}
+
+            {% if item.is_active %}
+              <span class="badge badge-info">Active</span>
+            {% else %}
+              <span class="badge badge-danger">Inactive</span>
             {% endif %}
           </div>
-          <div class="page-inventory-detail__info-item">
-            <strong>Stock Status:</strong> {{ item.stock_status }}
+        </div>
+        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+          ← Back to Inventory
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Item Info Card -->
+          <div class="card p-8">
+            <h2 class="text-2xl font-bold text-dark-text mb-6">Item Information</h2>
+
+            <div class="space-y-4 mb-8">
+              <div>
+                <span class="text-dark-muted text-sm block mb-1">Description</span>
+                <p class="text-dark-text">{{ item.description|default:"No description available." }}</p>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mt-6">
+                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-2">Current Stock</span>
+                  <span class="{% if item.stock <= 0 %}text-red-400{% elif item.is_low_stock %}text-amber-400{% else %}text-emerald-400{% endif %} text-3xl font-bold block">
+                    {{ item.stock }}
+                  </span>
+                  <span class="text-dark-muted text-sm">{{ item.unit }}</span>
+                </div>
+                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-2">Threshold</span>
+                  <span class="text-primary-400 text-3xl font-bold block">{{ item.threshold }}</span>
+                  <span class="text-dark-muted text-sm">{{ item.unit }}</span>
+                </div>
+                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-2">Unit Type</span>
+                  <span class="text-dark-text text-xl font-bold block">{{ item.unit }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Adjust Stock Card -->
+          <div class="card p-6">
+            <h3 class="text-xl font-bold text-dark-text mb-4">Adjust Stock</h3>
+            <form method="post" action="{% url 'inventory:adjust' item.id %}" class="space-y-4">
+              {% csrf_token %}
+              <div>
+                <label for="adjustment" class="block text-sm font-semibold text-dark-text mb-2">
+                  Adjustment Amount
+                </label>
+                <input
+                  type="number"
+                  id="adjustment"
+                  name="adjustment"
+                  step="0.01"
+                  placeholder="Enter +/- value (e.g., +50 or -20)"
+                  required
+                  class="input"
+                >
+                <p class="mt-2 text-sm text-dark-muted">
+                  Use positive numbers to add stock or negative numbers to remove stock
+                </p>
+              </div>
+              <button type="submit" class="btn btn-primary w-full">
+                Update Stock
+              </button>
+            </form>
           </div>
         </div>
 
-        <div class="page-inventory-detail__adjust">
-          <h3>Adjust Stock</h3>
-          <form method="post" action="{% url 'inventory:adjust' item.id %}" class="page-inventory-detail__adjust-form">
-            {% csrf_token %}
-            <div class="page-inventory-detail__adjust-field">
-              <label for="adjustment">Adjustment Amount:</label>
-              <input type="number" id="adjustment" name="adjustment" step="0.01" placeholder="Enter positive or negative value" required class="atom-input">
-              <p class="page-inventory-detail__adjust-help">
-                Use positive numbers to add stock (e.g., +50) or negative numbers to remove stock (e.g., -20)
-              </p>
-            </div>
-            {% include 'components/atoms/button.html' with label='Update Stock' style='primary' type='submit' %}
-          </form>
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="card p-6 sticky top-24">
+            <h3 class="text-lg font-bold text-dark-text mb-4">Used in Services</h3>
+            {% if services_using_item %}
+              <div class="space-y-2">
+                {% for si in services_using_item %}
+                  <a href="{% url 'services:detail' si.service.id %}" class="block p-3 bg-dark-elevated rounded-lg border border-dark-border hover:border-primary-500/50 transition-all">
+                    <div class="font-semibold text-dark-text mb-1">{{ si.service.name }}</div>
+                    <div class="text-sm text-primary-400">{{ si.qty_per_service }} {{ item.unit }} per service</div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="p-4 bg-dark-elevated rounded-lg border border-dark-border text-center">
+                <p class="text-sm text-dark-muted">Not used in any services</p>
+              </div>
+            {% endif %}
+          </div>
         </div>
       </div>
-
-      <aside class="page-inventory-detail__sidebar">
-        <h3>Used in Services</h3>
-        {% if services_using_item %}
-          <ul class="page-inventory-detail__services-list">
-            {% for si in services_using_item %}
-              <li class="page-inventory-detail__service-item">
-                <a href="{% url 'services:detail' si.service.id %}">{{ si.service.name }}</a>
-                <span class="page-inventory-detail__service-qty">{{ si.qty_per_service }} {{ item.unit }} per service</span>
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p>This item is not currently used in any services.</p>
-        {% endif %}
-      </aside>
     </div>
-
-    <div class="page-inventory-detail__back">
-      <a href="{% url 'inventory:list' %}" class="atom-button atom-button--ghost">
-        ← Back to Inventory
-      </a>
-    </div>
-  </section>
+  </div>
 {% endblock content %}
