@@ -10,7 +10,13 @@
         <h1 class="text-4xl font-bold text-gradient mb-2">Analytics Dashboard</h1>
         <p class="text-dark-muted">Business insights and performance metrics</p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
+        <a href="{% url 'analytics:business_intelligence' %}" class="btn btn-primary text-sm">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+          </svg>
+          Business Intelligence
+        </a>
         <a href="{% url 'analytics:revenue' %}" class="btn btn-ghost text-sm">Revenue</a>
         <a href="{% url 'analytics:services' %}" class="btn btn-ghost text-sm">Services</a>
         <a href="{% url 'analytics:inventory' %}" class="btn btn-ghost text-sm">Inventory</a>
