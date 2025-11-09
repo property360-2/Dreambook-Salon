@@ -79,7 +79,7 @@
               <h3 class="text-xl font-bold text-dark-text mb-4">Staff Actions</h3>
 
               {% if appointment.status == 'IN_PROGRESS' %}
-                <form method="post" action="{% url 'appointments:complete' appointment.id %}" class="mb-4">
+                <form method="post" action="{% url 'appointments:complete' appointment.id %}" class="mb-4 form-with-loading">
                   {% csrf_token %}
                   <button type="submit" class="btn bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 w-full">
                     Mark as Completed
@@ -89,7 +89,7 @@
 
               <div>
                 <h4 class="text-sm font-semibold text-dark-text mb-2">Update Status</h4>
-                <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="flex gap-2">
+                <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="flex gap-2 form-with-loading">
                   {% csrf_token %}
                   <select name="status" class="input flex-1">
                     <option value="PENDING" {% if appointment.status == 'PENDING' %}selected{% endif %}>Pending</option>
@@ -119,7 +119,11 @@
               {% endif %}
 
               {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
-                <form method="post" action="{% url 'appointments:cancel' appointment.id %}">
+                <form method="post" action="{% url 'appointments:cancel' appointment.id %}" class="confirm-action"
+                      data-confirm-title="Cancel Appointment?"
+                      data-confirm-message="Are you sure you want to cancel this appointment for {{ appointment.service.name }}? This action cannot be undone."
+                      data-confirm-text="Yes, Cancel Appointment"
+                      data-danger="true">
                   {% csrf_token %}
                   <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 w-full">
                     Cancel Appointment

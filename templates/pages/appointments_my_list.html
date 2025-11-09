@@ -75,7 +75,11 @@
                   View Details
                 </a>
                 {% if appointment.status not in 'COMPLETED,NO_SHOW,CANCELLED' %}
-                  <form method="post" action="{% url 'appointments:cancel' appointment.id %}" class="flex-1 lg:flex-initial">
+                  <form method="post" action="{% url 'appointments:cancel' appointment.id %}" class="flex-1 lg:flex-initial confirm-action"
+                        data-confirm-title="Cancel Appointment?"
+                        data-confirm-message="Are you sure you want to cancel this appointment? This action cannot be undone."
+                        data-confirm-text="Yes, Cancel Appointment"
+                        data-danger="true">
                     {% csrf_token %}
                     <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm w-full">
                       Cancel
@@ -103,14 +107,49 @@
         </nav>
       {% endif %}
     {% else %}
-      <!-- Empty State -->
-      <div class="card p-12 text-center">
-        <div class="text-6xl mb-4">📅</div>
-        <h3 class="text-2xl font-bold text-dark-text mb-2">No appointments yet</h3>
-        <p class="text-dark-muted mb-6">Book your first appointment to get started!</p>
-        <a href="{% url 'appointments:book' %}" class="btn btn-primary inline-block">
-          Book Your First Appointment
-        </a>
+      <!-- Enhanced Empty State -->
+      <div class="card p-16 text-center max-w-2xl mx-auto">
+        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
+          <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h3 class="text-3xl font-bold text-gradient mb-3">No Appointments Yet</h3>
+        <p class="text-lg text-dark-muted mb-8 max-w-md mx-auto">
+          Ready to experience premium salon services? Book your first appointment and let us pamper you!
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+          <a href="{% url 'appointments:book' %}" class="btn btn-primary">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Book Your First Appointment
+          </a>
+          <a href="{% url 'services:list' %}" class="btn btn-ghost">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            Browse Services
+          </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+          <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+            <div class="text-primary-400 mb-2">✨</div>
+            <h4 class="font-semibold text-dark-text text-sm mb-1">Easy Booking</h4>
+            <p class="text-xs text-dark-muted">Quick online appointment scheduling</p>
+          </div>
+          <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+            <div class="text-primary-400 mb-2">💳</div>
+            <h4 class="font-semibold text-dark-text text-sm mb-1">Flexible Payment</h4>
+            <p class="text-xs text-dark-muted">Pay online or at the salon</p>
+          </div>
+          <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+            <div class="text-primary-400 mb-2">⭐</div>
+            <h4 class="font-semibold text-dark-text text-sm mb-1">Premium Service</h4>
+            <p class="text-xs text-dark-muted">Expert stylists and quality products</p>
+          </div>
+        </div>
       </div>
     {% endif %}
   </div>
