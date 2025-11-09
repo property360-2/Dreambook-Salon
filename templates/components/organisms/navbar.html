@@ -14,7 +14,7 @@
         <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
         <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
         <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
-        <li><a href="{% url 'appointments:my_list' %}" class="navbar-link">My Appointments</a></li>
+        <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
       </ul>
 
       <!-- Account Section -->
@@ -23,7 +23,7 @@
           <span class="hidden lg:block text-sm text-dark-muted">
             Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
           </span>
-          <a href="{% url 'appointments:booking' %}" class="btn btn-primary text-sm px-4 py-2">
+          <a href="{% url 'appointments:book' %}" class="btn btn-primary text-sm px-4 py-2">
             Book Now
           </a>
           <form method="post" action="{% url 'core:logout' %}" class="inline">
