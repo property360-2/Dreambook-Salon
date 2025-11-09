@@ -3,86 +3,129 @@
 {% block title %}Make Payment · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-payment-initiate">
-    <header class="page-payment-initiate__header">
-      <h1>Make Payment</h1>
-      <p>Complete your payment for this appointment</p>
-    </header>
+  <div class="container-custom py-12">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">Make Payment</h1>
+        <p class="text-dark-muted">Complete your payment for this appointment</p>
+      </div>
 
-    <div class="page-payment-initiate__content">
-      <div class="page-payment-initiate__appointment">
-        <h2>Appointment Details</h2>
-        <div class="page-payment-initiate__appointment-info">
-          <div class="page-payment-initiate__info-item">
-            <strong>Service:</strong> {{ appointment.service.name }}
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+          <!-- Appointment Summary -->
+          <div class="card p-6 mb-6">
+            <h2 class="text-2xl font-bold text-dark-text mb-4">Appointment Summary</h2>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted">Service</span>
+                <span class="text-dark-text font-semibold">{{ appointment.service.name }}</span>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted">Date & Time</span>
+                <span class="text-dark-text font-semibold">{{ appointment.start_at|date:"F d, Y g:i A" }}</span>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted">Duration</span>
+                <span class="text-dark-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-primary-500/10 rounded-lg border border-primary-500/20">
+                <span class="text-primary-400 font-semibold">Amount to Pay</span>
+                <span class="text-gradient font-bold text-3xl">₱{{ appointment.service.price }}</span>
+              </div>
+            </div>
           </div>
-          <div class="page-payment-initiate__info-item">
-            <strong>Date & Time:</strong> {{ appointment.start_at|date:"F d, Y g:i A" }}
-          </div>
-          <div class="page-payment-initiate__info-item">
-            <strong>Duration:</strong> {{ appointment.service.duration_minutes }} minutes
-          </div>
-          <div class="page-payment-initiate__info-item">
-            <strong>Amount:</strong> ₱{{ appointment.service.price }}
+
+          <!-- Payment Form -->
+          <form method="post" class="card p-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-error mb-6">
+                {% for error in form.non_field_errors %}
+                  <p>{{ error }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Form Fields -->
+            {% if form %}
+              <div class="space-y-4 mb-6">
+                {% for field in form %}
+                  {% include 'components/molecules/form_field.html' with field=field %}
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Payment Methods -->
+            <div class="mb-6">
+              <h3 class="text-xl font-bold text-dark-text mb-4">Select Payment Method</h3>
+              <div class="space-y-3">
+                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="GCASH" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                  <div class="flex-1">
+                    <span class="text-dark-text font-semibold block mb-1">GCash</span>
+                    <span class="text-dark-muted text-sm">Pay via GCash mobile wallet</span>
+                  </div>
+                  <span class="text-2xl">💰</span>
+                </label>
+                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="PAYMAYA" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                  <div class="flex-1">
+                    <span class="text-dark-text font-semibold block mb-1">PayMaya</span>
+                    <span class="text-dark-muted text-sm">Pay via PayMaya mobile wallet</span>
+                  </div>
+                  <span class="text-2xl">💳</span>
+                </label>
+                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="ONSITE" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                  <div class="flex-1">
+                    <span class="text-dark-text font-semibold block mb-1">Pay at Salon</span>
+                    <span class="text-dark-muted text-sm">Pay cash at the salon</span>
+                  </div>
+                  <span class="text-2xl">🏪</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button type="submit" class="btn btn-primary flex-1">
+                Complete Payment
+              </button>
+              <a href="{% url 'appointments:detail' appointment.id %}" class="btn btn-ghost flex-1">
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="lg:col-span-1">
+          <div class="card p-6 sticky top-24">
+            <h3 class="text-lg font-bold text-dark-text mb-4">Payment Information</h3>
+            <div class="space-y-3 text-sm text-dark-muted">
+              <div class="flex items-start gap-2">
+                <span class="text-emerald-400">✓</span>
+                <p>All payments are processed securely</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-emerald-400">✓</span>
+                <p>You will receive a confirmation email after payment</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-emerald-400">✓</span>
+                <p>For online payments, you will be redirected to the payment provider</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-emerald-400">✓</span>
+                <p>For onsite payments, please pay at the salon before your appointment</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <form method="post" class="page-payment-initiate__form">
-        {% csrf_token %}
-
-        {% if form.non_field_errors %}
-          <div class="page-payment-initiate__errors">
-            {% for error in form.non_field_errors %}
-              <p class="page-payment-initiate__error">{{ error }}</p>
-            {% endfor %}
-          </div>
-        {% endif %}
-
-        <div class="page-payment-initiate__fields">
-          {% for field in form %}
-            {% include 'components/molecules/form_field.html' with field=field %}
-          {% endfor %}
-        </div>
-
-        <div class="page-payment-initiate__payment-methods">
-          <h3>Select Payment Method</h3>
-          <div class="page-payment-initiate__methods">
-            <label class="page-payment-initiate__method">
-              <input type="radio" name="method" value="GCASH" required>
-              <span class="page-payment-initiate__method-name">GCash</span>
-              <span class="page-payment-initiate__method-desc">Pay via GCash mobile wallet</span>
-            </label>
-            <label class="page-payment-initiate__method">
-              <input type="radio" name="method" value="PAYMAYA" required>
-              <span class="page-payment-initiate__method-name">PayMaya</span>
-              <span class="page-payment-initiate__method-desc">Pay via PayMaya mobile wallet</span>
-            </label>
-            <label class="page-payment-initiate__method">
-              <input type="radio" name="method" value="ONSITE" required>
-              <span class="page-payment-initiate__method-name">Pay at Salon</span>
-              <span class="page-payment-initiate__method-desc">Pay cash at the salon</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="page-payment-initiate__actions">
-          {% include 'components/atoms/button.html' with label='Complete Payment' style='primary' type='submit' %}
-          <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">
-            Cancel
-          </a>
-        </div>
-      </form>
-
-      <aside class="page-payment-initiate__info">
-        <h3>Payment Information</h3>
-        <ul>
-          <li>All payments are processed securely</li>
-          <li>You will receive a confirmation email after payment</li>
-          <li>For online payments, you will be redirected to the payment provider</li>
-          <li>For onsite payments, please pay at the salon before your appointment</li>
-        </ul>
-      </aside>
     </div>
-  </section>
+  </div>
 {% endblock content %}

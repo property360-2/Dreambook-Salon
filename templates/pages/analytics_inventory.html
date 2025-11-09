@@ -3,185 +3,256 @@
 {% block title %}Inventory Analytics · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-analytics-inventory">
-    <header class="page-analytics-inventory__header">
-      <h1>Inventory Analytics</h1>
-      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Inventory Analytics</h1>
+        <p class="text-dark-muted">Monitor stock levels and usage patterns</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         ← Back to Dashboard
       </a>
-    </header>
+    </div>
 
-    <div class="page-analytics-inventory__overview">
-      <h2>Inventory Status Overview</h2>
-      <div class="page-analytics-inventory__cards">
-        <div class="page-analytics-inventory__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Items' value=total_items|default:0 %}
+    <!-- Inventory Status Overview -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Inventory Status Overview</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Items</div>
+          <div class="stat-value">{{ total_items|default:0 }}</div>
         </div>
-        <div class="page-analytics-inventory__card">
-          {% include 'components/molecules/stat_card.html' with title='In Stock' value=in_stock_count|default:0 %}
+        <div class="stat-card bg-emerald-500/10 border-emerald-500/20">
+          <div class="stat-label text-emerald-400">In Stock</div>
+          <div class="stat-value text-emerald-400">{{ in_stock_count|default:0 }}</div>
         </div>
-        <div class="page-analytics-inventory__card">
-          {% include 'components/molecules/stat_card.html' with title='Low Stock' value=low_stock_count|default:0 %}
+        <div class="stat-card bg-amber-500/10 border-amber-500/20">
+          <div class="stat-label text-amber-400">Low Stock</div>
+          <div class="stat-value text-amber-400">{{ low_stock_count|default:0 }}</div>
         </div>
-        <div class="page-analytics-inventory__card">
-          {% include 'components/molecules/stat_card.html' with title='Out of Stock' value=out_of_stock_count|default:0 %}
+        <div class="stat-card bg-red-500/10 border-red-500/20">
+          <div class="stat-label text-red-400">Out of Stock</div>
+          <div class="stat-value text-red-400">{{ out_of_stock_count|default:0 }}</div>
         </div>
       </div>
     </div>
 
-    <div class="page-analytics-inventory__status">
-      <h2>Stock Status Breakdown</h2>
-      <div class="page-analytics-inventory__status-chart">
-        <div class="page-analytics-inventory__status-item">
-          <div class="page-analytics-inventory__status-bar" style="width: {{ in_stock_percentage|default:0 }}%; background-color: #28a745;"></div>
-          <span>In Stock: {{ in_stock_percentage|default:0|floatformat:1 }}%</span>
-        </div>
-        <div class="page-analytics-inventory__status-item">
-          <div class="page-analytics-inventory__status-bar" style="width: {{ low_stock_percentage|default:0 }}%; background-color: #ffc107;"></div>
-          <span>Low Stock: {{ low_stock_percentage|default:0|floatformat:1 }}%</span>
-        </div>
-        <div class="page-analytics-inventory__status-item">
-          <div class="page-analytics-inventory__status-bar" style="width: {{ out_of_stock_percentage|default:0 }}%; background-color: #dc3545;"></div>
-          <span>Out of Stock: {{ out_of_stock_percentage|default:0|floatformat:1 }}%</span>
+    <!-- Stock Status Breakdown -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Stock Status Breakdown</h2>
+      <div class="card p-8">
+        <div class="space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-emerald-400 font-semibold">In Stock</span>
+              <span class="text-dark-muted">{{ in_stock_percentage|default:0|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-dark-elevated rounded-full h-3 overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: {{ in_stock_percentage|default:0 }}%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-amber-400 font-semibold">Low Stock</span>
+              <span class="text-dark-muted">{{ low_stock_percentage|default:0|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-dark-elevated rounded-full h-3 overflow-hidden">
+              <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: {{ low_stock_percentage|default:0 }}%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-red-400 font-semibold">Out of Stock</span>
+              <span class="text-dark-muted">{{ out_of_stock_percentage|default:0|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-dark-elevated rounded-full h-3 overflow-hidden">
+              <div class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: {{ out_of_stock_percentage|default:0 }}%;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Stock Alerts -->
     {% if low_stock_items or out_of_stock_items %}
-      <div class="page-analytics-inventory__alerts">
-        <h2>Stock Alerts</h2>
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-dark-text mb-6">Stock Alerts</h2>
 
         {% if out_of_stock_items %}
-          <div class="page-analytics-inventory__alert-section">
-            <h3>Critical - Out of Stock ({{ out_of_stock_items|length }})</h3>
-            <table class="page-analytics-inventory__table">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Stock</th>
-                  <th>Threshold</th>
-                  <th>Used in Services</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in out_of_stock_items %}
-                  <tr class="page-analytics-inventory__row--critical">
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.stock }} {{ item.unit }}</td>
-                    <td>{{ item.threshold }} {{ item.unit }}</td>
-                    <td>{{ item.service_count|default:0 }}</td>
-                    <td>
-                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="mb-8">
+            <h3 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+              <span>🚨</span> Critical - Out of Stock ({{ out_of_stock_items|length }})
+            </h3>
+            <div class="card overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Stock</th>
+                      <th>Threshold</th>
+                      <th>Used in Services</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in out_of_stock_items %}
+                      <tr class="bg-red-500/5">
+                        <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                        <td><span class="text-red-400 font-bold">{{ item.stock }} {{ item.unit }}</span></td>
+                        <td class="text-dark-muted">{{ item.threshold }} {{ item.unit }}</td>
+                        <td><span class="badge badge-info">{{ item.service_count|default:0 }} services</span></td>
+                        <td>
+                          <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                            View
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         {% endif %}
 
         {% if low_stock_items %}
-          <div class="page-analytics-inventory__alert-section">
-            <h3>Warning - Low Stock ({{ low_stock_items|length }})</h3>
-            <table class="page-analytics-inventory__table">
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Stock</th>
-                  <th>Threshold</th>
-                  <th>Used in Services</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for item in low_stock_items %}
-                  <tr class="page-analytics-inventory__row--warning">
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.stock }} {{ item.unit }}</td>
-                    <td>{{ item.threshold }} {{ item.unit }}</td>
-                    <td>{{ item.service_count|default:0 }}</td>
-                    <td>
-                      <a href="{% url 'inventory:detail' item.id %}" class="atom-button atom-button--ghost">View</a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="mb-8">
+            <h3 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
+              <span>⚠️</span> Warning - Low Stock ({{ low_stock_items|length }})
+            </h3>
+            <div class="card overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Stock</th>
+                      <th>Threshold</th>
+                      <th>Used in Services</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in low_stock_items %}
+                      <tr class="bg-amber-500/5">
+                        <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                        <td><span class="text-amber-400 font-bold">{{ item.stock }} {{ item.unit }}</span></td>
+                        <td class="text-dark-muted">{{ item.threshold }} {{ item.unit }}</td>
+                        <td><span class="badge badge-info">{{ item.service_count|default:0 }} services</span></td>
+                        <td>
+                          <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                            View
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         {% endif %}
 
-        <div class="page-analytics-inventory__alert-actions">
-          <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+        <div class="text-center">
+          <a href="{% url 'inventory:alerts' %}" class="btn btn-primary inline-block">
             View All Alerts & Restock
           </a>
         </div>
       </div>
     {% endif %}
 
-    <div class="page-analytics-inventory__usage">
-      <h2>Inventory Usage</h2>
+    <!-- Inventory Usage -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Inventory Usage</h2>
       {% if item_usage %}
-        <table class="page-analytics-inventory__table">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Current Stock</th>
-              <th>Used in Services</th>
-              <th>Estimated Usage per Day</th>
-              <th>Days Until Depleted</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in item_usage %}
-              <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.stock }} {{ item.unit }}</td>
-                <td>{{ item.service_count|default:0 }}</td>
-                <td>{{ item.daily_usage|default:'0'|floatformat:2 }} {{ item.unit }}</td>
-                <td>
-                  {% if item.days_until_depleted %}
-                    {{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}
-                  {% else %}
-                    N/A
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Current Stock</th>
+                  <th>Used in Services</th>
+                  <th>Est. Usage per Day</th>
+                  <th>Days Until Depleted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in item_usage %}
+                  <tr>
+                    <td class="text-dark-text font-semibold">{{ item.name }}</td>
+                    <td class="text-primary-400">{{ item.stock }} {{ item.unit }}</td>
+                    <td><span class="badge badge-info">{{ item.service_count|default:0 }} services</span></td>
+                    <td class="text-dark-muted">{{ item.daily_usage|default:'0'|floatformat:2 }} {{ item.unit }}</td>
+                    <td>
+                      {% if item.days_until_depleted %}
+                        <span class="{% if item.days_until_depleted <= 7 %}text-red-400{% elif item.days_until_depleted <= 14 %}text-amber-400{% else %}text-emerald-400{% endif %} font-semibold">
+                          {{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}
+                        </span>
+                      {% else %}
+                        <span class="text-dark-muted">N/A</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       {% else %}
-        <p>No usage data available.</p>
+        <div class="card p-12 text-center">
+          <div class="text-6xl mb-4">📦</div>
+          <h3 class="text-2xl font-bold text-dark-text mb-2">No usage data available</h3>
+          <p class="text-dark-muted">Inventory usage patterns will appear here</p>
+        </div>
       {% endif %}
     </div>
 
-    <div class="page-analytics-inventory__recommendations">
-      <h2>Recommendations</h2>
-      <div class="page-analytics-inventory__recommendations-list">
-        {% if items_to_restock %}
-          <div class="page-analytics-inventory__recommendation">
-            <h4>Items Requiring Immediate Restocking</h4>
-            <p>Based on current usage patterns, these items should be restocked soon:</p>
-            <ul>
-              {% for item in items_to_restock %}
-                <li>{{ item.name }} - Will run out in ~{{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+    <!-- Recommendations -->
+    {% if items_to_restock or unused_items %}
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-dark-text mb-6">Recommendations</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {% if items_to_restock %}
+            <div class="card p-6 border-amber-500/20 bg-amber-500/5">
+              <h4 class="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">
+                <span>📋</span>
+                Items Requiring Immediate Restocking
+              </h4>
+              <p class="text-dark-muted mb-4">Based on current usage patterns, these items should be restocked soon:</p>
+              <ul class="space-y-2">
+                {% for item in items_to_restock %}
+                  <li class="flex items-start justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border gap-3">
+                    <span class="text-dark-text">{{ item.name }}</span>
+                    <span class="text-amber-400 font-semibold text-sm text-right whitespace-nowrap">
+                      ~{{ item.days_until_depleted|floatformat:0 }} day{{ item.days_until_depleted|pluralize }}
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
 
-        {% if unused_items %}
-          <div class="page-analytics-inventory__recommendation">
-            <h4>Unused Inventory Items</h4>
-            <p>These items are not currently used in any services:</p>
-            <ul>
-              {% for item in unused_items %}
-                <li>{{ item.name }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+          {% if unused_items %}
+            <div class="card p-6 border-primary-500/20 bg-primary-500/5">
+              <h4 class="text-lg font-bold text-primary-400 mb-3 flex items-center gap-2">
+                <span>ℹ️</span>
+                Unused Inventory Items
+              </h4>
+              <p class="text-dark-muted mb-4">These items are not currently used in any services:</p>
+              <ul class="space-y-2">
+                {% for item in unused_items %}
+                  <li class="p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                    <span class="text-dark-text">{{ item.name }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
       </div>
-    </div>
-  </section>
+    {% endif %}
+  </div>
 {% endblock content %}

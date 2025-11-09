@@ -3,127 +3,170 @@
 {% block title %}Service Analytics · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-analytics-services">
-    <header class="page-analytics-services__header">
-      <h1>Service Analytics</h1>
-      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Service Analytics</h1>
+        <p class="text-dark-muted">Performance metrics and insights for all services</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         ← Back to Dashboard
       </a>
-    </header>
+    </div>
 
-    <div class="page-analytics-services__overview">
-      <h2>Service Performance Overview</h2>
-      <div class="page-analytics-services__cards">
-        <div class="page-analytics-services__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Services' value=total_services|default:0 %}
+    <!-- Service Performance Overview -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Service Performance Overview</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Services</div>
+          <div class="stat-value">{{ total_services|default:0 }}</div>
         </div>
-        <div class="page-analytics-services__card">
-          {% include 'components/molecules/stat_card.html' with title='Active Services' value=active_services|default:0 %}
+        <div class="stat-card bg-emerald-500/10 border-emerald-500/20">
+          <div class="stat-label text-emerald-400">Active Services</div>
+          <div class="stat-value text-emerald-400">{{ active_services|default:0 }}</div>
         </div>
-        <div class="page-analytics-services__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Bookings' value=total_bookings|default:0 %}
+        <div class="stat-card bg-primary-500/10 border-primary-500/20">
+          <div class="stat-label text-primary-400">Total Bookings</div>
+          <div class="stat-value text-primary-400">{{ total_bookings|default:0 }}</div>
         </div>
-        <div class="page-analytics-services__card">
-          {% include 'components/molecules/stat_card.html' with title='Avg Bookings per Service' value=average_bookings|default:'0' %}
+        <div class="stat-card">
+          <div class="stat-label">Avg Bookings per Service</div>
+          <div class="stat-value">{{ average_bookings|default:'0' }}</div>
         </div>
       </div>
     </div>
 
     {% if services %}
-      <div class="page-analytics-services__table">
-        <h2>Service Performance Details</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Service Name</th>
-              <th>Total Bookings</th>
-              <th>Completed</th>
-              <th>Cancelled</th>
-              <th>Completion Rate</th>
-              <th>Total Revenue</th>
-              <th>Avg Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for service in services %}
-              <tr>
-                <td>
-                  <a href="{% url 'services:detail' service.id %}">{{ service.name }}</a>
-                </td>
-                <td>{{ service.total_bookings|default:0 }}</td>
-                <td>{{ service.completed_bookings|default:0 }}</td>
-                <td>{{ service.cancelled_bookings|default:0 }}</td>
-                <td>
-                  {% if service.total_bookings > 0 %}
-                    {{ service.completion_rate|floatformat:1 }}%
-                  {% else %}
-                    N/A
-                  {% endif %}
-                </td>
-                <td>₱{{ service.total_revenue|default:'0.00'|floatformat:2 }}</td>
-                <td>₱{{ service.average_revenue|default:'0.00'|floatformat:2 }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="page-analytics-services__top">
-        <h2>Top Performing Services</h2>
-        <div class="page-analytics-services__top-list">
-          {% for service in top_services %}
-            <div class="page-analytics-services__top-item">
-              <div class="page-analytics-services__top-rank">{{ forloop.counter }}</div>
-              <div class="page-analytics-services__top-info">
-                <h4>{{ service.name }}</h4>
-                <p>{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }} · ₱{{ service.total_revenue|floatformat:2 }} revenue</p>
-              </div>
-              <div class="page-analytics-services__top-badge">
-                {% if service.completion_rate >= 90 %}
-                  {% include 'components/atoms/badge.html' with label='Excellent' style='success' %}
-                {% elif service.completion_rate >= 70 %}
-                  {% include 'components/atoms/badge.html' with label='Good' style='primary' %}
-                {% else %}
-                  {% include 'components/atoms/badge.html' with label='Needs Attention' style='warning' %}
-                {% endif %}
-              </div>
-            </div>
-          {% endfor %}
+      <!-- Service Performance Details -->
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-dark-text mb-6">Service Performance Details</h2>
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Service Name</th>
+                  <th>Total Bookings</th>
+                  <th>Completed</th>
+                  <th>Cancelled</th>
+                  <th>Completion Rate</th>
+                  <th>Total Revenue</th>
+                  <th>Avg Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for service in services %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'services:detail' service.id %}" class="text-primary-400 hover:text-primary-300 font-semibold">
+                        {{ service.name }}
+                      </a>
+                    </td>
+                    <td class="text-dark-text">{{ service.total_bookings|default:0 }}</td>
+                    <td class="text-emerald-400">{{ service.completed_bookings|default:0 }}</td>
+                    <td class="text-red-400">{{ service.cancelled_bookings|default:0 }}</td>
+                    <td>
+                      {% if service.total_bookings > 0 %}
+                        <span class="{% if service.completion_rate >= 90 %}text-emerald-400{% elif service.completion_rate >= 70 %}text-primary-400{% else %}text-amber-400{% endif %} font-semibold">
+                          {{ service.completion_rate|floatformat:1 }}%
+                        </span>
+                      {% else %}
+                        <span class="text-dark-muted">N/A</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-gradient font-bold">₱{{ service.total_revenue|default:'0.00'|floatformat:2 }}</td>
+                    <td class="text-dark-muted">₱{{ service.average_revenue|default:'0.00'|floatformat:2 }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      <!-- Top Performing Services -->
+      {% if top_services %}
+        <div class="mb-12">
+          <h2 class="text-2xl font-bold text-dark-text mb-6">Top Performing Services</h2>
+          <div class="space-y-4">
+            {% for service in top_services %}
+              <div class="card p-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                    {{ forloop.counter }}
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-xl font-bold text-dark-text mb-1">{{ service.name }}</h4>
+                    <p class="text-dark-muted">{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }} · <span class="text-gradient font-semibold">₱{{ service.total_revenue|floatformat:2 }}</span> revenue</p>
+                  </div>
+                  <div>
+                    {% if service.completion_rate >= 90 %}
+                      <span class="badge badge-success">Excellent</span>
+                    {% elif service.completion_rate >= 70 %}
+                      <span class="badge badge-info">Good</span>
+                    {% else %}
+                      <span class="badge badge-warning">Needs Attention</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
     {% else %}
-      <div class="page-analytics-services__empty">
-        <p>No service analytics data available.</p>
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">📋</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">No service analytics data available</h3>
+        <p class="text-dark-muted">Service performance metrics will appear here</p>
       </div>
     {% endif %}
 
-    <div class="page-analytics-services__insights">
-      <h2>Insights & Recommendations</h2>
-      <div class="page-analytics-services__insights-list">
-        {% if low_performing_services %}
-          <div class="page-analytics-services__insight">
-            <h4>Low Performing Services</h4>
-            <p>The following services have low booking rates and may need promotion or review:</p>
-            <ul>
-              {% for service in low_performing_services %}
-                <li>{{ service.name }} - {{ service.total_bookings }} booking{{ service.total_bookings|pluralize }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+    <!-- Insights & Recommendations -->
+    {% if low_performing_services or high_cancellation_services %}
+      <div class="mb-12">
+        <h2 class="text-2xl font-bold text-dark-text mb-6">Insights & Recommendations</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {% if low_performing_services %}
+            <div class="card p-6 border-amber-500/20 bg-amber-500/5">
+              <h4 class="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">
+                <span>⚠️</span>
+                Low Performing Services
+              </h4>
+              <p class="text-dark-muted mb-4">The following services have low booking rates and may need promotion or review:</p>
+              <ul class="space-y-2">
+                {% for service in low_performing_services %}
+                  <li class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                    <span class="text-dark-text">{{ service.name }}</span>
+                    <span class="text-amber-400 font-semibold">{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
 
-        {% if high_cancellation_services %}
-          <div class="page-analytics-services__insight">
-            <h4>High Cancellation Rate</h4>
-            <p>These services have higher than average cancellation rates:</p>
-            <ul>
-              {% for service in high_cancellation_services %}
-                <li>{{ service.name }} - {{ service.cancellation_rate|floatformat:1 }}% cancellation rate</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
+          {% if high_cancellation_services %}
+            <div class="card p-6 border-red-500/20 bg-red-500/5">
+              <h4 class="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+                <span>🚨</span>
+                High Cancellation Rate
+              </h4>
+              <p class="text-dark-muted mb-4">These services have higher than average cancellation rates:</p>
+              <ul class="space-y-2">
+                {% for service in high_cancellation_services %}
+                  <li class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                    <span class="text-dark-text">{{ service.name }}</span>
+                    <span class="text-red-400 font-semibold">{{ service.cancellation_rate|floatformat:1 }}%</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
       </div>
-    </div>
-  </section>
+    {% endif %}
+  </div>
 {% endblock content %}
