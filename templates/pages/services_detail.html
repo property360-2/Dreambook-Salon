@@ -66,23 +66,35 @@
 
             {% if user.is_authenticated %}
               {% if service.is_active %}
-                <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary w-full mb-4">
+                <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary w-full mb-4 hover:shadow-glow transition-all">
+                  <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
                   Book Now
                 </a>
-                <div class="p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl">
+                <div class="p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl animate-pulse-slow">
                   <p class="text-sm text-primary-400 text-center">
                     ✨ Book your appointment and experience premium care
                   </p>
                 </div>
               {% else %}
+                <button disabled class="btn btn-primary w-full mb-4 opacity-50 cursor-not-allowed">
+                  <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                  </svg>
+                  Currently Unavailable
+                </button>
                 <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                  <p class="text-sm text-amber-400 text-center">
-                    This service is currently unavailable
+                  <p class="text-sm text-amber-400 text-center font-semibold">
+                    ⚠️ This service is temporarily unavailable
                   </p>
                 </div>
               {% endif %}
             {% else %}
               <a href="{% url 'core:login' %}?next={% url 'services:detail' service.id %}" class="btn btn-primary w-full mb-4">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
                 Login to Book
               </a>
               <div class="p-4 bg-dark-elevated border border-dark-border rounded-xl">

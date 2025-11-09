@@ -75,7 +75,7 @@
                       <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm transition-colors">
                         View
                       </a>
-                      <form method="post" action="{% url 'inventory:adjust' item.id %}" class="flex items-center gap-2">
+                      <form method="post" action="{% url 'inventory:adjust' item.id %}" class="flex items-center gap-2 form-with-loading">
                         {% csrf_token %}
                         <input
                           type="number"
@@ -86,7 +86,7 @@
                           class="input text-sm py-1 px-2"
                           style="width: 80px;"
                         >
-                        <button type="submit" class="btn btn-primary text-sm py-1 px-3">
+                        <button type="submit" class="btn btn-primary text-sm py-1 px-3" data-loading-text="Adjusting...">
                           Adjust
                         </button>
                       </form>
@@ -114,11 +114,25 @@
         </nav>
       {% endif %}
     {% else %}
-      <!-- Empty State -->
-      <div class="card p-12 text-center">
-        <div class="text-6xl mb-4">📦</div>
-        <h3 class="text-2xl font-bold text-dark-text mb-2">No inventory items found</h3>
-        <p class="text-dark-muted">Start by adding items to your inventory</p>
+      <!-- Enhanced Empty State -->
+      <div class="card p-16 text-center max-w-2xl mx-auto">
+        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
+          <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+          </svg>
+        </div>
+        <h3 class="text-3xl font-bold text-gradient mb-3">No Inventory Items Found</h3>
+        <p class="text-lg text-dark-muted mb-8 max-w-md mx-auto">
+          Your inventory is empty. Start by adding items to track your salon supplies and manage stock levels.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="{% url 'inventory:list' %}" class="btn btn-ghost">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh List
+          </a>
+        </div>
       </div>
     {% endif %}
   </div>

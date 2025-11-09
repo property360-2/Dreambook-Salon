@@ -15,7 +15,7 @@
         <!-- Booking Form -->
         <div class="lg:col-span-2">
           <div class="card p-8">
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6 form-with-loading validate-realtime">
               {% csrf_token %}
 
               {% if form.non_field_errors %}
