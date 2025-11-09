@@ -1,22 +1,46 @@
-<nav class="organism-navbar">
-  <div class="organism-navbar__brand">Dreambook Salon</div>
-  <ul class="organism-navbar__links">
-    <li><a href="{% url 'core:home' %}">Home</a></li>
-    <li><a href="#services">Services</a></li>
-    <li><a href="#inventory">Inventory</a></li>
-    <li><a href="#booking">Book Now</a></li>
-  </ul>
-  <div class="organism-navbar__account">
-    {% if request.user.is_authenticated %}
-      <span class="organism-navbar__welcome">Hi, {{ request.user.first_name|default:request.user.email }}</span>
-      <form method="post" action="{% url 'core:logout' %}" class="organism-navbar__logout">
-        {% csrf_token %}
-        {% include 'components/atoms/button.html' with label='Sign out' style='ghost' type='submit' %}
-      </form>
-    {% else %}
-      <a class="organism-navbar__link" href="{% url 'core:register' %}">Create account</a>
-      {% url 'core:login' as login_url %}
-      {% include 'components/atoms/button.html' with label='Sign in' style='accent' href=login_url %}
-    {% endif %}
+<nav class="navbar">
+  <div class="container-custom">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo/Brand -->
+      <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group">
+        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-glow transition-all duration-300">
+          <span class="text-white font-bold text-xl">D</span>
+        </div>
+        <span class="text-xl font-bold text-gradient">Dreambook Salon</span>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <ul class="hidden md:flex items-center space-x-1">
+        <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
+        <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
+        <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
+        <li><a href="{% url 'appointments:my_list' %}" class="navbar-link">My Appointments</a></li>
+      </ul>
+
+      <!-- Account Section -->
+      <div class="flex items-center space-x-4">
+        {% if request.user.is_authenticated %}
+          <span class="hidden lg:block text-sm text-dark-muted">
+            Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
+          </span>
+          <a href="{% url 'appointments:booking' %}" class="btn btn-primary text-sm px-4 py-2">
+            Book Now
+          </a>
+          <form method="post" action="{% url 'core:logout' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost text-sm px-4 py-2">
+              Sign out
+            </button>
+          </form>
+        {% else %}
+          <a href="{% url 'core:register' %}" class="hidden md:block text-dark-text hover:text-primary-400 transition-colors">
+            Create account
+          </a>
+          <a href="{% url 'core:login' %}" class="btn btn-primary text-sm px-4 py-2">
+            Sign in
+          </a>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </nav>

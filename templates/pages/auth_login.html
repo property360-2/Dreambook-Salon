@@ -3,32 +3,69 @@
 {% block title %}Sign in · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-auth">
-    <div class="page-auth__card">
-      <header class="page-auth__header">
-        <h1>Welcome back</h1>
-        <p>Sign in to manage bookings and inventory effortlessly.</p>
-      </header>
-      <form method="post" novalidate>
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-          <div class="page-auth__errors">
-            {% for error in form.non_field_errors %}
-              <p>{{ error }}</p>
-            {% endfor %}
+  <section class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-mesh">
+    <div class="max-w-md w-full">
+      <!-- Header -->
+      <div class="text-center mb-8 animate-slide-up">
+        <div class="flex items-center justify-center space-x-3 mb-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+            <span class="text-white font-bold text-2xl">D</span>
           </div>
-        {% endif %}
-        {% for field in form %}
-          {% include 'components/molecules/form_field.html' with field=field %}
-        {% endfor %}
-        <div class="page-auth__actions">
-          {% include 'components/atoms/button.html' with label='Sign in' style='primary' type='submit' %}
+          <h1 class="text-3xl font-bold text-gradient">Dreambook Salon</h1>
         </div>
-      </form>
-      <footer class="page-auth__footer">
-        <span>New to Dreambook?</span>
-        <a href="{% url 'core:register' %}">Create an account</a>
-      </footer>
+        <h2 class="text-3xl font-bold text-dark-text mb-2">Welcome back</h2>
+        <p class="text-dark-muted">Sign in to manage bookings and inventory effortlessly</p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="card p-8 animate-fade-in">
+        <form method="post" novalidate class="space-y-6">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-error">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% for field in form %}
+            <div>
+              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+                {{ field.label }}
+              </label>
+              <input
+                type="{{ field.field.widget.input_type }}"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                class="input {% if field.errors %}input-error{% endif %}"
+                {% if field.field.required %}required{% endif %}
+                placeholder="{{ field.label }}"
+                value="{{ field.value|default:'' }}"
+              >
+              {% if field.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
+              {% endif %}
+              {% if field.help_text %}
+                <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <button type="submit" class="btn btn-primary w-full">
+            Sign in
+          </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center">
+          <span class="text-dark-muted">New to Dreambook?</span>
+          <a href="{% url 'core:register' %}" class="text-primary-400 hover:text-primary-300 font-semibold ml-1 transition-colors">
+            Create an account
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 {% endblock content %}

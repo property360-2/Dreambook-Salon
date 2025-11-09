@@ -3,30 +3,114 @@
 {% block title %}Dreambook Salon · Book with ease{% endblock title %}
 
 {% block content %}
-  <section class="page-home__hero">
-    <div class="page-home__hero-content">
-      <h1>Modern pampering for Manila creatives</h1>
-      <p>Discover our curated services and track availability without calling the front desk.</p>
-      <div class="page-home__hero-actions">
-        {% include 'components/atoms/button.html' with label='Plan an appointment' style='primary' %}
-        {% include 'components/atoms/button.html' with label='View services' style='ghost' %}
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-mesh">
+    <div class="container-custom section">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-block mb-6">
+          <span class="badge badge-info animate-fade-in">
+            ✨ Now accepting online bookings
+          </span>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
+          Modern pampering for <span class="text-gradient">Manila creatives</span>
+        </h1>
+        <p class="text-xl text-dark-muted mb-10 max-w-2xl mx-auto animate-slide-up">
+          Discover our curated services and track availability without calling the front desk. Experience premium salon services in a modern, sophisticated environment.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
+          <a href="{% url 'appointments:booking' %}" class="btn btn-primary">
+            Plan an appointment
+          </a>
+          <a href="{% url 'services:list' %}" class="btn btn-outline">
+            View services
+          </a>
+        </div>
+      </div>
+
+      <!-- Decorative gradient orbs -->
+      <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl -z-10 animate-pulse-slow"></div>
+      <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl -z-10 animate-pulse-slow" style="animation-delay: 1s;"></div>
+    </div>
+  </section>
+
+  <!-- Featured Services Section -->
+  <section id="services" class="section">
+    <div class="container-custom">
+      <div class="section-header">
+        <h2 class="section-title">Featured services</h2>
+        <p class="section-subtitle">Handpicked treatments to kickstart the Dreambook experience</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for service in featured_services %}
+          <div class="card card-hover p-6 group">
+            <div class="flex items-start justify-between mb-4">
+              <h3 class="text-xl font-bold text-dark-text group-hover:text-primary-400 transition-colors">
+                {{ service.name }}
+              </h3>
+              <span class="badge badge-info">{{ service.duration }} min</span>
+            </div>
+            <p class="text-dark-muted mb-4 line-clamp-2">{{ service.description }}</p>
+            <div class="flex items-center justify-between pt-4 border-t border-dark-border">
+              <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
+              <a href="{% url 'appointments:booking' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                Book now →
+              </a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full text-center py-12">
+            <p class="text-dark-muted">No featured services available at the moment.</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="text-center mt-12">
+        <a href="{% url 'services:list' %}" class="btn btn-ghost">
+          View all services
+        </a>
       </div>
     </div>
   </section>
 
-  <section id="services" class="page-home__services">
-    <header class="page-home__section-header">
-      <h2>Featured services</h2>
-      <p>Handpicked treatments to kickstart the Dreambook experience.</p>
-    </header>
-    <div class="page-home__services-grid">
-      {% for service in featured_services %}
-        {% include 'components/molecules/service_card.html' with name=service.name description=service.description duration=service.duration price=service.price %}
-      {% endfor %}
+  <!-- Stats Section -->
+  <section class="section bg-dark-surface/50">
+    <div class="container-custom">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="stat-card text-center">
+          <div class="stat-label">Expert Stylists</div>
+          <div class="stat-value">12+</div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="stat-label">Happy Clients</div>
+          <div class="stat-value">5000+</div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="stat-label">Years Experience</div>
+          <div class="stat-value">15+</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  {% include 'components/organisms/inventory_table.html' with items=inventory_highlights %}
-
-  {% include 'components/organisms/booking_panel.html' with booking_fields=booking_fields %}
+  <!-- CTA Section -->
+  <section class="section">
+    <div class="container-custom">
+      <div class="card bg-gradient-primary p-12 text-center relative overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-4xl font-bold text-white mb-4">Ready to experience premium care?</h2>
+          <p class="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
+            Book your appointment today and discover why thousands of Manila creatives trust Dreambook Salon.
+          </p>
+          <a href="{% url 'appointments:booking' %}" class="btn bg-white text-primary-600 hover:bg-gray-100 shadow-xl">
+            Book an appointment
+          </a>
+        </div>
+        <!-- Decorative elements -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      </div>
+    </div>
+  </section>
 {% endblock content %}

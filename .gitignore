@@ -6,3 +6,8 @@ __pycache__/
 .env
 .DS_Store
 venv/
+
+# Node.js
+node_modules/
+npm-debug.log
+package-lock.json
