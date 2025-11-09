@@ -11,18 +11,19 @@
 
       <!-- Desktop Navigation Links -->
       <ul class="hidden md:flex items-center space-x-1">
-        <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
-        <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
-
-        {% if request.user.is_authenticated %}
-          {% if request.user.role == 'ADMIN' or request.user.role == 'STAFF' %}
-            <!-- Staff/Admin Only Links -->
-            <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
-            <li><a href="{% url 'appointments:staff_list' %}" class="navbar-link">All Appointments</a></li>
-            <li><a href="{% url 'analytics:dashboard' %}" class="navbar-link">Analytics</a></li>
-            <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">🤖 AI Assistant</a></li>
-          {% else %}
-            <!-- Customer Only Links -->
+        {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
+          <!-- Staff/Admin Navigation -->
+          <li><a href="{% url 'core:dashboard' %}" class="navbar-link">Dashboard</a></li>
+          <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
+          <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
+          <li><a href="{% url 'appointments:staff_list' %}" class="navbar-link">All Appointments</a></li>
+          <li><a href="{% url 'analytics:dashboard' %}" class="navbar-link">Analytics</a></li>
+          <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">🤖 AI Assistant</a></li>
+        {% else %}
+          <!-- Customer/Guest Navigation -->
+          <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
+          <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
+          {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
             <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
             <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">💬 Chat</a></li>
           {% endif %}
@@ -67,21 +68,25 @@
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="hidden md:hidden pb-4">
       <ul class="space-y-2 mt-4">
-        <li><a href="{% url 'core:home' %}" class="block navbar-link">Home</a></li>
-        <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
-
-        {% if request.user.is_authenticated %}
-          {% if request.user.role == 'ADMIN' or request.user.role == 'STAFF' %}
-            <!-- Staff/Admin Only Links -->
-            <li><a href="{% url 'inventory:list' %}" class="block navbar-link">Inventory</a></li>
-            <li><a href="{% url 'appointments:staff_list' %}" class="block navbar-link">All Appointments</a></li>
-            <li><a href="{% url 'analytics:dashboard' %}" class="block navbar-link">Analytics</a></li>
-            <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">🤖 AI Assistant</a></li>
-          {% else %}
-            <!-- Customer Only Links -->
+        {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
+          <!-- Staff/Admin Mobile Navigation -->
+          <li><a href="{% url 'core:dashboard' %}" class="block navbar-link">Dashboard</a></li>
+          <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
+          <li><a href="{% url 'inventory:list' %}" class="block navbar-link">Inventory</a></li>
+          <li><a href="{% url 'appointments:staff_list' %}" class="block navbar-link">All Appointments</a></li>
+          <li><a href="{% url 'analytics:dashboard' %}" class="block navbar-link">Analytics</a></li>
+          <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">🤖 AI Assistant</a></li>
+        {% else %}
+          <!-- Customer/Guest Mobile Navigation -->
+          <li><a href="{% url 'core:home' %}" class="block navbar-link">Home</a></li>
+          <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
+          {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
             <li><a href="{% url 'appointments:my_appointments' %}" class="block navbar-link">My Appointments</a></li>
             <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">💬 Chat</a></li>
           {% endif %}
+        {% endif %}
+
+        {% if request.user.is_authenticated %}
 
           <!-- Mobile Account Section -->
           <li class="pt-4 border-t border-dark-border">
