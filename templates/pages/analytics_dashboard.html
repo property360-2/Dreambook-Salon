@@ -3,111 +3,135 @@
 {% block title %}Analytics Dashboard · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-analytics-dashboard">
-    <header class="page-analytics-dashboard__header">
-      <h1>Analytics Dashboard</h1>
-      <div class="page-analytics-dashboard__nav">
-        <a href="{% url 'analytics:revenue' %}" class="atom-button atom-button--ghost">Revenue</a>
-        <a href="{% url 'analytics:services' %}" class="atom-button atom-button--ghost">Services</a>
-        <a href="{% url 'analytics:inventory' %}" class="atom-button atom-button--ghost">Inventory</a>
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Analytics Dashboard</h1>
+        <p class="text-dark-muted">Business insights and performance metrics</p>
       </div>
-    </header>
+      <div class="flex gap-2">
+        <a href="{% url 'analytics:revenue' %}" class="btn btn-ghost text-sm">Revenue</a>
+        <a href="{% url 'analytics:services' %}" class="btn btn-ghost text-sm">Services</a>
+        <a href="{% url 'analytics:inventory' %}" class="btn btn-ghost text-sm">Inventory</a>
+      </div>
+    </div>
 
-    <div class="page-analytics-dashboard__overview">
-      <h2>Revenue Overview</h2>
-      <div class="page-analytics-dashboard__revenue-cards">
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='Today Revenue' value=today_revenue|default:'₱0.00' %}
+    <!-- Revenue Overview -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue Overview</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="stat-card">
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value">₱{{ today_revenue|default:'0.00' }}</div>
         </div>
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='This Week' value=week_revenue|default:'₱0.00' %}
+        <div class="stat-card">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value">₱{{ week_revenue|default:'0.00' }}</div>
         </div>
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='This Month' value=month_revenue|default:'₱0.00' %}
+        <div class="stat-card">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value">₱{{ month_revenue|default:'0.00' }}</div>
         </div>
       </div>
     </div>
 
-    <div class="page-analytics-dashboard__appointments">
-      <h2>Appointment Statistics</h2>
-      <div class="page-analytics-dashboard__appointment-cards">
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Appointments' value=total_appointments|default:0 %}
+    <!-- Appointment Statistics -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Appointment Statistics</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Appointments</div>
+          <div class="stat-value">{{ total_appointments|default:0 }}</div>
         </div>
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='Pending' value=pending_appointments|default:0 %}
+        <div class="stat-card bg-amber-500/10 border-amber-500/20">
+          <div class="stat-label text-amber-400">Pending</div>
+          <div class="stat-value text-amber-400">{{ pending_appointments|default:0 }}</div>
         </div>
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='Confirmed' value=confirmed_appointments|default:0 %}
+        <div class="stat-card bg-primary-500/10 border-primary-500/20">
+          <div class="stat-label text-primary-400">Confirmed</div>
+          <div class="stat-value text-primary-400">{{ confirmed_appointments|default:0 }}</div>
         </div>
-        <div class="page-analytics-dashboard__card">
-          {% include 'components/molecules/stat_card.html' with title='Completed' value=completed_appointments|default:0 %}
+        <div class="stat-card bg-emerald-500/10 border-emerald-500/20">
+          <div class="stat-label text-emerald-400">Completed</div>
+          <div class="stat-value text-emerald-400">{{ completed_appointments|default:0 }}</div>
         </div>
       </div>
     </div>
 
-    <div class="page-analytics-dashboard__content">
-      <div class="page-analytics-dashboard__main">
-        <div class="page-analytics-dashboard__section">
-          <h2>Top Services</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Top Services -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-dark-text mb-6">Top Services</h2>
           {% if top_services %}
-            <div class="page-analytics-dashboard__services-list">
+            <div class="space-y-4">
               {% for service in top_services %}
-                <div class="page-analytics-dashboard__service-item">
-                  <div class="page-analytics-dashboard__service-info">
-                    <h4>{{ service.name }}</h4>
-                    <p>{{ service.booking_count }} booking{{ service.booking_count|pluralize }}</p>
+                <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 transition-all">
+                  <div class="flex-1">
+                    <h4 class="font-semibold text-dark-text mb-1">{{ service.name }}</h4>
+                    <p class="text-sm text-dark-muted">{{ service.booking_count }} booking{{ service.booking_count|pluralize }}</p>
                   </div>
-                  <div class="page-analytics-dashboard__service-revenue">
-                    <strong>₱{{ service.total_revenue|floatformat:2 }}</strong>
-                  </div>
+                  <div class="text-gradient font-bold text-xl">₱{{ service.total_revenue|floatformat:2 }}</div>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <p>No service data available.</p>
+            <p class="text-dark-muted text-center py-8">No service data available</p>
           {% endif %}
         </div>
 
-        <div class="page-analytics-dashboard__section">
-          <h2>Payment Methods</h2>
+        <!-- Payment Methods -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Methods</h2>
           {% if payment_methods %}
-            <div class="page-analytics-dashboard__payment-methods">
+            <div class="space-y-3">
               {% for method in payment_methods %}
-                <div class="page-analytics-dashboard__payment-method">
-                  <span class="page-analytics-dashboard__method-name">{{ method.method_display }}</span>
-                  <span class="page-analytics-dashboard__method-count">{{ method.count }} payment{{ method.count|pluralize }}</span>
-                  <span class="page-analytics-dashboard__method-amount">₱{{ method.total|floatformat:2 }}</span>
+                <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
+                  <div class="flex items-center gap-3">
+                    <span class="font-semibold text-dark-text">{{ method.method_display }}</span>
+                    <span class="badge badge-info">{{ method.count }} payment{{ method.count|pluralize }}</span>
+                  </div>
+                  <span class="text-gradient font-bold text-lg">₱{{ method.total|floatformat:2 }}</span>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <p>No payment data available.</p>
+            <p class="text-dark-muted text-center py-8">No payment data available</p>
           {% endif %}
         </div>
       </div>
 
-      <aside class="page-analytics-dashboard__sidebar">
-        <div class="page-analytics-dashboard__alerts">
-          <h3>Low Stock Alerts</h3>
+      <!-- Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="card p-6 sticky top-24">
+          <h3 class="text-xl font-bold text-dark-text mb-4 flex items-center gap-2">
+            <span>⚠️</span>
+            Low Stock Alerts
+          </h3>
           {% if low_stock_alerts %}
-            <ul class="page-analytics-dashboard__alerts-list">
+            <div class="space-y-2 mb-4">
               {% for item in low_stock_alerts %}
-                <li class="page-analytics-dashboard__alert-item">
-                  <a href="{% url 'inventory:detail' item.id %}">{{ item.name }}</a>
-                  <span class="page-analytics-dashboard__alert-stock">{{ item.stock }} {{ item.unit }}</span>
-                  {% include 'components/atoms/badge.html' with label='Low' style='warning' %}
-                </li>
+                <a href="{% url 'inventory:detail' item.id %}" class="block p-3 bg-dark-elevated rounded-lg border border-amber-500/20 hover:border-amber-500/50 transition-all">
+                  <div class="flex items-start justify-between gap-2 mb-1">
+                    <span class="text-dark-text font-semibold text-sm">{{ item.name }}</span>
+                    <span class="badge badge-warning text-xs">Low</span>
+                  </div>
+                  <span class="text-amber-400 text-sm font-bold">{{ item.stock }} {{ item.unit }}</span>
+                </a>
               {% endfor %}
-            </ul>
-            <a href="{% url 'inventory:alerts' %}" class="atom-button atom-button--primary">
+            </div>
+            <a href="{% url 'inventory:alerts' %}" class="btn btn-primary text-sm w-full">
               View All Alerts
             </a>
           {% else %}
-            <p>No low stock alerts.</p>
+            <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-center">
+              <p class="text-sm text-emerald-400">All stock levels healthy</p>
+            </div>
           {% endif %}
         </div>
-      </aside>
+      </div>
     </div>
-  </section>
+  </div>
 {% endblock content %}

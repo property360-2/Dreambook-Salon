@@ -3,21 +3,26 @@
 {% block title %}Payment History · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-payments-list">
-    <header class="page-payments-list__header">
-      <h1>Payment History</h1>
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Payment History</h1>
+        <p class="text-dark-muted">Track all your transactions</p>
+      </div>
       {% if user.role in 'STAFF,ADMIN' %}
-        <a href="{% url 'payments:stats' %}" class="atom-button atom-button--primary">
+        <a href="{% url 'payments:stats' %}" class="btn btn-primary whitespace-nowrap">
           View Statistics
         </a>
       {% endif %}
-    </header>
+    </div>
 
-    <form method="get" class="page-payments-list__filters">
-      <div class="page-payments-list__filters-row">
-        <div class="page-payments-list__filter">
-          <label>Status:</label>
-          <select name="status" class="atom-input">
+    <!-- Filters -->
+    <div class="card p-6 mb-8">
+      <form method="get" class="flex flex-col sm:flex-row gap-4 items-end">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-dark-text mb-2">Status:</label>
+          <select name="status" class="input">
             <option value="">All</option>
             <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
             <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
@@ -25,9 +30,9 @@
           </select>
         </div>
 
-        <div class="page-payments-list__filter">
-          <label>Method:</label>
-          <select name="method" class="atom-input">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-dark-text mb-2">Method:</label>
+          <select name="method" class="input">
             <option value="">All</option>
             <option value="GCASH" {% if request.GET.method == 'GCASH' %}selected{% endif %}>GCash</option>
             <option value="PAYMAYA" {% if request.GET.method == 'PAYMAYA' %}selected{% endif %}>PayMaya</option>
@@ -35,62 +40,83 @@
           </select>
         </div>
 
-        <button type="submit" class="atom-button atom-button--primary">Filter</button>
-        <a href="{% url 'payments:list' %}" class="atom-button atom-button--ghost">Clear</a>
-      </div>
-    </form>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Filter</button>
+          <a href="{% url 'payments:list' %}" class="btn btn-ghost flex-1 sm:flex-initial">Clear</a>
+        </div>
+      </form>
+    </div>
 
     {% if payments %}
-      <div class="page-payments-list__table">
-        <table>
-          <thead>
-            <tr>
-              <th>Transaction ID</th>
-              <th>Date</th>
-              {% if user.role in 'STAFF,ADMIN' %}<th>Customer</th>{% endif %}
-              <th>Service</th>
-              <th>Amount</th>
-              <th>Method</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for payment in payments %}
+      <!-- Payments Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
               <tr>
-                <td>{{ payment.txn_id }}</td>
-                <td>{{ payment.created_at|date:"M d, Y" }}</td>
-                {% if user.role in 'STAFF,ADMIN' %}
-                  <td>{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</td>
-                {% endif %}
-                <td>{{ payment.appointment.service.name }}</td>
-                <td>₱{{ payment.amount }}</td>
-                <td>{{ payment.get_method_display }}</td>
-                <td>{% include 'components/atoms/badge.html' with label=payment.get_status_display style='primary' %}</td>
-                <td>
-                  <a href="{% url 'payments:detail' payment.id %}" class="atom-button atom-button--ghost">View</a>
-                </td>
+                <th>Transaction ID</th>
+                <th>Date</th>
+                {% if user.role in 'STAFF,ADMIN' %}<th>Customer</th>{% endif %}
+                <th>Service</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for payment in payments %}
+                <tr>
+                  <td class="font-mono text-sm text-primary-400">{{ payment.txn_id }}</td>
+                  <td class="text-dark-muted">{{ payment.created_at|date:"M d, Y" }}</td>
+                  {% if user.role in 'STAFF,ADMIN' %}
+                    <td class="text-dark-text">{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</td>
+                  {% endif %}
+                  <td class="font-semibold text-dark-text">{{ payment.appointment.service.name }}</td>
+                  <td class="text-gradient font-bold text-lg">₱{{ payment.amount }}</td>
+                  <td><span class="badge badge-info">{{ payment.get_method_display }}</span></td>
+                  <td>
+                    {% if payment.status == 'PAID' %}
+                      <span class="badge badge-success">{{ payment.get_status_display }}</span>
+                    {% elif payment.status == 'PENDING' %}
+                      <span class="badge badge-warning">{{ payment.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-danger">{{ payment.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'payments:detail' payment.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                      View
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- Pagination -->
       {% if is_paginated %}
-        <nav class="page-payments-list__pagination">
+        <nav class="flex items-center justify-center gap-2 mt-8">
           {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Previous</a>
           {% endif %}
-          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          <span class="px-4 py-2 text-dark-text font-semibold">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Next</a>
           {% endif %}
         </nav>
       {% endif %}
     {% else %}
-      <div class="page-payments-list__empty">
-        <p>No payments found matching your filters.</p>
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">💳</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">No payments found</h3>
+        <p class="text-dark-muted">No transactions match your filters</p>
       </div>
     {% endif %}
-  </section>
+  </div>
 {% endblock content %}

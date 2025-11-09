@@ -3,19 +3,24 @@
 {% block title %}All Appointments · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-staff-appointments">
-    <header class="page-staff-appointments__header">
-      <h1>All Appointments</h1>
-      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">All Appointments</h1>
+        <p class="text-dark-muted">Manage and track all salon appointments</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         View Analytics
       </a>
-    </header>
+    </div>
 
-    <form method="get" class="page-staff-appointments__filters">
-      <div class="page-staff-appointments__filters-row">
-        <div class="page-staff-appointments__filter">
-          <label>Status:</label>
-          <select name="status" class="atom-input">
+    <!-- Filters -->
+    <form method="get" class="card p-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-dark-text mb-2">Status</label>
+          <select name="status" class="input">
             <option value="">All</option>
             <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
             <option value="CONFIRMED" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
@@ -26,66 +31,112 @@
           </select>
         </div>
 
-        <div class="page-staff-appointments__filter">
-          <label>From Date:</label>
-          <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="atom-input">
+        <div>
+          <label class="block text-sm font-semibold text-dark-text mb-2">From Date</label>
+          <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="input">
         </div>
 
-        <div class="page-staff-appointments__filter">
-          <label>To Date:</label>
-          <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="atom-input">
+        <div>
+          <label class="block text-sm font-semibold text-dark-text mb-2">To Date</label>
+          <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="input">
         </div>
 
-        <button type="submit" class="atom-button atom-button--primary">Filter</button>
-        <a href="{% url 'appointments:staff_list' %}" class="atom-button atom-button--ghost">Clear</a>
+        <div class="flex items-end gap-2">
+          <button type="submit" class="btn btn-primary flex-1">Filter</button>
+          <a href="{% url 'appointments:staff_list' %}" class="btn btn-ghost flex-1">Clear</a>
+        </div>
       </div>
     </form>
 
     {% if appointments %}
-      <div class="page-staff-appointments__table">
-        <table>
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Status</th>
-              <th>Payment</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for appointment in appointments %}
+      <!-- Appointments Table -->
+      <div class="card overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
               <tr>
-                <td>{{ appointment.start_at|date:"M d, Y g:i A" }}</td>
-                <td>{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
-                <td>{{ appointment.service.name }}</td>
-                <td>{% include 'components/atoms/badge.html' with label=appointment.get_status_display style='primary' %}</td>
-                <td>{% include 'components/atoms/badge.html' with label=appointment.get_payment_state_display style='secondary' %}</td>
-                <td>
-                  <a href="{% url 'appointments:detail' appointment.id %}" class="atom-button atom-button--ghost">View</a>
-                </td>
+                <th>Date & Time</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for appointment in appointments %}
+                <tr>
+                  <td>
+                    <div class="font-semibold text-dark-text">{{ appointment.start_at|date:"M d, Y" }}</div>
+                    <div class="text-sm text-primary-400">{{ appointment.start_at|date:"g:i A" }}</div>
+                  </td>
+                  <td class="text-dark-text">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
+                  <td class="text-dark-text font-semibold">{{ appointment.service.name }}</td>
+                  <td>
+                    {% if appointment.status == 'CONFIRMED' %}
+                      <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == 'PENDING' %}
+                      <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == 'IN_PROGRESS' %}
+                      <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == 'COMPLETED' %}
+                      <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == 'NO_SHOW' %}
+                      <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if appointment.payment_state == 'PAID' %}
+                      <span class="badge badge-success">{{ appointment.get_payment_state_display }}</span>
+                    {% else %}
+                      <span class="badge badge-warning">{{ appointment.get_payment_state_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'appointments:detail' appointment.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                      View Details
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- Pagination -->
       {% if is_paginated %}
-        <nav class="page-staff-appointments__pagination">
+        <nav class="flex items-center justify-center gap-4">
           {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost">
+              Previous
+            </a>
+          {% else %}
+            <span class="btn btn-ghost opacity-50 cursor-not-allowed">Previous</span>
           {% endif %}
-          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+          <span class="text-dark-muted">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="atom-button atom-button--ghost">Next</a>
+            <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost">
+              Next
+            </a>
+          {% else %}
+            <span class="btn btn-ghost opacity-50 cursor-not-allowed">Next</span>
           {% endif %}
         </nav>
       {% endif %}
     {% else %}
-      <div class="page-staff-appointments__empty">
-        <p>No appointments found matching your filters.</p>
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="text-6xl mb-4">📅</div>
+        <h3 class="text-2xl font-bold text-dark-text mb-2">No appointments found</h3>
+        <p class="text-dark-muted">No appointments match your current filters</p>
       </div>
     {% endif %}
-  </section>
+  </div>
 {% endblock content %}

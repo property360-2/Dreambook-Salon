@@ -3,105 +3,136 @@
 {% block title %}Payment Statistics · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-payments-stats">
-    <header class="page-payments-stats__header">
-      <h1>Payment Statistics</h1>
-      <a href="{% url 'analytics:dashboard' %}" class="atom-button atom-button--ghost">
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Payment Statistics</h1>
+        <p class="text-dark-muted">Financial overview and analytics</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         View Dashboard
       </a>
-    </header>
+    </div>
 
-    <div class="page-payments-stats__overview">
-      <h2>Revenue Overview</h2>
-      <div class="page-payments-stats__cards">
-        <div class="page-payments-stats__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Revenue' value=total_revenue|default:'₱0.00' %}
+    <!-- Revenue Overview -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue Overview</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">₱{{ total_revenue|default:'0.00' }}</div>
         </div>
-        <div class="page-payments-stats__card">
-          {% include 'components/molecules/stat_card.html' with title='Total Payments' value=total_count|default:0 %}
+        <div class="stat-card">
+          <div class="stat-label">Total Payments</div>
+          <div class="stat-value">{{ total_count|default:0 }}</div>
         </div>
-        <div class="page-payments-stats__card">
-          {% include 'components/molecules/stat_card.html' with title='Successful Payments' value=paid_count|default:0 %}
+        <div class="stat-card bg-emerald-500/10 border-emerald-500/20">
+          <div class="stat-label text-emerald-400">Successful</div>
+          <div class="stat-value text-emerald-400">{{ paid_count|default:0 }}</div>
         </div>
-        <div class="page-payments-stats__card">
-          {% include 'components/molecules/stat_card.html' with title='Failed Payments' value=failed_count|default:0 %}
+        <div class="stat-card bg-red-500/10 border-red-500/20">
+          <div class="stat-label text-red-400">Failed</div>
+          <div class="stat-value text-red-400">{{ failed_count|default:0 }}</div>
         </div>
       </div>
     </div>
 
-    <div class="page-payments-stats__breakdown">
-      <h2>Payment Method Breakdown</h2>
-      <div class="page-payments-stats__methods">
-        {% if method_breakdown %}
-          <table class="page-payments-stats__table">
-            <thead>
-              <tr>
-                <th>Payment Method</th>
-                <th>Count</th>
-                <th>Total Amount</th>
-                <th>Average</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for method in method_breakdown %}
+    <!-- Payment Method Breakdown -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Method Breakdown</h2>
+      {% if method_breakdown %}
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
                 <tr>
-                  <td>{{ method.method_display }}</td>
-                  <td>{{ method.count }}</td>
-                  <td>₱{{ method.total|floatformat:2 }}</td>
-                  <td>₱{{ method.average|floatformat:2 }}</td>
+                  <th>Payment Method</th>
+                  <th>Count</th>
+                  <th>Total Amount</th>
+                  <th>Average</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% else %}
-          <p>No payment method data available.</p>
-        {% endif %}
+              </thead>
+              <tbody>
+                {% for method in method_breakdown %}
+                  <tr>
+                    <td class="font-semibold text-dark-text">{{ method.method_display }}</td>
+                    <td><span class="badge badge-info">{{ method.count }}</span></td>
+                    <td class="text-gradient font-bold text-lg">₱{{ method.total|floatformat:2 }}</td>
+                    <td class="text-dark-muted">₱{{ method.average|floatformat:2 }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div class="card p-8 text-center">
+          <p class="text-dark-muted">No payment method data available</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Payment Status Summary -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Status Summary</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 bg-amber-500/10 border-amber-500/20">
+          <h3 class="text-lg font-semibold text-amber-400 mb-4">Pending</h3>
+          <div class="text-4xl font-bold text-amber-400 mb-2">{{ pending_count|default:0 }}</div>
+          <div class="text-sm text-amber-400/80">₱{{ pending_amount|default:'0.00' }}</div>
+        </div>
+        <div class="card p-6 bg-emerald-500/10 border-emerald-500/20">
+          <h3 class="text-lg font-semibold text-emerald-400 mb-4">Paid</h3>
+          <div class="text-4xl font-bold text-emerald-400 mb-2">{{ paid_count|default:0 }}</div>
+          <div class="text-sm text-emerald-400/80">₱{{ paid_amount|default:'0.00' }}</div>
+        </div>
+        <div class="card p-6 bg-red-500/10 border-red-500/20">
+          <h3 class="text-lg font-semibold text-red-400 mb-4">Failed</h3>
+          <div class="text-4xl font-bold text-red-400 mb-2">{{ failed_count|default:0 }}</div>
+          <div class="text-sm text-red-400/80">₱{{ failed_amount|default:'0.00' }}</div>
+        </div>
       </div>
     </div>
 
-    <div class="page-payments-stats__status">
-      <h2>Payment Status Summary</h2>
-      <div class="page-payments-stats__status-grid">
-        <div class="page-payments-stats__status-item">
-          <h3>Pending</h3>
-          <p class="page-payments-stats__status-count">{{ pending_count|default:0 }}</p>
-          <p class="page-payments-stats__status-amount">₱{{ pending_amount|default:'0.00' }}</p>
-        </div>
-        <div class="page-payments-stats__status-item">
-          <h3>Paid</h3>
-          <p class="page-payments-stats__status-count">{{ paid_count|default:0 }}</p>
-          <p class="page-payments-stats__status-amount">₱{{ paid_amount|default:'0.00' }}</p>
-        </div>
-        <div class="page-payments-stats__status-item">
-          <h3>Failed</h3>
-          <p class="page-payments-stats__status-count">{{ failed_count|default:0 }}</p>
-          <p class="page-payments-stats__status-amount">₱{{ failed_amount|default:'0.00' }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="page-payments-stats__recent">
-      <h2>Recent Payments</h2>
+    <!-- Recent Payments -->
+    <div>
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Recent Payments</h2>
       {% if recent_payments %}
-        <div class="page-payments-stats__recent-list">
+        <div class="space-y-4">
           {% for payment in recent_payments %}
-            <article class="page-payments-stats__recent-item">
-              <div class="page-payments-stats__recent-header">
-                <strong>{{ payment.txn_id }}</strong>
-                {% include 'components/atoms/badge.html' with label=payment.get_status_display style='primary' %}
+            <div class="card p-6 hover:border-primary-500/50 transition-all">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <span class="font-mono text-sm text-primary-400">{{ payment.txn_id }}</span>
+                    {% if payment.status == 'PAID' %}
+                      <span class="badge badge-success">{{ payment.get_status_display }}</span>
+                    {% elif payment.status == 'PENDING' %}
+                      <span class="badge badge-warning">{{ payment.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-danger">{{ payment.get_status_display }}</span>
+                    {% endif %}
+                  </div>
+                  <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <span class="text-dark-text font-semibold">{{ payment.appointment.service.name }}</span>
+                    <span class="text-gradient font-bold">₱{{ payment.amount }}</span>
+                    <span class="text-dark-muted">{{ payment.created_at|date:"M d, Y" }}</span>
+                  </div>
+                </div>
+                <a href="{% url 'payments:detail' payment.id %}" class="btn btn-ghost text-sm">
+                  View Details
+                </a>
               </div>
-              <div class="page-payments-stats__recent-details">
-                <span>{{ payment.appointment.service.name }}</span>
-                <span>₱{{ payment.amount }}</span>
-                <span>{{ payment.created_at|date:"M d, Y" }}</span>
-              </div>
-              <a href="{% url 'payments:detail' payment.id %}" class="atom-button atom-button--ghost">View</a>
-            </article>
+            </div>
           {% endfor %}
         </div>
       {% else %}
-        <p>No recent payments.</p>
+        <div class="card p-12 text-center">
+          <div class="text-6xl mb-4">💳</div>
+          <p class="text-dark-muted">No recent payments</p>
+        </div>
       {% endif %}
     </div>
-  </section>
+  </div>
 {% endblock content %}

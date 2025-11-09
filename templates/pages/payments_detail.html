@@ -3,75 +3,116 @@
 {% block title %}Payment Details · Dreambook Salon{% endblock title %}
 
 {% block content %}
-  <section class="page-payment-detail">
-    <header class="page-payment-detail__header">
-      <h1>Payment Details</h1>
-      {% include 'components/atoms/badge.html' with label=payment.get_status_display style='primary' %}
-    </header>
-
-    <div class="page-payment-detail__content">
-      <div class="page-payment-detail__main">
-        <h2>Payment Information</h2>
-
-        <div class="page-payment-detail__info">
-          <div class="page-payment-detail__info-item">
-            <strong>Transaction ID:</strong> {{ payment.txn_id }}
-          </div>
-          <div class="page-payment-detail__info-item">
-            <strong>Amount:</strong> ₱{{ payment.amount }}
-          </div>
-          <div class="page-payment-detail__info-item">
-            <strong>Payment Method:</strong> {{ payment.get_method_display }}
-          </div>
-          <div class="page-payment-detail__info-item">
-            <strong>Status:</strong> {{ payment.get_status_display }}
-          </div>
-          <div class="page-payment-detail__info-item">
-            <strong>Created:</strong> {{ payment.created_at|date:"F d, Y g:i A" }}
-          </div>
-          <div class="page-payment-detail__info-item">
-            <strong>Last Updated:</strong> {{ payment.updated_at|date:"F d, Y g:i A" }}
-          </div>
+  <div class="container-custom py-12">
+    <div class="max-w-5xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-4xl font-bold text-gradient">Payment Details</h1>
+          {% if payment.status == 'PAID' %}
+            <span class="badge badge-success">{{ payment.get_status_display }}</span>
+          {% elif payment.status == 'PENDING' %}
+            <span class="badge badge-warning">{{ payment.get_status_display }}</span>
+          {% else %}
+            <span class="badge badge-danger">{{ payment.get_status_display }}</span>
+          {% endif %}
         </div>
-
-        {% if payment.notes %}
-          <div class="page-payment-detail__notes">
-            <h3>Payment Notes</h3>
-            <p>{{ payment.notes }}</p>
-          </div>
-        {% endif %}
-
-        <div class="page-payment-detail__appointment">
-          <h3>Appointment Details</h3>
-          <div class="page-payment-detail__appointment-info">
-            <div class="page-payment-detail__info-item">
-              <strong>Service:</strong> {{ payment.appointment.service.name }}
-            </div>
-            <div class="page-payment-detail__info-item">
-              <strong>Date & Time:</strong> {{ payment.appointment.start_at|date:"F d, Y g:i A" }}
-            </div>
-            <div class="page-payment-detail__info-item">
-              <strong>Customer:</strong> {{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}
-            </div>
-          </div>
-          <a href="{% url 'appointments:detail' payment.appointment.id %}" class="atom-button atom-button--ghost">
-            View Appointment
-          </a>
-        </div>
-      </div>
-
-      <aside class="page-payment-detail__actions">
-        {% if payment.status == 'FAILED' and user.role == 'CUSTOMER' and payment.appointment.customer == user %}
-          <form method="post" action="{% url 'payments:retry' payment.id %}">
-            {% csrf_token %}
-            {% include 'components/atoms/button.html' with label='Retry Payment' style='primary' type='submit' %}
-          </form>
-        {% endif %}
-
-        <a href="{% url 'payments:list' %}" class="atom-button atom-button--ghost">
+        <a href="{% url 'payments:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
           ← Back to Payments
         </a>
-      </aside>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Payment Information Card -->
+          <div class="card p-8">
+            <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Information</h2>
+
+            <div class="space-y-4">
+              <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                <span class="text-dark-muted text-sm block mb-1">Transaction ID</span>
+                <span class="text-dark-text font-mono text-lg">{{ payment.txn_id }}</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-2">Amount</span>
+                  <span class="text-gradient font-bold text-3xl">₱{{ payment.amount }}</span>
+                </div>
+                <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-2">Payment Method</span>
+                  <span class="text-dark-text font-semibold text-lg">{{ payment.get_method_display }}</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-1">Created</span>
+                  <span class="text-dark-text font-semibold">{{ payment.created_at|date:"F d, Y" }}</span>
+                  <br>
+                  <span class="text-primary-400 text-sm">{{ payment.created_at|date:"g:i A" }}</span>
+                </div>
+                <div class="p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <span class="text-dark-muted text-sm block mb-1">Last Updated</span>
+                  <span class="text-dark-text font-semibold">{{ payment.updated_at|date:"F d, Y" }}</span>
+                  <br>
+                  <span class="text-primary-400 text-sm">{{ payment.updated_at|date:"g:i A" }}</span>
+                </div>
+              </div>
+            </div>
+
+            {% if payment.notes %}
+              <div class="mt-6 p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                <h3 class="text-lg font-bold text-dark-text mb-2">Payment Notes</h3>
+                <p class="text-dark-muted">{{ payment.notes }}</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Appointment Details Card -->
+          <div class="card p-6">
+            <h3 class="text-xl font-bold text-dark-text mb-4">Appointment Details</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted text-sm">Service</span>
+                <span class="text-dark-text font-semibold">{{ payment.appointment.service.name }}</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted text-sm">Date & Time</span>
+                <span class="text-dark-text font-semibold">{{ payment.appointment.start_at|date:"M d, Y g:i A" }}</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
+                <span class="text-dark-muted text-sm">Customer</span>
+                <span class="text-dark-text font-semibold">{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</span>
+              </div>
+            </div>
+            <a href="{% url 'appointments:detail' payment.appointment.id %}" class="btn btn-ghost w-full mt-4">
+              View Appointment Details
+            </a>
+          </div>
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="lg:col-span-1">
+          <div class="card p-6 sticky top-24 space-y-3">
+            <h3 class="text-lg font-bold text-dark-text mb-4">Actions</h3>
+
+            {% if payment.status == 'FAILED' and user.role == 'CUSTOMER' and payment.appointment.customer == user %}
+              <form method="post" action="{% url 'payments:retry' payment.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary w-full">
+                  Retry Payment
+                </button>
+              </form>
+            {% endif %}
+
+            <a href="{% url 'payments:list' %}" class="btn btn-ghost w-full">
+              Back to Payments
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
 {% endblock content %}
