@@ -7,9 +7,9 @@
     <div class="max-w-5xl mx-auto">
       <!-- Header -->
       <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
           <h1 class="text-4xl font-bold text-gradient">{{ item.name }}</h1>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             {% if item.stock <= 0 %}
               <span class="badge badge-danger">Out of Stock</span>
             {% elif item.is_low_stock %}
@@ -23,6 +23,19 @@
             {% else %}
               <span class="badge badge-danger">Inactive</span>
             {% endif %}
+
+            <a href="{% url 'inventory:edit' item.id %}" class="btn btn-ghost text-sm">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Edit
+            </a>
+            <a href="{% url 'inventory:delete' item.id %}" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Delete
+            </a>
           </div>
         </div>
         <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
@@ -64,29 +77,110 @@
             </div>
           </div>
 
+          <!-- Restock Card -->
+          <div class="card p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <h3 class="text-xl font-bold text-dark-text">Restock Item</h3>
+            </div>
+            <form method="post" action="{% url 'inventory:restock' item.id %}" class="space-y-4 form-with-loading">
+              {% csrf_token %}
+              <div>
+                <label for="restock_quantity" class="block text-sm font-semibold text-dark-text mb-2">
+                  Quantity to Add
+                  <span class="text-red-400">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="restock_quantity"
+                    name="quantity"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="Enter quantity to add"
+                    required
+                    class="input pr-16"
+                  >
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-dark-muted text-sm">
+                    {{ item.unit }}
+                  </span>
+                </div>
+                <p class="mt-2 text-sm text-dark-muted">
+                  This will be added to the current stock of {{ item.stock }} {{ item.unit }}
+                </p>
+              </div>
+              <div>
+                <label for="restock_notes" class="block text-sm font-semibold text-dark-text mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  id="restock_notes"
+                  name="notes"
+                  rows="2"
+                  placeholder="Add notes about this restock..."
+                  class="input"
+                ></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-full">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add to Stock
+              </button>
+            </form>
+          </div>
+
           <!-- Adjust Stock Card -->
           <div class="card p-6">
-            <h3 class="text-xl font-bold text-dark-text mb-4">Adjust Stock</h3>
-            <form method="post" action="{% url 'inventory:adjust' item.id %}" class="space-y-4">
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+              </svg>
+              <h3 class="text-xl font-bold text-dark-text">Adjust Stock</h3>
+            </div>
+            <form method="post" action="{% url 'inventory:adjust' item.id %}" class="space-y-4 form-with-loading">
               {% csrf_token %}
               <div>
                 <label for="adjustment" class="block text-sm font-semibold text-dark-text mb-2">
                   Adjustment Amount
+                  <span class="text-red-400">*</span>
                 </label>
-                <input
-                  type="number"
-                  id="adjustment"
-                  name="adjustment"
-                  step="0.01"
-                  placeholder="Enter +/- value (e.g., +50 or -20)"
-                  required
-                  class="input"
-                >
+                <div class="relative">
+                  <input
+                    type="number"
+                    id="adjustment"
+                    name="adjustment"
+                    step="0.01"
+                    placeholder="Enter +/- value (e.g., +50 or -20)"
+                    required
+                    class="input pr-16"
+                  >
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-dark-muted text-sm">
+                    {{ item.unit }}
+                  </span>
+                </div>
                 <p class="mt-2 text-sm text-dark-muted">
                   Use positive numbers to add stock or negative numbers to remove stock
                 </p>
               </div>
-              <button type="submit" class="btn btn-primary w-full">
+              <div>
+                <label for="adjust_reason" class="block text-sm font-semibold text-dark-text mb-2">
+                  Reason (Optional)
+                </label>
+                <textarea
+                  id="adjust_reason"
+                  name="reason"
+                  rows="2"
+                  placeholder="Reason for adjustment..."
+                  class="input"
+                ></textarea>
+              </div>
+              <button type="submit" class="btn btn-ghost w-full">
+                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
                 Update Stock
               </button>
             </form>

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ form_title }} · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <div class="max-w-3xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">{{ form_title }}</h1>
+        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+          ← Back to Inventory
+        </a>
+      </div>
+
+      <!-- Form -->
+      <div class="card p-8">
+        <form method="post" class="space-y-6 form-with-loading validate-realtime">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-error">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% for field in form %}
+            <div>
+              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+                {{ field.label }}
+                {% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
+              </label>
+
+              {% if field.name == 'is_active' %}
+                <div class="flex items-center">
+                  {{ field }}
+                  <label for="{{ field.id_for_label }}" class="ml-2 text-sm text-dark-muted">
+                    Track this item in inventory
+                  </label>
+                </div>
+              {% else %}
+                {{ field }}
+              {% endif %}
+
+              {% if field.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
+              {% endif %}
+              {% if field.help_text %}
+                <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <!-- Submit Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-dark-border">
+            <button type="submit" class="btn btn-primary flex-1">
+              {{ submit_text }}
+            </button>
+            <a href="{% url 'inventory:list' %}" class="btn btn-ghost flex-1 text-center">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

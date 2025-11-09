@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title }} · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">{{ form_title }}</h1>
+        <a href="{% url 'services:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+          ← Back to Services
+        </a>
+      </div>
+
+      <!-- Form -->
+      <div class="card p-8">
+        <form method="post" class="space-y-6 form-with-loading validate-realtime">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-error">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Service Basic Info -->
+          <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-dark-text border-b border-dark-border pb-2">
+              Service Information
+            </h2>
+
+            {% for field in form %}
+              <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+                  {{ field.label }}
+                  {% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
+                </label>
+
+                {% if field.name == 'is_active' %}
+                  <div class="flex items-center">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" class="ml-2 text-sm text-dark-muted">
+                      Make this service available for booking
+                    </label>
+                  </div>
+                {% else %}
+                  {{ field }}
+                {% endif %}
+
+                {% if field.errors %}
+                  <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
+                {% endif %}
+                {% if field.help_text %}
+                  <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Inventory Items Section -->
+          <div class="space-y-4 pt-6 border-t border-dark-border">
+            <div class="flex items-center justify-between">
+              <h2 class="text-2xl font-bold text-dark-text">
+                Required Inventory Items
+              </h2>
+              <span class="text-sm text-dark-muted">
+                Optional - items consumed when service is completed
+              </span>
+            </div>
+
+            {{ formset.management_form }}
+
+            <div id="formset-container" class="space-y-4">
+              {% for form in formset %}
+                <div class="formset-form p-4 bg-dark-elevated rounded-xl border border-dark-border">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{ form.id }}
+                    {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+
+                    <div>
+                      <label class="block text-sm font-semibold text-dark-text mb-2">
+                        {{ form.item.label }}
+                      </label>
+                      {{ form.item }}
+                      {% if form.item.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.item.errors.0 }}</p>
+                      {% endif %}
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-semibold text-dark-text mb-2">
+                        {{ form.qty_per_service.label }}
+                      </label>
+                      {{ form.qty_per_service }}
+                      {% if form.qty_per_service.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.qty_per_service.errors.0 }}</p>
+                      {% endif %}
+                    </div>
+
+                    {% if form.instance.pk %}
+                      <div class="md:col-span-2">
+                        <label class="flex items-center text-sm text-red-400">
+                          {{ form.DELETE }}
+                          <span class="ml-2">Delete this item</span>
+                        </label>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if formset.non_form_errors %}
+              <div class="alert alert-error">
+                {{ formset.non_form_errors }}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-dark-border">
+            <button type="submit" class="btn btn-primary flex-1">
+              {{ submit_text }}
+            </button>
+            <a href="{% url 'services:list' %}" class="btn btn-ghost flex-1 text-center">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

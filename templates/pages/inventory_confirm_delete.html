@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Inventory Item · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">Delete Inventory Item</h1>
+        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+          ← Back to Inventory
+        </a>
+      </div>
+
+      <!-- Confirmation Card -->
+      <div class="card p-8">
+        <div class="flex items-start gap-4 mb-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold text-dark-text mb-2">
+              Are you sure you want to delete this item?
+            </h2>
+            <div class="space-y-2">
+              <p class="text-dark-muted">
+                <span class="font-semibold text-dark-text">Item:</span> {{ object.name }}
+              </p>
+              <p class="text-dark-muted">
+                <span class="font-semibold text-dark-text">Current Stock:</span> {{ object.stock }} {{ object.unit }}
+              </p>
+              <p class="text-dark-muted">
+                <span class="font-semibold text-dark-text">Status:</span>
+                {% if object.stock <= 0 %}
+                  <span class="text-red-400">Out of Stock</span>
+                {% elif object.is_low_stock %}
+                  <span class="text-amber-400">Low Stock</span>
+                {% else %}
+                  <span class="text-emerald-400">In Stock</span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {% if used_in_services %}
+          <div class="alert alert-warning mb-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <div>
+                <p class="font-semibold text-amber-400">Warning: Item is used in services</p>
+                <p class="text-sm text-dark-muted mt-1">
+                  This item is required by <strong>{{ service_count }}</strong> service(s).
+                  Instead of deleting, the item will be <strong>deactivated</strong> to preserve service requirements.
+                </p>
+                <div class="mt-3 space-y-1">
+                  <p class="text-sm font-semibold text-dark-text">Used in:</p>
+                  {% for link in services %}
+                    <p class="text-sm text-dark-muted">• {{ link.service.name }} ({{ link.qty_per_service }} {{ object.unit }})</p>
+                  {% endfor %}
+                  {% if service_count > 5 %}
+                    <p class="text-sm text-dark-muted">• And {{ service_count|add:"-5" }} more...</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-error mb-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              <div>
+                <p class="font-semibold text-red-400">This action cannot be undone</p>
+                <p class="text-sm text-dark-muted mt-1">
+                  The inventory item will be permanently deleted.
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <form method="post" class="flex flex-col sm:flex-row gap-4 form-with-loading">
+          {% csrf_token %}
+          <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 flex-1">
+            {% if used_in_services %}
+              Deactivate Item
+            {% else %}
+              Delete Item
+            {% endif %}
+          </button>
+          <a href="{% url 'inventory:list' %}" class="btn btn-ghost flex-1 text-center">
+            Cancel
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
