@@ -75,7 +75,7 @@ ServiceItemFormSet = inlineformset_factory(
     Service,
     ServiceItem,
     form=ServiceItemForm,
-    extra=1,
+    extra=3,  # Show 3 empty forms by default for adding multiple items
     can_delete=True,
     min_num=0,
     validate_min=False,
