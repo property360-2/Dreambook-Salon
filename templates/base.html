@@ -15,7 +15,12 @@
       {% block content %}{% endblock content %}
     </main>
     {% include 'components/organisms/footer.html' %}
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 space-y-3 max-w-md"></div>
+
     <script src="{% static 'js/ui-enhancements.js' %}"></script>
+    <script src="{% static 'js/async-utils.js' %}"></script>
     {% block extra_scripts %}{% endblock extra_scripts %}
   </body>
 </html>
