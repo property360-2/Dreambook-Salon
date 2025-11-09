@@ -13,8 +13,18 @@
       <ul class="hidden md:flex items-center space-x-1">
         <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
         <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
-        <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
-        <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
+
+        {% if request.user.is_authenticated %}
+          {% if request.user.role == 'ADMIN' or request.user.role == 'STAFF' %}
+            <!-- Staff/Admin Only Links -->
+            <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
+            <li><a href="{% url 'appointments:staff_list' %}" class="navbar-link">All Appointments</a></li>
+            <li><a href="{% url 'analytics:dashboard' %}" class="navbar-link">Analytics</a></li>
+          {% else %}
+            <!-- Customer Only Links -->
+            <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
+          {% endif %}
+        {% endif %}
       </ul>
 
       <!-- Account Section -->
