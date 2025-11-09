@@ -211,3 +211,89 @@
     </div>
   </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Async Restock Form
+  const restockForm = document.querySelector('form[action*="restock"]');
+  if (restockForm) {
+    restockForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const submitBtn = this.querySelector('[type="submit"]');
+      const originalHtml = submitBtn.innerHTML;
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<svg class="w-5 h-5 inline-block mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Processing...';
+
+        const formData = new FormData(this);
+        const response = await Ajax.post(this.action, formData);
+
+        // Update stock display
+        const stockValue = document.querySelector('.stat-value');
+        if (response.new_stock !== undefined && stockValue) {
+          stockValue.textContent = response.new_stock;
+          stockValue.classList.add('animate-pulse');
+          setTimeout(() => stockValue.classList.remove('animate-pulse'), 1000);
+        }
+
+        Toast.success(response.message || `Successfully restocked item!`);
+        this.reset();
+
+        // Reload page after short delay to show updated stock everywhere
+        setTimeout(() => window.location.reload(), 1500);
+
+      } catch (error) {
+        console.error('Restock error:', error);
+        Toast.error(error.message || 'Failed to restock. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
+      }
+    });
+  }
+
+  // Async Adjust Stock Form
+  const adjustForm = document.querySelector('form[action*="adjust"]');
+  if (adjustForm) {
+    adjustForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const submitBtn = this.querySelector('[type="submit"]');
+      const originalHtml = submitBtn.innerHTML;
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<svg class="w-5 h-5 inline-block mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Processing...';
+
+        const formData = new FormData(this);
+        const response = await Ajax.post(this.action, formData);
+
+        // Update stock display
+        const stockValue = document.querySelector('.stat-value');
+        if (response.new_stock !== undefined && stockValue) {
+          stockValue.textContent = response.new_stock;
+          stockValue.classList.add('animate-pulse');
+          setTimeout(() => stockValue.classList.remove('animate-pulse'), 1000);
+        }
+
+        Toast.success(response.message || `Stock adjusted successfully!`);
+        this.reset();
+
+        // Reload page after short delay
+        setTimeout(() => window.location.reload(), 1500);
+
+      } catch (error) {
+        console.error('Adjust error:', error);
+        Toast.error(error.message || 'Failed to adjust stock. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
+      }
+    });
+  }
+});
+</script>
+{% endblock extra_scripts %}

@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q, F
+from django.http import JsonResponse
 from core.mixins import StaffOrAdminRequiredMixin
 from .models import Item
 from .forms import ItemForm, RestockForm, AdjustStockForm
@@ -157,6 +158,7 @@ class InventoryRestockView(StaffOrAdminRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Item, pk=pk)
         form = RestockForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if form.is_valid():
             quantity = form.cleaned_data['quantity']
@@ -169,8 +171,25 @@ class InventoryRestockView(StaffOrAdminRequiredMixin, View):
             message = f"Successfully restocked {quantity} {item.unit}. New stock: {item.stock} {item.unit}"
             if notes:
                 message += f" (Notes: {notes})"
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'new_stock': float(item.stock),
+                    'item_name': item.name,
+                    'unit': item.unit
+                })
+
             messages.success(request, message)
         else:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid restock quantity.',
+                    'errors': form.errors
+                }, status=400)
+
             messages.error(request, "Invalid restock quantity.")
 
         return redirect('inventory:detail', pk=pk)
@@ -181,20 +200,33 @@ class InventoryAdjustView(StaffOrAdminRequiredMixin, View):
 
     def post(self, request, pk):
         item = get_object_or_404(Item, pk=pk)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         try:
             adjustment = float(request.POST.get('adjustment', 0))
             reason = request.POST.get('reason', '').strip()
 
             if adjustment == 0:
-                messages.warning(request, "No adjustment made (adjustment is 0)")
+                error_msg = "No adjustment made (adjustment is 0)"
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_msg
+                    }, status=400)
+                messages.warning(request, error_msg)
                 return redirect('inventory:list')
 
             # Calculate new stock
             new_stock = item.stock + adjustment
 
             if new_stock < 0:
-                messages.error(request, f"Cannot adjust: would result in negative stock ({new_stock})")
+                error_msg = f"Cannot adjust: would result in negative stock ({new_stock})"
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_msg
+                    }, status=400)
+                messages.error(request, error_msg)
                 return redirect('inventory:list')
 
             # Update stock
@@ -206,10 +238,26 @@ class InventoryAdjustView(StaffOrAdminRequiredMixin, View):
             if reason:
                 message += f" (Reason: {reason})"
 
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'new_stock': float(item.stock),
+                    'item_name': item.name,
+                    'unit': item.unit,
+                    'adjustment': adjustment
+                })
+
             messages.success(request, message)
 
-        except (ValueError, TypeError):
-            messages.error(request, "Invalid adjustment value")
+        except (ValueError, TypeError) as e:
+            error_msg = "Invalid adjustment value"
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': error_msg
+                }, status=400)
+            messages.error(request, error_msg)
 
         return redirect('inventory:list')
 
