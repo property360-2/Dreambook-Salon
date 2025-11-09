@@ -151,6 +151,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Custom User Model
 AUTH_USER_MODEL = "core.User"
 
+# Authentication URLs
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
 # Application Settings
 SITE_NAME = env("SITE_NAME", default="Dreambook Salon")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
