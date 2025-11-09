@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum, Count, Q, F, Avg
+from django.db.models.functions import ExtractHour
 from django.utils import timezone
 from datetime import timedelta, datetime
 from core.mixins import StaffOrAdminRequiredMixin
@@ -346,11 +347,13 @@ class BusinessIntelligenceView(StaffOrAdminRequiredMixin, TemplateView):
         # Analyze by hour of day
         hourly_appointments = Appointment.objects.filter(
             created_at__gte=start_date
-        ).extra(select={'hour': 'EXTRACT(hour FROM start_at)'}).values('hour').annotate(
+        ).annotate(
+            hour=ExtractHour('start_at')
+        ).values('hour').annotate(
             count=Count('id')
         ).order_by('-count')[:5]
 
-        context['peak_hours'] = hourly_appointments
+        context['peak_hours'] = list(hourly_appointments)
 
         # Analyze by day of week
         daily_appointments = []
