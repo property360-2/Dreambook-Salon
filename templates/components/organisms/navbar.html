@@ -35,9 +35,11 @@
           <span class="hidden lg:block text-sm text-dark-muted">
             Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
           </span>
-          <a href="{% url 'appointments:book' %}" class="btn btn-primary text-sm px-4 py-2">
-            Book Now
-          </a>
+          {% if request.user.role == 'CUSTOMER' %}
+            <a href="{% url 'appointments:book' %}" class="btn btn-primary text-sm px-4 py-2">
+              Book Now
+            </a>
+          {% endif %}
           <form method="post" action="{% url 'core:logout' %}" class="inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost text-sm px-4 py-2">
@@ -87,11 +89,13 @@
               Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
             </span>
           </li>
-          <li>
-            <a href="{% url 'appointments:book' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
-              Book Now
-            </a>
-          </li>
+          {% if request.user.role == 'CUSTOMER' %}
+            <li>
+              <a href="{% url 'appointments:book' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
+                Book Now
+              </a>
+            </li>
+          {% endif %}
           <li>
             <form method="post" action="{% url 'core:logout' %}" class="mx-4">
               {% csrf_token %}
