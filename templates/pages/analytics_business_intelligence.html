@@ -100,7 +100,7 @@
         <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
           <p class="text-sm text-blue-400">
             <strong>Total Predicted Revenue (14 days):</strong>
-            ₱{% widthratio revenue_forecast|length 1 1 as total %}{{ revenue_forecast|map_attribute:'value'|join:','|cut:' '|split:','|sum|floatformat:2 }}
+            ₱{{ total_predicted_revenue|floatformat:2 }}
           </p>
         </div>
       </div>

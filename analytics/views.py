@@ -37,19 +37,19 @@ class AnalyticsDashboardView(StaffOrAdminRequiredMixin, TemplateView):
         revenue_today = all_payments.filter(
             created_at__gte=today_start
         ).aggregate(total=Sum('amount'))['total'] or 0
-        context['revenue_today'] = revenue_today
+        context['today_revenue'] = revenue_today
 
         # Revenue this week
         revenue_week = all_payments.filter(
             created_at__gte=week_ago
         ).aggregate(total=Sum('amount'))['total'] or 0
-        context['revenue_week'] = revenue_week
+        context['week_revenue'] = revenue_week
 
         # Revenue this month
         revenue_month = all_payments.filter(
             created_at__gte=month_ago
         ).aggregate(total=Sum('amount'))['total'] or 0
-        context['revenue_month'] = revenue_month
+        context['month_revenue'] = revenue_month
 
         # === APPOINTMENT STATS ===
         all_appointments = Appointment.objects.all()
@@ -60,6 +60,9 @@ class AnalyticsDashboardView(StaffOrAdminRequiredMixin, TemplateView):
         ).count()
         context['pending_appointments'] = all_appointments.filter(
             status=Appointment.Status.PENDING
+        ).count()
+        context['confirmed_appointments'] = all_appointments.filter(
+            status=Appointment.Status.CONFIRMED
         ).count()
         context['cancelled_appointments'] = all_appointments.filter(
             status=Appointment.Status.CANCELLED
@@ -76,7 +79,7 @@ class AnalyticsDashboardView(StaffOrAdminRequiredMixin, TemplateView):
         top_services = Service.objects.annotate(
             booking_count=Count('appointments'),
             completed_count=Count('appointments', filter=Q(appointments__status=Appointment.Status.COMPLETED)),
-            revenue=Sum('appointments__payments__amount', filter=Q(appointments__payments__status=Payment.Status.PAID))
+            total_revenue=Sum('appointments__payments__amount', filter=Q(appointments__payments__status=Payment.Status.PAID))
         ).order_by('-booking_count')[:10]
 
         context['top_services'] = top_services
@@ -88,24 +91,25 @@ class AnalyticsDashboardView(StaffOrAdminRequiredMixin, TemplateView):
             stock__lte=F('threshold')
         ).order_by('stock')
 
-        context['low_stock_items'] = low_stock_items
+        context['low_stock_alerts'] = low_stock_items
         context['low_stock_count'] = low_stock_items.count()
         context['out_of_stock_count'] = low_stock_items.filter(stock=0).count()
 
         # === PAYMENT METHOD BREAKDOWN ===
-        payment_by_method = []
+        payment_methods = []
         for method_key, method_label in Payment.Method.choices:
             count = all_payments.filter(method=method_key).count()
-            revenue = all_payments.filter(method=method_key).aggregate(
+            total = all_payments.filter(method=method_key).aggregate(
                 total=Sum('amount')
             )['total'] or 0
-            payment_by_method.append({
-                'method': method_label,
-                'count': count,
-                'revenue': revenue
-            })
+            if count > 0:  # Only include methods that have been used
+                payment_methods.append({
+                    'method_display': method_label,
+                    'count': count,
+                    'total': total
+                })
 
-        context['payment_by_method'] = payment_by_method
+        context['payment_methods'] = payment_methods
 
         # === RECENT ACTIVITY ===
         context['recent_appointments'] = Appointment.objects.select_related(
@@ -290,6 +294,7 @@ class BusinessIntelligenceView(StaffOrAdminRequiredMixin, TemplateView):
             }
             for i in range(forecast_days)
         ]
+        context['total_predicted_revenue'] = sum(revenue_forecast)
 
         context['revenue_historical'] = revenue_data
         context['revenue_trend'] = BusinessIntelligence.detect_trend(revenue_values)
