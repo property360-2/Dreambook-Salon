@@ -89,7 +89,7 @@ class Command(BaseCommand):
             password='admin123',
             first_name='Admin',
             last_name='User',
-            role=User.Role.ADMIN,
+            role=User.Roles.ADMIN,
             is_staff=True,
             is_superuser=True
         )
@@ -99,7 +99,7 @@ class Command(BaseCommand):
             password='staff123',
             first_name='Staff',
             last_name='Member',
-            role=User.Role.STAFF,
+            role=User.Roles.STAFF,
             is_staff=True
         )
 
@@ -108,7 +108,7 @@ class Command(BaseCommand):
             password='customer123',
             first_name='Maria',
             last_name='Santos',
-            role=User.Role.CUSTOMER
+            role=User.Roles.CUSTOMER
         )
 
         customer2 = User.objects.create_user(
@@ -116,7 +116,7 @@ class Command(BaseCommand):
             password='customer123',
             first_name='Juan',
             last_name='Dela Cruz',
-            role=User.Role.CUSTOMER
+            role=User.Roles.CUSTOMER
         )
 
         customer3 = User.objects.create_user(
@@ -124,7 +124,7 @@ class Command(BaseCommand):
             password='customer123',
             first_name='Ana',
             last_name='Reyes',
-            role=User.Role.CUSTOMER
+            role=User.Roles.CUSTOMER
         )
 
         self.stdout.write(f'  Created {User.objects.count()} users')
@@ -352,8 +352,8 @@ class Command(BaseCommand):
                 customer=customer,
                 service=service,
                 start_at=start_time,
-                status=Appointment.Status.COMPLETED,
-                payment_state=Appointment.PaymentState.PAID
+                status='completed',
+                payment_state='paid'
             )
             appointments.append(appointment)
 
@@ -364,8 +364,8 @@ class Command(BaseCommand):
             customer = random.choice(customers)
             service = random.choice(services)
 
-            status_choices = [Appointment.Status.PENDING, Appointment.Status.CONFIRMED]
-            payment_choices = [Appointment.PaymentState.UNPAID, Appointment.PaymentState.PAID]
+            status_choices = ['pending', 'confirmed']
+            payment_choices = ['unpaid', 'paid']
 
             appointment = Appointment.objects.create(
                 customer=customer,
@@ -387,8 +387,8 @@ class Command(BaseCommand):
                 customer=customer,
                 service=service,
                 start_at=start_time,
-                status=Appointment.Status.CANCELLED,
-                payment_state=Appointment.PaymentState.UNPAID
+                status='cancelled',
+                payment_state='unpaid'
             )
             appointments.append(appointment)
 
@@ -397,24 +397,24 @@ class Command(BaseCommand):
 
     def create_payments(self, appointments):
         """Create payments for paid appointments."""
-        from payments.views import generate_transaction_id
+        import uuid
 
         payments = []
         for appointment in appointments:
-            if appointment.payment_state == Appointment.PaymentState.PAID:
+            if appointment.payment_state == 'paid':
                 method = random.choice([
-                    Payment.Method.GCASH,
-                    Payment.Method.PAYMAYA,
-                    Payment.Method.ONSITE
+                    'gcash',
+                    'paymaya',
+                    'onsite'
                 ])
 
                 payment = Payment.objects.create(
                     appointment=appointment,
                     method=method,
                     amount=appointment.service.price,
-                    status=Payment.Status.PAID,
-                    txn_id=generate_transaction_id(),
-                    notes=f'{method} payment successful'
+                    status='paid',
+                    txn_id=f'TXN-{uuid.uuid4().hex[:12].upper()}',
+                    notes=f'{method.upper()} payment successful'
                 )
                 payments.append(payment)
 
