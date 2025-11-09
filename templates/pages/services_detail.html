@@ -66,7 +66,7 @@
 
             {% if user.is_authenticated %}
               {% if service.is_active %}
-                <a href="{% url 'appointments:booking' %}?service={{ service.id }}" class="btn btn-primary w-full mb-4">
+                <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary w-full mb-4">
                   Book Now
                 </a>
                 <div class="p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl">

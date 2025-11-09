@@ -27,7 +27,7 @@
             {% endif %}
           </div>
         </div>
-        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_list' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_appointments' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="text-primary-400 hover:text-primary-300 transition-colors">
           ← Back to Appointments
         </a>
       </div>
@@ -128,7 +128,7 @@
               {% endif %}
             {% endif %}
 
-            <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_list' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="btn btn-ghost w-full">
+            <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_appointments' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="btn btn-ghost w-full">
               Back to List
             </a>
           </div>

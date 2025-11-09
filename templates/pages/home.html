@@ -19,7 +19,7 @@
           Discover our curated services and track availability without calling the front desk. Experience premium salon services in a modern, sophisticated environment.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
-          <a href="{% url 'appointments:booking' %}" class="btn btn-primary">
+          <a href="{% url 'appointments:book' %}" class="btn btn-primary">
             Plan an appointment
           </a>
           <a href="{% url 'services:list' %}" class="btn btn-outline">
@@ -54,7 +54,7 @@
             <p class="text-dark-muted mb-4 line-clamp-2">{{ service.description }}</p>
             <div class="flex items-center justify-between pt-4 border-t border-dark-border">
               <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
-              <a href="{% url 'appointments:booking' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+              <a href="{% url 'appointments:book' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
                 Book now →
               </a>
             </div>
@@ -103,7 +103,7 @@
           <p class="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             Book your appointment today and discover why thousands of Manila creatives trust Dreambook Salon.
           </p>
-          <a href="{% url 'appointments:booking' %}" class="btn bg-white text-primary-600 hover:bg-gray-100 shadow-xl">
+          <a href="{% url 'appointments:book' %}" class="btn bg-white text-primary-600 hover:bg-gray-100 shadow-xl">
             Book an appointment
           </a>
         </div>

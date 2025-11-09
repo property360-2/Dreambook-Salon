@@ -10,7 +10,7 @@
         <h1 class="text-4xl font-bold text-gradient mb-2">My Appointments</h1>
         <p class="text-dark-muted">Manage and track your upcoming salon visits</p>
       </div>
-      <a href="{% url 'appointments:booking' %}" class="btn btn-primary whitespace-nowrap">
+      <a href="{% url 'appointments:book' %}" class="btn btn-primary whitespace-nowrap">
         Book New Appointment
       </a>
     </div>
@@ -108,7 +108,7 @@
         <div class="text-6xl mb-4">📅</div>
         <h3 class="text-2xl font-bold text-dark-text mb-2">No appointments yet</h3>
         <p class="text-dark-muted mb-6">Book your first appointment to get started!</p>
-        <a href="{% url 'appointments:booking' %}" class="btn btn-primary inline-block">
+        <a href="{% url 'appointments:book' %}" class="btn btn-primary inline-block">
           Book Your First Appointment
         </a>
       </div>
