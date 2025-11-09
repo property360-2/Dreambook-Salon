@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Business Intelligence & Forecasting · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4 animate-slide-up">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Business Intelligence & Forecasting</h1>
+        <p class="text-dark-muted">Predictive analytics and data-driven insights powered by Holt-Winters ETS</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost text-sm">← Back to Analytics</a>
+      </div>
+    </div>
+
+    <!-- Key Performance Indicators -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold text-dark-text mb-6">Key Performance Indicators</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="stat-card bg-gradient-to-br from-primary-500/10 to-primary-500/5 border-primary-500/20">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value text-primary-400">₱{{ kpis.total_revenue|floatformat:2 }}</div>
+          <div class="text-xs text-dark-muted mt-2">
+            {% if revenue_growth > 0 %}
+              <span class="text-emerald-400">↑ {{ revenue_growth|floatformat:1 }}%</span> vs previous period
+            {% elif revenue_growth < 0 %}
+              <span class="text-red-400">↓ {{ revenue_growth|floatformat:1 }}%</span> vs previous period
+            {% else %}
+              <span class="text-dark-muted">→ No change</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-accent-500/10 to-accent-500/5 border-accent-500/20">
+          <div class="stat-label">Total Appointments</div>
+          <div class="stat-value text-accent-400">{{ kpis.total_appointments }}</div>
+          <div class="text-xs text-dark-muted mt-2">
+            Completion Rate: <span class="text-emerald-400">{{ kpis.completion_rate }}%</span>
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
+          <div class="stat-label">Customer Retention</div>
+          <div class="stat-value text-emerald-400">{{ kpis.customer_retention }}%</div>
+          <div class="text-xs text-dark-muted mt-2">
+            {{ kpis.total_customers }} total customers
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Avg Transaction Value</div>
+          <div class="stat-value">₱{{ kpis.avg_transaction|floatformat:2 }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Forecast Accuracy</div>
+          <div class="stat-value {% if forecast_accuracy.accuracy >= 80 %}text-emerald-400{% elif forecast_accuracy.accuracy >= 60 %}text-amber-400{% else %}text-red-400{% endif %}">
+            {{ forecast_accuracy.accuracy }}%
+          </div>
+          <div class="text-xs text-dark-muted mt-2">MAPE: {{ forecast_accuracy.mape|floatformat:1 }}%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Revenue Trend</div>
+          <div class="stat-value text-sm">
+            {% if revenue_trend == 'increasing' %}
+              <span class="text-emerald-400">📈 Increasing</span>
+            {% elif revenue_trend == 'decreasing' %}
+              <span class="text-red-400">📉 Decreasing</span>
+            {% else %}
+              <span class="text-blue-400">→ Stable</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Forecast -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div class="card p-6">
+        <h3 class="text-2xl font-bold text-dark-text mb-4 flex items-center gap-2">
+          <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+          </svg>
+          14-Day Revenue Forecast
+        </h3>
+        <p class="text-sm text-dark-muted mb-6">Predicted revenue using Holt-Winters ETS with weekly seasonality</p>
+
+        <div class="space-y-2 max-h-96 overflow-y-auto">
+          {% for forecast in revenue_forecast %}
+            <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg hover:bg-dark-hover transition-colors">
+              <span class="text-sm text-dark-muted">{{ forecast.date }}</span>
+              <span class="font-bold text-primary-400">₱{{ forecast.value|floatformat:2 }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <p class="text-sm text-blue-400">
+            <strong>Total Predicted Revenue (14 days):</strong>
+            ₱{% widthratio revenue_forecast|length 1 1 as total %}{{ revenue_forecast|map_attribute:'value'|join:','|cut:' '|split:','|sum|floatformat:2 }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Appointment Demand Forecast -->
+      <div class="card p-6">
+        <h3 class="text-2xl font-bold text-dark-text mb-4 flex items-center gap-2">
+          <svg class="w-6 h-6 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          14-Day Appointment Demand
+        </h3>
+        <p class="text-sm text-dark-muted mb-6">Predicted daily appointment bookings</p>
+
+        <div class="space-y-2 max-h-96 overflow-y-auto">
+          {% for forecast in appointment_forecast %}
+            <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg hover:bg-dark-hover transition-colors">
+              <span class="text-sm text-dark-muted">{{ forecast.date }}</span>
+              <span class="font-bold text-accent-400">~{{ forecast.value|floatformat:0 }} appointments</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-4 p-4 bg-accent-500/10 border border-accent-500/20 rounded-lg">
+          <p class="text-sm text-accent-400">
+            <strong>Trend:</strong>
+            {% if appointment_trend == 'increasing' %}
+              📈 Demand is increasing - consider increasing staff capacity
+            {% elif appointment_trend == 'decreasing' %}
+              📉 Demand is decreasing - focus on marketing efforts
+            {% else %}
+              → Demand is stable - maintain current operations
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Seasonality Analysis -->
+    <div class="card p-6 mb-12">
+      <h3 class="text-2xl font-bold text-dark-text mb-4 flex items-center gap-2">
+        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        Weekly Seasonality Pattern
+      </h3>
+      <p class="text-sm text-dark-muted mb-6">Revenue patterns by day of week (index: 1.0 = average)</p>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        {% for day in seasonality %}
+          <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
+            <div class="text-sm font-semibold text-dark-text mb-2">{{ day.day }}</div>
+            <div class="text-2xl font-bold {% if day.index > 1.1 %}text-emerald-400{% elif day.index < 0.9 %}text-red-400{% else %}text-blue-400{% endif %}">
+              {{ day.index }}x
+            </div>
+            <div class="text-xs text-dark-muted mt-1">
+              {% if day.index > 1.1 %}High{% elif day.index < 0.9 %}Low{% else %}Average{% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+        <p class="text-sm text-emerald-400">
+          <strong>💡 Insight:</strong> Use this data to optimize staff scheduling and promotional campaigns
+        </p>
+      </div>
+    </div>
+
+    <!-- Popular Services & Peak Periods -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <!-- Top Services -->
+      <div class="card p-6">
+        <h3 class="text-2xl font-bold text-dark-text mb-4">Top Performing Services</h3>
+        <p class="text-sm text-dark-muted mb-6">Based on last 90 days</p>
+
+        {% if popular_services %}
+          <div class="space-y-3">
+            {% for service in popular_services|slice:":5" %}
+              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/30 transition-all">
+                <div class="flex-1">
+                  <h4 class="font-semibold text-dark-text mb-1">{{ service.name }}</h4>
+                  <p class="text-sm text-dark-muted">{{ service.booking_count }} bookings</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-lg font-bold text-gradient">₱{{ service.revenue|default:0|floatformat:2 }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-dark-muted text-center py-8">No service data available</p>
+        {% endif %}
+      </div>
+
+      <!-- Peak Hours & Days -->
+      <div class="card p-6">
+        <h3 class="text-2xl font-bold text-dark-text mb-4">Peak Periods</h3>
+        <p class="text-sm text-dark-muted mb-6">Busiest times for appointments</p>
+
+        <div class="mb-6">
+          <h4 class="font-semibold text-dark-text mb-3">📅 Busiest Days</h4>
+          <div class="space-y-2">
+            {% for day in peak_days|slice:":5" %}
+              <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg">
+                <span class="text-sm font-medium text-dark-text">{{ day.day }}</span>
+                <div class="flex items-center gap-2">
+                  <div class="w-32 bg-dark-border rounded-full h-2">
+                    <div class="bg-primary-500 h-2 rounded-full" style="width: {% widthratio day.count peak_days.0.count 100 %}%"></div>
+                  </div>
+                  <span class="text-sm font-bold text-primary-400">{{ day.count }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if peak_hours %}
+          <div>
+            <h4 class="font-semibold text-dark-text mb-3">🕐 Peak Hours</h4>
+            <div class="space-y-2">
+              {% for hour in peak_hours %}
+                <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg">
+                  <span class="text-sm font-medium text-dark-text">{{ hour.hour|stringformat:"02d" }}:00</span>
+                  <span class="text-sm font-bold text-accent-400">{{ hour.count }} appointments</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Inventory Restocking Alert -->
+    {% if items_needing_restock %}
+      <div class="card p-6 mb-12 border-amber-500/50">
+        <h3 class="text-2xl font-bold text-dark-text mb-4 flex items-center gap-2">
+          <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          Inventory Restocking Recommendations
+        </h3>
+        <p class="text-sm text-dark-muted mb-6">Items approaching or below threshold levels</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for item in items_needing_restock %}
+            <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="font-semibold text-dark-text">{{ item.name }}</h4>
+                {% if item.stock == 0 %}
+                  <span class="badge badge-danger text-xs">Out of Stock</span>
+                {% else %}
+                  <span class="badge badge-warning text-xs">Low Stock</span>
+                {% endif %}
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-dark-muted">Current: {{ item.stock }} {{ item.unit }}</span>
+                <span class="text-dark-muted">Threshold: {{ item.threshold }} {{ item.unit }}</span>
+              </div>
+              <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 text-sm mt-2 inline-block">
+                Restock Now →
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Methodology -->
+    <div class="card p-6 bg-blue-500/5 border-blue-500/20">
+      <h3 class="text-lg font-bold text-dark-text mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        About This Forecast
+      </h3>
+      <p class="text-sm text-dark-muted leading-relaxed">
+        Forecasts are generated using <strong>Holt-Winters Exponential Smoothing (ETS)</strong>, a proven statistical method that accounts for:
+        <br>• <strong>Level:</strong> The average value of the series
+        <br>• <strong>Trend:</strong> The increasing or decreasing pattern
+        <br>• <strong>Seasonality:</strong> Weekly patterns in your data
+        <br><br>
+        The model is trained on the last 90 days of data and validated against recent historical data to ensure accuracy.
+        Current forecast accuracy: <strong class="text-primary-400">{{ forecast_accuracy.accuracy }}%</strong>
+      </p>
+    </div>
+  </div>
+{% endblock content %}
