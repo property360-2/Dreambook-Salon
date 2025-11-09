@@ -51,17 +51,33 @@
               </h3>
               <span class="badge badge-info">{{ service.duration_minutes }} min</span>
             </div>
-            <p class="text-dark-muted mb-4 line-clamp-2">{{ service.description }}</p>
+            <p class="text-dark-muted mb-4 line-clamp-2">{{ service.description|default:"Premium salon service" }}</p>
             <div class="flex items-center justify-between pt-4 border-t border-dark-border">
               <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
-              <a href="{% url 'appointments:book' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
-                Book now →
-              </a>
+              {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
+                <a href="{% url 'appointments:book' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                  Book now →
+                </a>
+              {% elif not request.user.is_authenticated %}
+                <a href="{% url 'core:login' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                  Sign in to book →
+                </a>
+              {% else %}
+                <a href="{% url 'services:detail' service.id %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                  View details →
+                </a>
+              {% endif %}
             </div>
           </div>
         {% empty %}
           <div class="col-span-full text-center py-12">
-            <p class="text-dark-muted">No featured services available at the moment.</p>
+            <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center">
+              <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-dark-text mb-2">Services Coming Soon</h3>
+            <p class="text-dark-muted">We're preparing our premium services for you. Check back soon!</p>
           </div>
         {% endfor %}
       </div>
