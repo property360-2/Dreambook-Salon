@@ -30,7 +30,7 @@
       </ul>
 
       <!-- Account Section -->
-      <div class="flex items-center space-x-4">
+      <div class="hidden md:flex items-center space-x-4">
         {% if request.user.is_authenticated %}
           <span class="hidden lg:block text-sm text-dark-muted">
             Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
@@ -45,7 +45,7 @@
             </button>
           </form>
         {% else %}
-          <a href="{% url 'core:register' %}" class="hidden md:block text-dark-text hover:text-primary-400 transition-colors">
+          <a href="{% url 'core:register' %}" class="text-dark-text hover:text-primary-400 transition-colors">
             Create account
           </a>
           <a href="{% url 'core:login' %}" class="btn btn-primary text-sm px-4 py-2">
@@ -53,6 +53,88 @@
           </a>
         {% endif %}
       </div>
+
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-dark-hover transition-colors">
+        <svg class="w-6 h-6 text-dark-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden pb-4">
+      <ul class="space-y-2 mt-4">
+        <li><a href="{% url 'core:home' %}" class="block navbar-link">Home</a></li>
+        <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
+
+        {% if request.user.is_authenticated %}
+          {% if request.user.role == 'ADMIN' or request.user.role == 'STAFF' %}
+            <!-- Staff/Admin Only Links -->
+            <li><a href="{% url 'inventory:list' %}" class="block navbar-link">Inventory</a></li>
+            <li><a href="{% url 'appointments:staff_list' %}" class="block navbar-link">All Appointments</a></li>
+            <li><a href="{% url 'analytics:dashboard' %}" class="block navbar-link">Analytics</a></li>
+            <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">🤖 AI Assistant</a></li>
+          {% else %}
+            <!-- Customer Only Links -->
+            <li><a href="{% url 'appointments:my_appointments' %}" class="block navbar-link">My Appointments</a></li>
+            <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">💬 Chat</a></li>
+          {% endif %}
+
+          <!-- Mobile Account Section -->
+          <li class="pt-4 border-t border-dark-border">
+            <span class="block text-sm text-dark-muted px-4 py-2">
+              Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
+            </span>
+          </li>
+          <li>
+            <a href="{% url 'appointments:book' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
+              Book Now
+            </a>
+          </li>
+          <li>
+            <form method="post" action="{% url 'core:logout' %}" class="mx-4">
+              {% csrf_token %}
+              <button type="submit" class="w-full btn btn-ghost text-sm text-center">
+                Sign out
+              </button>
+            </form>
+          </li>
+        {% else %}
+          <li>
+            <a href="{% url 'core:register' %}" class="block navbar-link">Create account</a>
+          </li>
+          <li>
+            <a href="{% url 'core:login' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
+              Sign in
+            </a>
+          </li>
+        {% endif %}
+      </ul>
     </div>
   </div>
 </nav>
+
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (mobileMenuButton && mobileMenu) {
+    mobileMenuButton.addEventListener('click', function() {
+      mobileMenu.classList.toggle('hidden');
+
+      // Toggle hamburger icon
+      const svg = this.querySelector('svg');
+      const isOpen = !mobileMenu.classList.contains('hidden');
+
+      if (isOpen) {
+        svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+      } else {
+        svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+      }
+    });
+  }
+});
+</script>
