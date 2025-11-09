@@ -100,9 +100,9 @@ class DashboardView(StaffOrAdminRequiredMixin, TemplateView):
 
         # Top services by bookings
         top_services = Service.objects.annotate(
-            booking_count=Count('appointment'),
-            completed_count=Count('appointment', filter=Q(appointment__status=Appointment.Status.COMPLETED)),
-            revenue=Sum('appointment__payment__amount', filter=Q(appointment__payment__status=Payment.Status.PAID))
+            booking_count=Count('appointments'),
+            completed_count=Count('appointments', filter=Q(appointments__status=Appointment.Status.COMPLETED)),
+            revenue=Sum('appointments__payment__amount', filter=Q(appointments__payment__status=Payment.Status.PAID))
         ).order_by('-booking_count')[:5]
         context['top_services'] = top_services
 
