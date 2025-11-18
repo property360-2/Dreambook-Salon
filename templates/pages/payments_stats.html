@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Payment Statistics</h1>
-        <p class="text-dark-muted">Financial overview and analytics</p>
+        <p class="text-light-muted">Financial overview and analytics</p>
       </div>
       <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         View Dashboard
@@ -17,7 +17,7 @@
 
     <!-- Revenue Overview -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue Overview</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Revenue Overview</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="stat-card">
           <div class="stat-label">Total Revenue</div>
@@ -40,7 +40,7 @@
 
     <!-- Payment Method Breakdown -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Method Breakdown</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Payment Method Breakdown</h2>
       {% if method_breakdown %}
         <div class="card overflow-hidden">
           <div class="overflow-x-auto">
@@ -56,10 +56,10 @@
               <tbody>
                 {% for method in method_breakdown %}
                   <tr>
-                    <td class="font-semibold text-dark-text">{{ method.method_display }}</td>
+                    <td class="font-semibold text-light-text">{{ method.method_display }}</td>
                     <td><span class="badge badge-info">{{ method.count }}</span></td>
                     <td class="text-gradient font-bold text-lg">₱{{ method.total|floatformat:2 }}</td>
-                    <td class="text-dark-muted">₱{{ method.average|floatformat:2 }}</td>
+                    <td class="text-light-muted">₱{{ method.average|floatformat:2 }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -68,14 +68,14 @@
         </div>
       {% else %}
         <div class="card p-8 text-center">
-          <p class="text-dark-muted">No payment method data available</p>
+          <p class="text-light-muted">No payment method data available</p>
         </div>
       {% endif %}
     </div>
 
     <!-- Payment Status Summary -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Payment Status Summary</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Payment Status Summary</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="card p-6 bg-amber-500/10 border-amber-500/20">
           <h3 class="text-lg font-semibold text-amber-400 mb-4">Pending</h3>
@@ -97,7 +97,7 @@
 
     <!-- Recent Payments -->
     <div>
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Recent Payments</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Recent Payments</h2>
       {% if recent_payments %}
         <div class="space-y-4">
           {% for payment in recent_payments %}
@@ -105,7 +105,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
-                    <span class="font-mono text-sm text-primary-400">{{ payment.txn_id }}</span>
+                    <span class="font-mono text-sm text-primary-600">{{ payment.txn_id }}</span>
                     {% if payment.status == 'PAID' %}
                       <span class="badge badge-success">{{ payment.get_status_display }}</span>
                     {% elif payment.status == 'PENDING' %}
@@ -115,9 +115,9 @@
                     {% endif %}
                   </div>
                   <div class="flex flex-wrap items-center gap-4 text-sm">
-                    <span class="text-dark-text font-semibold">{{ payment.appointment.service.name }}</span>
+                    <span class="text-light-text font-semibold">{{ payment.appointment.service.name }}</span>
                     <span class="text-gradient font-bold">₱{{ payment.amount }}</span>
-                    <span class="text-dark-muted">{{ payment.created_at|date:"M d, Y" }}</span>
+                    <span class="text-light-muted">{{ payment.created_at|date:"M d, Y" }}</span>
                   </div>
                 </div>
                 <a href="{% url 'payments:detail' payment.id %}" class="btn btn-ghost text-sm">
@@ -130,7 +130,7 @@
       {% else %}
         <div class="card p-12 text-center">
           <div class="text-6xl mb-4">💳</div>
-          <p class="text-dark-muted">No recent payments</p>
+          <p class="text-light-muted">No recent payments</p>
         </div>
       {% endif %}
     </div>

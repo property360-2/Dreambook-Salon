@@ -8,7 +8,7 @@
       <!-- Header -->
       <div class="text-center mb-12 animate-slide-up">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gradient">Book an Appointment</h1>
-        <p class="text-xl text-dark-muted">Select a service and choose your preferred time</p>
+        <p class="text-xl text-light-muted">Select a service and choose your preferred time</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -28,7 +28,7 @@
 
               {% for field in form %}
                 <div>
-                  <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+                  <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-light-text mb-2">
                     {{ field.label }}
                     {% if field.field.required %}
                       <span class="text-red-400">*</span>
@@ -74,7 +74,7 @@
                     <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
                   {% endif %}
                   {% if field.help_text %}
-                    <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+                    <p class="mt-1 text-sm text-light-muted">{{ field.help_text }}</p>
                   {% endif %}
                 </div>
               {% endfor %}
@@ -94,32 +94,32 @@
         <!-- Booking Information Sidebar -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24">
-            <h3 class="text-xl font-bold text-dark-text mb-4 flex items-center gap-2">
+            <h3 class="text-xl font-bold text-light-text mb-4 flex items-center gap-2">
               <span class="text-2xl">ℹ️</span>
               Booking Information
             </h3>
-            <ul class="space-y-3 text-sm text-dark-muted">
+            <ul class="space-y-3 text-sm text-light-muted">
               <li class="flex items-start gap-2">
-                <span class="text-primary-400 mt-1">•</span>
+                <span class="text-primary-600 mt-1">•</span>
                 <span>Appointments can be booked up to 30 days in advance</span>
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary-400 mt-1">•</span>
+                <span class="text-primary-600 mt-1">•</span>
                 <span>You will receive a confirmation after booking</span>
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary-400 mt-1">•</span>
+                <span class="text-primary-600 mt-1">•</span>
                 <span>Payment can be made online or at the salon</span>
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary-400 mt-1">•</span>
+                <span class="text-primary-600 mt-1">•</span>
                 <span>Cancellations can be made up until the appointment time</span>
               </li>
             </ul>
 
-            <div class="mt-6 pt-6 border-t border-dark-border">
-              <h4 class="text-sm font-semibold text-dark-text mb-2">Need help?</h4>
-              <p class="text-sm text-dark-muted mb-3">Contact our support team for assistance</p>
+            <div class="mt-6 pt-6 border-t border-light-border">
+              <h4 class="text-sm font-semibold text-light-text mb-2">Need help?</h4>
+              <p class="text-sm text-light-muted mb-3">Contact our support team for assistance</p>
               <a href="#contact" class="btn btn-ghost text-sm w-full">
                 Contact Support
               </a>

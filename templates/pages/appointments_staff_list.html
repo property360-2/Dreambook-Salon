@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">All Appointments</h1>
-        <p class="text-dark-muted">Manage and track all salon appointments</p>
+        <p class="text-light-muted">Manage and track all salon appointments</p>
       </div>
       <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         View Analytics
@@ -19,7 +19,7 @@
     <form method="get" class="card p-6 mb-8">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-dark-text mb-2">Status</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">Status</label>
           <select name="status" class="input">
             <option value="">All</option>
             <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
@@ -32,12 +32,12 @@
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-dark-text mb-2">From Date</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">From Date</label>
           <input type="date" name="from_date" value="{{ request.GET.from_date }}" class="input">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-dark-text mb-2">To Date</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">To Date</label>
           <input type="date" name="to_date" value="{{ request.GET.to_date }}" class="input">
         </div>
 
@@ -67,11 +67,11 @@
               {% for appointment in appointments %}
                 <tr>
                   <td>
-                    <div class="font-semibold text-dark-text">{{ appointment.start_at|date:"M d, Y" }}</div>
-                    <div class="text-sm text-primary-400">{{ appointment.start_at|date:"g:i A" }}</div>
+                    <div class="font-semibold text-light-text">{{ appointment.start_at|date:"M d, Y" }}</div>
+                    <div class="text-sm text-primary-600">{{ appointment.start_at|date:"g:i A" }}</div>
                   </td>
-                  <td class="text-dark-text">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
-                  <td class="text-dark-text font-semibold">{{ appointment.service.name }}</td>
+                  <td class="text-light-text">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
+                  <td class="text-light-text font-semibold">{{ appointment.service.name }}</td>
                   <td>
                     {% if appointment.status == 'CONFIRMED' %}
                       <span class="badge badge-success">{{ appointment.get_status_display }}</span>
@@ -95,7 +95,7 @@
                     {% endif %}
                   </td>
                   <td>
-                    <a href="{% url 'appointments:detail' appointment.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                    <a href="{% url 'appointments:detail' appointment.id %}" class="text-primary-600 hover:text-primary-300 font-semibold text-sm">
                       View Details
                     </a>
                   </td>
@@ -117,7 +117,7 @@
             <span class="btn btn-ghost opacity-50 cursor-not-allowed">Previous</span>
           {% endif %}
 
-          <span class="text-dark-muted">
+          <span class="text-light-muted">
             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
           </span>
 
@@ -134,8 +134,8 @@
       <!-- Empty State -->
       <div class="card p-12 text-center">
         <div class="text-6xl mb-4">📅</div>
-        <h3 class="text-2xl font-bold text-dark-text mb-2">No appointments found</h3>
-        <p class="text-dark-muted">No appointments match your current filters</p>
+        <h3 class="text-2xl font-bold text-light-text mb-2">No appointments found</h3>
+        <p class="text-light-muted">No appointments match your current filters</p>
       </div>
     {% endif %}
   </div>

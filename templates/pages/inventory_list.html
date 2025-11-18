@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Inventory Management</h1>
-        <p class="text-dark-muted">Track and manage your salon supplies</p>
+        <p class="text-light-muted">Track and manage your salon supplies</p>
       </div>
       <div class="flex flex-col sm:flex-row gap-3">
         <a href="{% url 'inventory:create' %}" class="btn btn-primary whitespace-nowrap">
@@ -30,7 +30,7 @@
     <div class="card p-6 mb-8">
       <form method="get" class="flex flex-col sm:flex-row gap-4 items-end">
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-dark-text mb-2">Stock Status:</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">Stock Status:</label>
           <select name="stock_status" class="input">
             <option value="">All</option>
             <option value="low" {% if request.GET.stock_status == 'low' %}selected{% endif %}>Low Stock</option>
@@ -64,14 +64,14 @@
             <tbody>
               {% for item in items %}
                 <tr class="{% if item.stock <= 0 %}bg-red-500/5{% elif item.is_low_stock %}bg-amber-500/5{% endif %}">
-                  <td class="font-semibold text-dark-text">{{ item.name }}</td>
+                  <td class="font-semibold text-light-text">{{ item.name }}</td>
                   <td>
                     <span class="{% if item.stock <= 0 %}text-red-400{% elif item.is_low_stock %}text-amber-400{% else %}text-emerald-400{% endif %} font-bold">
                       {{ item.stock }}
                     </span>
                   </td>
-                  <td class="text-dark-muted">{{ item.unit }}</td>
-                  <td class="text-dark-muted">{{ item.threshold }}</td>
+                  <td class="text-light-muted">{{ item.unit }}</td>
+                  <td class="text-light-muted">{{ item.threshold }}</td>
                   <td>
                     {% if item.stock <= 0 %}
                       <span class="badge badge-danger">Out of Stock</span>
@@ -83,7 +83,7 @@
                   </td>
                   <td>
                     <div class="flex items-center gap-2 flex-wrap">
-                      <a href="{% url 'inventory:detail' item.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm transition-colors">
+                      <a href="{% url 'inventory:detail' item.id %}" class="text-primary-600 hover:text-primary-300 font-semibold text-sm transition-colors">
                         <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -132,7 +132,7 @@
           {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Previous</a>
           {% endif %}
-          <span class="px-4 py-2 text-dark-text font-semibold">
+          <span class="px-4 py-2 text-light-text font-semibold">
             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
           </span>
           {% if page_obj.has_next %}
@@ -144,12 +144,12 @@
       <!-- Enhanced Empty State -->
       <div class="card p-16 text-center max-w-2xl mx-auto">
         <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
-          <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-12 h-12 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
           </svg>
         </div>
         <h3 class="text-3xl font-bold text-gradient mb-3">No Inventory Items Found</h3>
-        <p class="text-lg text-dark-muted mb-8 max-w-md mx-auto">
+        <p class="text-lg text-light-muted mb-8 max-w-md mx-auto">
           Your inventory is empty. Start by adding items to track your salon supplies and manage stock levels.
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">

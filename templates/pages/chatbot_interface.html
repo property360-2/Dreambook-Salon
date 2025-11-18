@@ -9,35 +9,35 @@
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gradient mb-2">Chat Assistant</h1>
-        <p class="text-dark-muted">Ask me anything about Dreambook Salon services, appointments, or general inquiries</p>
+        <p class="text-light-muted">Ask me anything about Dreambook Salon services, appointments, or general inquiries</p>
       </div>
 
       <!-- Chat Container -->
       <div class="card overflow-hidden">
         <!-- Messages Area -->
-        <div id="chatMessages" class="h-[500px] overflow-y-auto p-6 bg-dark-bg">
+        <div id="chatMessages" class="h-[500px] overflow-y-auto p-6 bg-light-bg">
           <div class="text-center py-12">
             <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30 animate-pulse-slow">
               <span class="text-white text-3xl">🤖</span>
             </div>
-            <h3 class="text-dark-text font-bold text-xl mb-2">AI Assistant</h3>
-            <p class="text-dark-muted text-sm mb-4">I can help you with real-time information!</p>
+            <h3 class="text-light-text font-bold text-xl mb-2">AI Assistant</h3>
+            <p class="text-light-muted text-sm mb-4">I can help you with real-time information!</p>
             {% if user.is_authenticated and user.role in 'ADMIN,STAFF' %}
               <div class="inline-block bg-primary-500/10 border border-primary-500/20 rounded-lg px-4 py-2 text-left">
-                <p class="text-primary-400 text-sm font-semibold mb-1">📊 Staff Mode Active</p>
-                <p class="text-dark-muted text-xs">Ask about revenue, analytics, inventory, or stats!</p>
+                <p class="text-primary-600 text-sm font-semibold mb-1">📊 Staff Mode Active</p>
+                <p class="text-light-muted text-xs">Ask about revenue, analytics, inventory, or stats!</p>
               </div>
             {% else %}
               <div class="inline-block bg-accent-500/10 border border-accent-500/20 rounded-lg px-4 py-2 text-left">
-                <p class="text-accent-400 text-sm font-semibold mb-1">💇 Customer Mode</p>
-                <p class="text-dark-muted text-xs">Ask about services, pricing, popular treatments!</p>
+                <p class="text-accent-600 text-sm font-semibold mb-1">💇 Customer Mode</p>
+                <p class="text-light-muted text-xs">Ask about services, pricing, popular treatments!</p>
               </div>
             {% endif %}
           </div>
         </div>
 
         <!-- Input Area -->
-        <div class="p-4 bg-dark-surface border-t border-dark-border">
+        <div class="p-4 bg-light-surface border-t border-light-border">
           <form id="chatForm" class="flex gap-3">
             {% csrf_token %}
             <input
@@ -128,12 +128,12 @@
     contentDiv.className = `max-w-[70%] px-4 py-3 rounded-xl whitespace-pre-wrap ${
       sender === 'user'
         ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white'
-        : 'bg-dark-elevated border border-dark-border text-dark-text'
+        : 'bg-light-elevated border border-light-border text-light-text'
     }`;
 
     // Format text: convert **bold** to <strong>, preserve newlines
     let formattedText = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-primary-400">$1</strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-primary-600">$1</strong>')
       .replace(/\n/g, '<br>');
 
     contentDiv.innerHTML = formattedText;

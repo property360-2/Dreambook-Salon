@@ -8,7 +8,7 @@
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold text-gradient mb-2">Make Payment</h1>
-        <p class="text-dark-muted">Complete your payment for this appointment</p>
+        <p class="text-light-muted">Complete your payment for this appointment</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -16,22 +16,22 @@
         <div class="lg:col-span-2">
           <!-- Appointment Summary -->
           <div class="card p-6 mb-6">
-            <h2 class="text-2xl font-bold text-dark-text mb-4">Appointment Summary</h2>
+            <h2 class="text-2xl font-bold text-light-text mb-4">Appointment Summary</h2>
             <div class="space-y-3">
-              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
-                <span class="text-dark-muted">Service</span>
-                <span class="text-dark-text font-semibold">{{ appointment.service.name }}</span>
+              <div class="flex items-center justify-between p-4 bg-light-elevated rounded-lg border border-light-border">
+                <span class="text-light-muted">Service</span>
+                <span class="text-light-text font-semibold">{{ appointment.service.name }}</span>
               </div>
-              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
-                <span class="text-dark-muted">Date & Time</span>
-                <span class="text-dark-text font-semibold">{{ appointment.start_at|date:"F d, Y g:i A" }}</span>
+              <div class="flex items-center justify-between p-4 bg-light-elevated rounded-lg border border-light-border">
+                <span class="text-light-muted">Date & Time</span>
+                <span class="text-light-text font-semibold">{{ appointment.start_at|date:"F d, Y g:i A" }}</span>
               </div>
-              <div class="flex items-center justify-between p-4 bg-dark-elevated rounded-lg border border-dark-border">
-                <span class="text-dark-muted">Duration</span>
-                <span class="text-dark-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
+              <div class="flex items-center justify-between p-4 bg-light-elevated rounded-lg border border-light-border">
+                <span class="text-light-muted">Duration</span>
+                <span class="text-light-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
               </div>
               <div class="flex items-center justify-between p-4 bg-primary-500/10 rounded-lg border border-primary-500/20">
-                <span class="text-primary-400 font-semibold">Amount to Pay</span>
+                <span class="text-primary-600 font-semibold">Amount to Pay</span>
                 <span class="text-gradient font-bold text-3xl">₱{{ appointment.service.price }}</span>
               </div>
             </div>
@@ -60,29 +60,29 @@
 
             <!-- Payment Methods -->
             <div class="mb-6">
-              <h3 class="text-xl font-bold text-dark-text mb-4">Select Payment Method</h3>
+              <h3 class="text-xl font-bold text-light-text mb-4">Select Payment Method</h3>
               <div class="space-y-3">
-                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="GCASH" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="GCASH" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
                   <div class="flex-1">
-                    <span class="text-dark-text font-semibold block mb-1">GCash</span>
-                    <span class="text-dark-muted text-sm">Pay via GCash mobile wallet</span>
+                    <span class="text-light-text font-semibold block mb-1">GCash</span>
+                    <span class="text-light-muted text-sm">Pay via GCash mobile wallet</span>
                   </div>
                   <span class="text-2xl">💰</span>
                 </label>
-                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="PAYMAYA" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="PAYMAYA" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
                   <div class="flex-1">
-                    <span class="text-dark-text font-semibold block mb-1">PayMaya</span>
-                    <span class="text-dark-muted text-sm">Pay via PayMaya mobile wallet</span>
+                    <span class="text-light-text font-semibold block mb-1">PayMaya</span>
+                    <span class="text-light-muted text-sm">Pay via PayMaya mobile wallet</span>
                   </div>
                   <span class="text-2xl">💳</span>
                 </label>
-                <label class="flex items-center p-4 bg-dark-elevated rounded-xl border border-dark-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="ONSITE" required class="mr-4 w-5 h-5 text-primary-500 border-dark-border focus:ring-primary-500 focus:ring-2">
+                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
+                  <input type="radio" name="method" value="ONSITE" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
                   <div class="flex-1">
-                    <span class="text-dark-text font-semibold block mb-1">Pay at Salon</span>
-                    <span class="text-dark-muted text-sm">Pay cash at the salon</span>
+                    <span class="text-light-text font-semibold block mb-1">Pay at Salon</span>
+                    <span class="text-light-muted text-sm">Pay cash at the salon</span>
                   </div>
                   <span class="text-2xl">🏪</span>
                 </label>
@@ -104,8 +104,8 @@
         <!-- Sidebar Info -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24">
-            <h3 class="text-lg font-bold text-dark-text mb-4">Payment Information</h3>
-            <div class="space-y-3 text-sm text-dark-muted">
+            <h3 class="text-lg font-bold text-light-text mb-4">Payment Information</h3>
+            <div class="space-y-3 text-sm text-light-muted">
               <div class="flex items-start gap-2">
                 <span class="text-emerald-400">✓</span>
                 <p>All payments are processed securely</p>

@@ -8,7 +8,7 @@
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold text-gradient mb-2">Delete Inventory Item</h1>
-        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% url 'inventory:list' %}" class="text-primary-600 hover:text-primary-300 transition-colors">
           ← Back to Inventory
         </a>
       </div>
@@ -22,18 +22,18 @@
             </svg>
           </div>
           <div class="flex-1">
-            <h2 class="text-2xl font-bold text-dark-text mb-2">
+            <h2 class="text-2xl font-bold text-light-text mb-2">
               Are you sure you want to delete this item?
             </h2>
             <div class="space-y-2">
-              <p class="text-dark-muted">
-                <span class="font-semibold text-dark-text">Item:</span> {{ object.name }}
+              <p class="text-light-muted">
+                <span class="font-semibold text-light-text">Item:</span> {{ object.name }}
               </p>
-              <p class="text-dark-muted">
-                <span class="font-semibold text-dark-text">Current Stock:</span> {{ object.stock }} {{ object.unit }}
+              <p class="text-light-muted">
+                <span class="font-semibold text-light-text">Current Stock:</span> {{ object.stock }} {{ object.unit }}
               </p>
-              <p class="text-dark-muted">
-                <span class="font-semibold text-dark-text">Status:</span>
+              <p class="text-light-muted">
+                <span class="font-semibold text-light-text">Status:</span>
                 {% if object.stock <= 0 %}
                   <span class="text-red-400">Out of Stock</span>
                 {% elif object.is_low_stock %}
@@ -54,17 +54,17 @@
               </svg>
               <div>
                 <p class="font-semibold text-amber-400">Warning: Item is used in services</p>
-                <p class="text-sm text-dark-muted mt-1">
+                <p class="text-sm text-light-muted mt-1">
                   This item is required by <strong>{{ service_count }}</strong> service(s).
                   Instead of deleting, the item will be <strong>deactivated</strong> to preserve service requirements.
                 </p>
                 <div class="mt-3 space-y-1">
-                  <p class="text-sm font-semibold text-dark-text">Used in:</p>
+                  <p class="text-sm font-semibold text-light-text">Used in:</p>
                   {% for link in services %}
-                    <p class="text-sm text-dark-muted">• {{ link.service.name }} ({{ link.qty_per_service }} {{ object.unit }})</p>
+                    <p class="text-sm text-light-muted">• {{ link.service.name }} ({{ link.qty_per_service }} {{ object.unit }})</p>
                   {% endfor %}
                   {% if service_count > 5 %}
-                    <p class="text-sm text-dark-muted">• And {{ service_count|add:"-5" }} more...</p>
+                    <p class="text-sm text-light-muted">• And {{ service_count|add:"-5" }} more...</p>
                   {% endif %}
                 </div>
               </div>
@@ -78,7 +78,7 @@
               </svg>
               <div>
                 <p class="font-semibold text-red-400">This action cannot be undone</p>
-                <p class="text-sm text-dark-muted mt-1">
+                <p class="text-sm text-light-muted mt-1">
                   The inventory item will be permanently deleted.
                 </p>
               </div>

@@ -88,20 +88,20 @@ function showConfirmationModal(options = {}) {
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
         <!-- Modal panel -->
-        <div class="inline-block align-bottom bg-dark-surface rounded-2xl border border-dark-border px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-slide-up">
+        <div class="inline-block align-bottom bg-light-surface rounded-2xl border border-light-border px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-slide-up">
           <div class="sm:flex sm:items-start">
             <div class="mx-auto flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-xl ${config.isDanger ? 'bg-red-500/10 border border-red-500/20' : 'bg-primary-500/10 border border-primary-500/20'} sm:mx-0 sm:h-12 sm:w-12">
               ${config.isDanger ?
                 '<svg class="h-7 w-7 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>' :
-                '<svg class="h-7 w-7 text-primary-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
+                '<svg class="h-7 w-7 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
               }
             </div>
             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
-              <h3 class="text-xl font-bold text-dark-text mb-2" id="modal-title">
+              <h3 class="text-xl font-bold text-light-text mb-2" id="modal-title">
                 ${config.title}
               </h3>
               <div class="mt-2">
-                <p class="text-base text-dark-muted">
+                <p class="text-base text-light-muted">
                   ${config.message}
                 </p>
               </div>
@@ -235,7 +235,7 @@ function showToast(message, type = 'info', duration = 5000) {
     success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
     error: 'bg-red-500/10 border-red-500/20 text-red-400',
     warning: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-    info: 'bg-primary-500/10 border-primary-500/20 text-primary-400'
+    info: 'bg-primary-500/10 border-primary-500/20 text-primary-600'
   };
 
   const toast = document.createElement('div');
@@ -246,7 +246,7 @@ function showToast(message, type = 'info', duration = 5000) {
         ${icons[type]}
       </div>
       <div class="flex-1">
-        <p class="text-sm font-medium text-dark-text">${message}</p>
+        <p class="text-sm font-medium text-light-text">${message}</p>
       </div>
       <button type="button" class="flex-shrink-0 hover:opacity-75 transition-opacity" onclick="this.parentElement.parentElement.remove()">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,7 @@ function showPasswordStrength(input, strength) {
   indicator.innerHTML = `
     <div class="flex gap-1 mb-1">
       ${Array.from({length: 5}, (_, i) =>
-        `<div class="h-1 flex-1 rounded-full ${i < strength ? colors[strength] : 'bg-dark-border'}"></div>`
+        `<div class="h-1 flex-1 rounded-full ${i < strength ? colors[strength] : 'bg-light-border'}"></div>`
       ).join('')}
     </div>
     <p class="text-xs ${strength < 2 ? 'text-red-400' : strength < 4 ? 'text-amber-400' : 'text-emerald-400'}">
@@ -425,9 +425,9 @@ function showSkeletonLoader(targetSelector) {
 
   target.innerHTML = `
     <div class="animate-pulse space-y-4">
-      <div class="h-4 bg-dark-border rounded w-3/4"></div>
-      <div class="h-4 bg-dark-border rounded w-full"></div>
-      <div class="h-4 bg-dark-border rounded w-5/6"></div>
+      <div class="h-4 bg-light-border rounded w-3/4"></div>
+      <div class="h-4 bg-light-border rounded w-full"></div>
+      <div class="h-4 bg-light-border rounded w-5/6"></div>
     </div>
   `;
 }
