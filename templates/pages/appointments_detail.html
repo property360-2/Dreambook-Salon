@@ -88,6 +88,9 @@
             </div>
           </div>
 
+          <!-- Available Time Slots -->
+          {% include 'components/molecules/available_slots.html' %}
+
           <!-- Staff Actions (if applicable) -->
           {% if user.role in 'STAFF,ADMIN' %}
             <div class="card p-6">
