@@ -16,6 +16,9 @@ class Service(models.Model):
     duration_minutes = models.IntegerField(
         validators=[MinValueValidator(1)], help_text="Duration in minutes"
     )
+    image = models.ImageField(
+        upload_to='services/', blank=True, null=True, help_text="Service image for display"
+    )
     is_active = models.BooleanField(
         default=True, help_text="Whether this service is available for booking"
     )

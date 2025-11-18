@@ -9,7 +9,7 @@ class ServiceForm(forms.ModelForm):
 
     class Meta:
         model = Service
-        fields = ['name', 'description', 'price', 'duration_minutes', 'is_active']
+        fields = ['name', 'description', 'price', 'duration_minutes', 'image', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'input',
@@ -31,8 +31,12 @@ class ServiceForm(forms.ModelForm):
                 'min': '1',
                 'placeholder': 'Duration in minutes'
             }),
+            'image': forms.FileInput(attrs={
+                'class': 'input',
+                'accept': 'image/*',
+            }),
             'is_active': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-primary-600 bg-dark-elevated border-dark-border rounded focus:ring-primary-500'
+                'class': 'w-4 h-4 text-primary-600 bg-light-elevated border-light-border rounded focus:ring-primary-500'
             }),
         }
         labels = {
@@ -40,6 +44,7 @@ class ServiceForm(forms.ModelForm):
             'description': 'Description',
             'price': 'Price (₱)',
             'duration_minutes': 'Duration (minutes)',
+            'image': 'Service Image',
             'is_active': 'Active (available for booking)',
         }
 
