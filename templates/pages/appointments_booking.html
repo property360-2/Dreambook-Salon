@@ -92,6 +92,18 @@
                         >
                       </div>
                     </div>
+
+                    <!-- Slot Availability Status -->
+                    <div id="slot-availability" class="mt-4 p-4 rounded-lg border-2 bg-light-elevated border-light-border hidden">
+                      <div class="flex items-start gap-3">
+                        <div id="slot-status-icon" class="mt-1 flex-shrink-0"></div>
+                        <div class="flex-1">
+                          <p id="slot-status-text" class="font-semibold text-sm"></p>
+                          <p id="slot-reason-text" class="text-xs text-light-muted mt-1"></p>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Hidden datetime field that gets populated -->
                     <input
                       type="hidden"
@@ -110,11 +122,86 @@
                       const dateInput = document.getElementById('id_start_at_date');
                       const timeInput = document.getElementById('id_start_at_time');
                       const datetimeInput = document.getElementById('id_start_at');
+                      const availabilityDiv = document.getElementById('slot-availability');
+                      const statusIcon = document.getElementById('slot-status-icon');
+                      const statusText = document.getElementById('slot-status-text');
+                      const reasonText = document.getElementById('slot-reason-text');
+                      const serviceField = document.querySelector('select[name="service"]');
+                      const hiddenServiceInput = document.querySelector('input[name="service"][type="hidden"]');
+                      const submitBtn = document.querySelector('button[type="submit"]');
 
                       function updateDatetime() {
                         if (dateInput.value && timeInput.value) {
                           datetimeInput.value = `${dateInput.value}T${timeInput.value}`;
+                          checkSlotAvailability();
                         }
+                      }
+
+                      function checkSlotAvailability() {
+                        if (!dateInput.value || !timeInput.value) {
+                          availabilityDiv.classList.add('hidden');
+                          return;
+                        }
+
+                        const serviceId = hiddenServiceInput ? hiddenServiceInput.value : (serviceField ? serviceField.value : null);
+                        if (!serviceId) {
+                          availabilityDiv.classList.add('hidden');
+                          return;
+                        }
+
+                        // Show checking state
+                        availabilityDiv.classList.remove('hidden');
+                        statusIcon.innerHTML = '<svg class="w-5 h-5 text-light-muted animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                        statusText.textContent = 'Checking availability...';
+                        reasonText.textContent = '';
+
+                        // Send API request
+                        fetch('{% url "appointments:check_availability" %}', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+                          },
+                          body: new URLSearchParams({
+                            'service_id': serviceId,
+                            'date': dateInput.value,
+                            'time': timeInput.value
+                          })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                          availabilityDiv.classList.remove('hidden');
+
+                          if (data.available) {
+                            // Available
+                            availabilityDiv.classList.remove('border-red-300', 'bg-red-50');
+                            availabilityDiv.classList.add('border-accent-300', 'bg-accent-50');
+
+                            statusIcon.innerHTML = '<svg class="w-5 h-5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+                            statusText.textContent = '✓ Slot Available';
+                            statusText.className = 'font-semibold text-sm text-accent-700';
+                            reasonText.textContent = `${data.date} at ${data.time}`;
+                            reasonText.className = 'text-xs text-accent-600 mt-1';
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                          } else {
+                            // Unavailable
+                            availabilityDiv.classList.remove('border-accent-300', 'bg-accent-50');
+                            availabilityDiv.classList.add('border-red-300', 'bg-red-50');
+
+                            statusIcon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>';
+                            statusText.textContent = '✗ Slot Not Available';
+                            statusText.className = 'font-semibold text-sm text-red-700';
+                            reasonText.textContent = data.reason || 'This time slot is not available';
+                            reasonText.className = 'text-xs text-red-600 mt-1';
+                            submitBtn.disabled = true;
+                            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error checking availability:', error);
+                          availabilityDiv.classList.add('hidden');
+                        });
                       }
 
                       // Update hidden field when date or time changes

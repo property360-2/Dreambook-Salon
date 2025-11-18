@@ -7,6 +7,7 @@ from .views import (
     StaffAppointmentListView,
     AppointmentCompleteView,
     AppointmentUpdateStatusView,
+    CheckSlotAvailabilityView,
 )
 
 app_name = 'appointments'
@@ -17,6 +18,9 @@ urlpatterns = [
     path('my/', MyAppointmentsView.as_view(), name='my_appointments'),
     path('<int:pk>/', AppointmentDetailView.as_view(), name='detail'),
     path('<int:pk>/cancel/', AppointmentCancelView.as_view(), name='cancel'),
+
+    # API endpoints
+    path('api/check-availability/', CheckSlotAvailabilityView.as_view(), name='check_availability'),
 
     # Staff/Admin views
     path('staff/', StaffAppointmentListView.as_view(), name='staff_list'),

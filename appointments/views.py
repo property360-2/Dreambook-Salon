@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Q
+from django.http import JsonResponse
 from datetime import timedelta, datetime
 from .models import Appointment, AppointmentSettings, BlockedRange
-from .utils import get_calendar_data, get_day_appointments, get_available_slots
+from .utils import get_calendar_data, get_day_appointments, get_available_slots, check_slot_availability
 from services.models import Service
 from core.mixins import CustomerRequiredMixin, StaffOrAdminRequiredMixin
 
@@ -68,6 +69,61 @@ def check_availability(service, start_at, exclude_appointment_id=None):
             return False, f"Insufficient inventory: {service_item.item.name}"
 
     return True, None
+
+
+class CheckSlotAvailabilityView(LoginRequiredMixin, View):
+    """API endpoint to check if a time slot is available."""
+
+    def post(self, request):
+        """Check availability for a specific service, date, and time."""
+        try:
+            service_id = request.POST.get('service_id')
+            date_str = request.POST.get('date')
+            time_str = request.POST.get('time')
+
+            if not all([service_id, date_str, time_str]):
+                return JsonResponse({
+                    'available': False,
+                    'reason': 'Missing required fields'
+                })
+
+            # Parse date and time
+            try:
+                booking_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                booking_time = datetime.strptime(time_str, '%H:%M').time()
+                start_at = timezone.make_aware(
+                    datetime.combine(booking_date, booking_time)
+                )
+            except ValueError:
+                return JsonResponse({
+                    'available': False,
+                    'reason': 'Invalid date or time format'
+                })
+
+            # Get service
+            service = Service.objects.get(id=service_id, is_active=True)
+
+            # Check availability
+            end_at = start_at + timedelta(minutes=service.duration_minutes)
+            is_available, reason = check_slot_availability(service, start_at, end_at, service.duration_minutes)
+
+            return JsonResponse({
+                'available': is_available,
+                'reason': reason,
+                'time': start_at.strftime('%I:%M %p').lstrip('0'),
+                'date': booking_date.strftime('%B %d, %Y'),
+            })
+
+        except Service.DoesNotExist:
+            return JsonResponse({
+                'available': False,
+                'reason': 'Service not found'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'available': False,
+                'reason': 'An error occurred while checking availability'
+            })
 
 
 class AppointmentBookingView(CustomerRequiredMixin, CreateView):
