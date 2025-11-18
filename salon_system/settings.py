@@ -141,7 +141,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # User-uploaded files (service images, etc.) stored in static/images
-MEDIA_URL = "static/images/"
+# Use /uploads/ URL to avoid conflict with STATIC_URL
+MEDIA_URL = "/uploads/"
 MEDIA_ROOT = BASE_DIR / "static" / "images"
 
 # Default primary key field type
