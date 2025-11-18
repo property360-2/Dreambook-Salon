@@ -11,7 +11,7 @@
         <p class="text-light-muted">Manage and track all salon appointments</p>
       </div>
       <div class="flex gap-2">
-        <a href="/admin/appointments/slotlimit/" class="btn bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 whitespace-nowrap">
+        <a href="{% url 'appointments:slotlimit_list' %}" class="btn bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 whitespace-nowrap">
           Manage Slot Limits
         </a>
         <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
