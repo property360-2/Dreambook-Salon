@@ -21,10 +21,11 @@ def get_calendar_data(year, month, user=None, is_staff=False):
     Returns:
         dict with:
             - year, month: Calendar identifiers
+            - day_names: List of abbreviated day names
             - days: List of day dicts with date, day_num, appointment_count, appointments
             - appointment_details: Dict mapping dates to appointment lists
     """
-    from calendar import monthrange, month_name
+    from calendar import monthrange, month_name, day_abbr
 
     # Get calendar structure
     num_days = monthrange(year, month)[1]
@@ -97,6 +98,7 @@ def get_calendar_data(year, month, user=None, is_staff=False):
         'year': year,
         'month': month,
         'month_name': month_name[month],
+        'day_names': list(day_abbr),
         'days': days,
         'appointment_details': appointments_by_date,
     }
