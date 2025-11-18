@@ -17,6 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
+from django.views.static import serve
 from chatbot.urls import api_urlpatterns as chatbot_api_urls
 
 urlpatterns = [
@@ -31,3 +33,11 @@ urlpatterns = [
     # API endpoints
     path("api/", include(chatbot_api_urls)),
 ]
+
+# Serve uploaded media files in development
+if settings.DEBUG:
+    urlpatterns += [
+        path("uploads/<path:path>", serve, {
+            "document_root": settings.MEDIA_ROOT,
+        }),
+    ]
