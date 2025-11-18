@@ -2,7 +2,7 @@
 Intelligent Chatbot with Database Queries and Role-Based Responses
 Enhanced with Filipino/Taglish support and advanced queries
 """
-from django.db.models import Count, Sum, Avg, Q
+from django.db.models import Count, Sum, Avg, Q, Max, Min
 from django.utils import timezone
 from datetime import timedelta, datetime
 from services.models import Service
@@ -58,7 +58,7 @@ class IntelligentChatbot:
             # Customer intents (English + Filipino)
             (r'\b(service|services|what do you (have|offer)|treatment|serbisyo|ano (ang|meron))\b', self.get_services),
             (r'\b(price|cost|how much|pricing|magkano|presyo)\b', self.get_pricing),
-            (r'\b(popular|best|top|most booked|trending|sikat|pinaka)\b', self.get_popular_services),
+            (r'\b(popular|best|top|most booked|trending|sikat|pinaka|best selling|best\s?seller|bestseller|pinakasikat)\b', self.get_popular_services),
             (r'\b(available|availability|book|appointment|schedule|may slot|meron bang|pwede (ba|bang)|libre)\b', self.get_booking_info),
             (r'\b(hours|open|opening|when|time|bukas|oras|anong oras)\b', self.get_hours),
             (r'\b(location|address|where|saan|nasaan)\b', self.get_location),
@@ -66,26 +66,47 @@ class IntelligentChatbot:
             (r'\b(inventory|item|items|product|gamit)\b', self.get_inventory_info),
 
             # Staff/Admin intents (analytics) - English + Filipino
-            (r'\b(revenue|sales|income|earnings|kita|benta)\b', self.get_revenue_analytics),
-            (r'\b(appointment stats|appointment count|bookings|total appointments|bilang)\b', self.get_appointment_stats),
+            (r'\b(revenue|sales|income|earnings|kita|benta|profit|kikita)\b', self.get_revenue_analytics),
+            (r'\b(appointment stats|appointment count|bookings|total appointments|bilang|dami)\b', self.get_appointment_stats),
             (r'\b(inventory status|stock|low stock|out of stock|kulang|ubos)\b', self.get_inventory_status),
-            (r'\b(top service|best performing|highest revenue|pinaka mataas)\b', self.get_top_services_analytics),
-            (r'\b(payment|payment stats|transaction|bayad)\b', self.get_payment_analytics),
+            (r'\b(top service|best performing|highest revenue|pinaka mataas|best selling|pinakasikat|numero uno|number one)\b', self.get_top_services_analytics),
+            (r'\b(payment|payment stats|transaction|bayad|pera)\b', self.get_payment_analytics),
             (r'\b(today|daily|ngayon|ngayong araw)\b', self.get_today_summary),
             (r'\b(week|weekly|linggo|this week)\b', self.get_week_summary),
             (r'\b(month|monthly|buwan|this month)\b', self.get_month_summary),
             (r'\b(pending|confirmed|completed|status)\b', self.get_appointment_status_breakdown),
+
+            # Advanced Intelligence Queries (Staff/Admin Only)
+            (r'\b(most (booked|popular|best selling)|bestselling|pinakasikat|best seller|numero uno|top 1|top services|profitable|highest earning)\b', self.get_best_selling_service_detailed),
+            (r'\b(customer (analysis|analytics|insights|trends)|client|satisfaction|retention|repeat|loyalty|engagement)\b', self.get_customer_analytics),
+            (r'\b(staff|employee|therapist|performance|productivity|top performer|best staff)\b', self.get_staff_analytics),
+            (r'\b(peak (hours|times|periods)|busy|busiest|rush hour|peak demand)\b', self.get_peak_hours_analysis),
+            (r'\b(average|avg|spending|spend|price range|revenue per|income per|earning per)\b', self.get_spending_analytics),
+            (r'\b(no[\\-]?show|cancelation|cancel rate|noshow rate|absence|failed|missed)\b', self.get_noshow_analytics),
+            (r'\b(growth|trend|increase|decrease|comparison|vs|previous|period)\b', self.get_growth_analytics),
+            (r'\b(profitability|profitable|profit margin|margin|cost|efficiency)\b', self.get_profitability_analysis),
+            (r'\b(recommendation|suggest|which (service|treatment)|what should|ano (ang best|dapat))\b', self.get_service_recommendations),
+            (r'\b(forecast|predict|projection|estimate|expected|upcoming)\b', self.get_forecast_analysis),
         ]
 
         # Try to match intent
         for pattern, handler in intents:
             if re.search(pattern, message_lower):
                 # Check role permission for analytics queries
-                if handler in [self.get_revenue_analytics, self.get_appointment_stats,
-                              self.get_inventory_status, self.get_top_services_analytics,
-                              self.get_payment_analytics, self.get_today_summary,
-                              self.get_week_summary, self.get_month_summary,
-                              self.get_appointment_status_breakdown]:
+                analytics_handlers = [
+                    self.get_revenue_analytics, self.get_appointment_stats,
+                    self.get_inventory_status, self.get_top_services_analytics,
+                    self.get_payment_analytics, self.get_today_summary,
+                    self.get_week_summary, self.get_month_summary,
+                    self.get_appointment_status_breakdown,
+                    self.get_best_selling_service_detailed, self.get_customer_analytics,
+                    self.get_staff_analytics, self.get_peak_hours_analysis,
+                    self.get_spending_analytics, self.get_noshow_analytics,
+                    self.get_growth_analytics, self.get_profitability_analysis,
+                    self.get_service_recommendations, self.get_forecast_analysis
+                ]
+
+                if handler in analytics_handlers:
                     if not self.is_staff:
                         return "I'm sorry, but analytics information is only available to staff members. You can ask me about our services, pricing, or booking information!\n\n(Pasensya na, pero ang analytics ay para lang sa staff. Magtanong ka tungkol sa aming services, presyo, o booking!)"
 
@@ -93,13 +114,20 @@ class IntelligentChatbot:
 
         # Default response
         if self.is_staff:
-            return ("I can help you with:\n"
-                   "📊 Revenue analytics (revenue, sales, kita)\n"
-                   "📅 Appointment statistics (appointments, bookings)\n"
-                   "📦 Inventory status (stock, items)\n"
-                   "📈 Top services analysis (best, popular)\n"
-                   "💳 Payment reports (payments, bayad)\n"
-                   "📱 Specific queries (e.g., 'revenue last friday', 'appointments on 12/25/2025')\n\n"
+            return ("I can help you with ADVANCED ANALYTICS:\n"
+                   "🏆 **Best selling service** (most booked, bestseller, pinakasikat)\n"
+                   "👥 **Customer insights** (retention, loyalty, satisfaction)\n"
+                   "💼 **Staff performance** (productivity, top performer)\n"
+                   "⏰ **Peak hours** (busy times, rush hours)\n"
+                   "💰 **Spending analysis** (average, revenue per customer)\n"
+                   "📊 **No-show analytics** (cancelation, absence rates)\n"
+                   "📈 **Growth trends** (comparison, growth, decline)\n"
+                   "💵 **Profitability** (profit margin, most profitable)\n"
+                   "🔮 **Forecast** (predictions, projections, expected)\n\n"
+                   "BASIC ANALYTICS:\n"
+                   "💰 Revenue, 📅 Appointments, 📦 Inventory, 💳 Payments, 🔍 Status\n\n"
+                   "SPECIFIC QUERIES:\n"
+                   "📱 'best selling service?', 'customer retention?', 'peak hours?', 'what will revenue be next month?'\n\n"
                    "Or ask about services and booking!")
         else:
             return ("I can help you with:\n"
@@ -677,5 +705,374 @@ class IntelligentChatbot:
             }.get(status, '•')
 
             response += f"{emoji} {status.replace('_', ' ').title()}: {count}\n"
+
+        return response
+
+    # ===== ADVANCED INTELLIGENCE ANALYTICS =====
+
+    def get_best_selling_service_detailed(self, message):
+        """Return detailed best selling/most booked service analysis (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        # Get best selling service by bookings
+        best_service = Service.objects.annotate(
+            booking_count=Count('appointment', filter=Q(appointment__status='COMPLETED')),
+            total_revenue=Sum('appointment__payment__amount',
+                            filter=Q(appointment__payment__status='PAID')),
+            avg_rating=Avg('appointment__payment__amount',
+                         filter=Q(appointment__payment__status='PAID'))
+        ).order_by('-booking_count').first()
+
+        if not best_service or best_service.booking_count == 0:
+            return "No completed appointments yet. Start tracking bookings to see analytics!"
+
+        # Calculate metrics
+        all_completed = Appointment.objects.filter(status='COMPLETED').count()
+        market_share = (best_service.booking_count / all_completed * 100) if all_completed > 0 else 0
+
+        response = f"🏆 **Best Selling Service Analysis**\n\n"
+        response += f"📌 Service: **{best_service.name}**\n"
+        response += f"💇 Price: ₱{best_service.price}\n\n"
+
+        response += f"**Performance Metrics:**\n"
+        response += f"✅ Total Bookings: {best_service.booking_count}\n"
+        response += f"📊 Market Share: {market_share:.1f}%\n"
+        response += f"💰 Total Revenue: ₱{best_service.total_revenue or 0:,.2f}\n"
+        response += f"💵 Avg Revenue per Booking: ₱{best_service.price:,.2f}\n"
+
+        # Compare with others
+        second_best = Service.objects.annotate(
+            booking_count=Count('appointment', filter=Q(appointment__status='COMPLETED'))
+        ).exclude(id=best_service.id).order_by('-booking_count').first()
+
+        if second_best:
+            lead = best_service.booking_count - second_best.booking_count
+            response += f"\n📈 Leading {second_best.name} by {lead} bookings\n"
+
+        response += f"\n✨ This is your star service! Focus on marketing and maintaining quality!"
+
+        return response
+
+    def get_customer_analytics(self, message):
+        """Return customer insights and behavior analytics (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        total_customers = User.objects.filter(role='CUSTOMER').count()
+        repeat_customers = User.objects.filter(
+            role='CUSTOMER',
+            appointments__status='COMPLETED'
+        ).distinct().annotate(
+            appointment_count=Count('appointments')
+        ).filter(appointment_count__gte=2).count()
+
+        total_appointments = Appointment.objects.filter(status='COMPLETED').count()
+        avg_customer_value = Payment.objects.filter(status='PAID').aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+
+        response = "👥 **Customer Analytics & Insights:**\n\n"
+        response += f"Total Customers: {total_customers}\n"
+        response += f"🔄 Repeat Customers: {repeat_customers}\n"
+
+        if total_customers > 0:
+            retention_rate = (repeat_customers / total_customers) * 100
+            response += f"📈 Customer Retention Rate: {retention_rate:.1f}%\n"
+
+        if total_customers > 0 and avg_customer_value > 0:
+            avg_value = avg_customer_value / total_customers
+            response += f"\n💰 **Customer Value:**\n"
+            response += f"Total Revenue: ₱{avg_customer_value:,.2f}\n"
+            response += f"Avg Value per Customer: ₱{avg_value:,.2f}\n"
+
+        response += f"\nTotal Completed Appointments: {total_appointments}\n"
+
+        if total_customers > 0:
+            appointments_per_customer = total_appointments / total_customers
+            response += f"Avg Appointments per Customer: {appointments_per_customer:.1f}\n"
+
+        return response
+
+    def get_staff_analytics(self, message):
+        """Return staff performance analytics (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        total_staff = User.objects.filter(role__in=['STAFF', 'ADMIN']).count()
+
+        response = "👔 **Staff Performance Analytics:**\n\n"
+        response += f"Total Staff Members: {total_staff}\n\n"
+
+        # Get total workload
+        completed_appointments = Appointment.objects.filter(status='COMPLETED').count()
+        response += f"📊 Total Completed Services: {completed_appointments}\n"
+
+        if total_staff > 0:
+            avg_per_staff = completed_appointments / total_staff
+            response += f"Avg per Staff Member: {avg_per_staff:.1f}\n\n"
+
+        response += "💡 **Insights:**\n"
+        response += "• Monitor individual staff productivity\n"
+        response += "• Recognize top performers\n"
+        response += "• Ensure balanced workload distribution\n"
+
+        return response
+
+    def get_peak_hours_analysis(self, message):
+        """Analyze peak booking hours and times (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        # Get busiest hours
+        from django.db.models.functions import Hour
+        peak_hours = Appointment.objects.filter(
+            status__in=['CONFIRMED', 'IN_PROGRESS', 'COMPLETED']
+        ).annotate(hour=Hour('start_at')).values('hour').annotate(
+            count=Count('id')
+        ).order_by('-count')[:3]
+
+        response = "⏰ **Peak Hours Analysis:**\n\n"
+
+        if peak_hours:
+            response += "**Busiest Times:**\n"
+            for i, hour_data in enumerate(peak_hours, 1):
+                hour = hour_data['hour']
+                count = hour_data['count']
+                if hour is not None:
+                    time_str = f"{hour:02d}:00 - {hour:02d}:59"
+                    response += f"{i}. {time_str}: {count} appointments\n"
+        else:
+            response += "No appointment data available yet.\n"
+
+        response += f"\n📈 **Recommendations:**\n"
+        response += "• Schedule staff based on peak hours\n"
+        response += "• Encourage off-peak bookings with special offers\n"
+        response += "• Prepare inventory for high-demand periods\n"
+
+        return response
+
+    def get_spending_analytics(self, message):
+        """Analyze customer spending patterns (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        all_payments = Payment.objects.filter(status='PAID').aggregate(
+            total=Sum('amount'),
+            count=Count('id'),
+            avg=Avg('amount'),
+            max=Max('amount'),
+            min=Min('amount')
+        )
+
+        response = "💰 **Spending Analytics:**\n\n"
+        response += f"**Total Revenue:** ₱{all_payments['total'] or 0:,.2f}\n"
+        response += f"**Transaction Count:** {all_payments['count'] or 0}\n\n"
+
+        if all_payments['count'] and all_payments['count'] > 0:
+            response += f"**Spending Range:**\n"
+            response += f"• Average: ₱{all_payments['avg'] or 0:,.2f}\n"
+            response += f"• Highest: ₱{all_payments['max'] or 0:,.2f}\n"
+            response += f"• Lowest: ₱{all_payments['min'] or 0:,.2f}\n\n"
+
+        # Price distribution
+        services = Service.objects.all().values('price').distinct().order_by('price')
+        if services:
+            prices = [s['price'] for s in services]
+            response += f"**Service Price Range:** ₱{min(prices)} - ₱{max(prices)}\n"
+
+        return response
+
+    def get_noshow_analytics(self, message):
+        """Analyze no-show and cancellation rates (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        total = Appointment.objects.count()
+        no_shows = Appointment.objects.filter(status='NO_SHOW').count()
+        cancelled = Appointment.objects.filter(status='CANCELLED').count()
+        completed = Appointment.objects.filter(status='COMPLETED').count()
+
+        response = "📊 **No-Show & Cancellation Analysis:**\n\n"
+        response += f"Total Appointments: {total}\n"
+        response += f"🚫 No-Shows: {no_shows}\n"
+        response += f"❌ Cancellations: {cancelled}\n"
+        response += f"✅ Completed: {completed}\n\n"
+
+        if total > 0:
+            no_show_rate = (no_shows / total) * 100
+            cancel_rate = (cancelled / total) * 100
+            completion_rate = (completed / total) * 100
+
+            response += f"**Rates:**\n"
+            response += f"No-Show Rate: {no_show_rate:.1f}%\n"
+            response += f"Cancellation Rate: {cancel_rate:.1f}%\n"
+            response += f"✅ Completion Rate: {completion_rate:.1f}%\n\n"
+
+            response += "💡 **Action Items:**\n"
+            if no_show_rate > 10:
+                response += "⚠️ High no-show rate! Consider SMS reminders.\n"
+            if cancel_rate > 15:
+                response += "⚠️ High cancellation rate! Review policies.\n"
+
+        return response
+
+    def get_growth_analytics(self, message):
+        """Analyze business growth trends (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        today = timezone.now().date()
+        current_month_start = today.replace(day=1)
+        prev_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+        prev_month_end = current_month_start - timedelta(days=1)
+
+        # Current month
+        current_revenue = Payment.objects.filter(
+            status='PAID',
+            created_at__gte=current_month_start
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        current_appointments = Appointment.objects.filter(
+            start_at__gte=current_month_start
+        ).count()
+
+        # Previous month
+        prev_revenue = Payment.objects.filter(
+            status='PAID',
+            created_at__gte=prev_month_start,
+            created_at__lte=prev_month_end
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        prev_appointments = Appointment.objects.filter(
+            start_at__gte=prev_month_start,
+            start_at__lte=prev_month_end
+        ).count()
+
+        response = "📈 **Growth & Trend Analysis:**\n\n"
+
+        # Revenue growth
+        if prev_revenue > 0:
+            revenue_growth = ((current_revenue - prev_revenue) / prev_revenue) * 100
+            response += f"**Revenue:**\n"
+            response += f"Current: ₱{current_revenue:,.2f}\n"
+            response += f"Previous: ₱{prev_revenue:,.2f}\n"
+            if revenue_growth >= 0:
+                response += f"📈 Growth: +{revenue_growth:.1f}%\n\n"
+            else:
+                response += f"📉 Decline: {revenue_growth:.1f}%\n\n"
+        else:
+            response += f"**Revenue:** ₱{current_revenue:,.2f}\n\n"
+
+        # Appointment growth
+        if prev_appointments > 0:
+            appt_growth = ((current_appointments - prev_appointments) / prev_appointments) * 100
+            response += f"**Appointments:**\n"
+            response += f"Current: {current_appointments}\n"
+            response += f"Previous: {prev_appointments}\n"
+            if appt_growth >= 0:
+                response += f"📈 Growth: +{appt_growth:.1f}%\n"
+            else:
+                response += f"📉 Decline: {appt_growth:.1f}%\n"
+        else:
+            response += f"**Appointments:** {current_appointments}\n"
+
+        return response
+
+    def get_profitability_analysis(self, message):
+        """Analyze service profitability (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        services = Service.objects.annotate(
+            bookings=Count('appointment', filter=Q(appointment__status='COMPLETED')),
+            total_revenue=Sum('appointment__payment__amount',
+                            filter=Q(appointment__payment__status='PAID'))
+        ).filter(bookings__gt=0).order_by('-total_revenue')[:5]
+
+        response = "💵 **Service Profitability Analysis:**\n\n"
+
+        if services:
+            response += "**Top 5 Most Profitable Services:**\n"
+            for i, service in enumerate(services, 1):
+                revenue = service.total_revenue or 0
+                bookings = service.bookings or 0
+                profit_per_booking = revenue / bookings if bookings > 0 else 0
+
+                response += f"{i}. {service.name}\n"
+                response += f"   Revenue: ₱{revenue:,.2f}\n"
+                response += f"   Bookings: {bookings}\n"
+                response += f"   Per Booking: ₱{profit_per_booking:,.2f}\n\n"
+        else:
+            response += "No profitability data yet.\n"
+
+        return response
+
+    def get_service_recommendations(self, message):
+        """Provide intelligent service recommendations (staff/admin only)."""
+        if not self.is_staff:
+            return "Use customer feedback to recommend services!"
+
+        # Get most popular services
+        popular = Service.objects.annotate(
+            bookings=Count('appointment', filter=Q(appointment__status='COMPLETED'))
+        ).order_by('-bookings')[:3]
+
+        response = "💡 **Service Recommendations:**\n\n"
+
+        response += "**Top Recommended Services:**\n"
+        for i, service in enumerate(popular, 1):
+            response += f"{i}. **{service.name}**\n"
+            response += f"   Price: ₱{service.price}\n"
+            response += f"   Popular: {service.bookings} bookings\n\n"
+
+        response += "💬 **Recommendation Strategy:**\n"
+        response += "• Promote top services in marketing\n"
+        response += "• Bundle slower-moving services with popular ones\n"
+        response += "• Offer special packages during low-demand periods\n"
+
+        return response
+
+    def get_forecast_analysis(self, message):
+        """Provide business forecast and predictions (staff/admin only)."""
+        if not self.is_staff:
+            return "This information is only available to staff members."
+
+        today = timezone.now().date()
+        last_7_days = today - timedelta(days=7)
+
+        recent_revenue = Payment.objects.filter(
+            status='PAID',
+            created_at__date__gte=last_7_days
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        recent_appointments = Appointment.objects.filter(
+            start_at__date__gte=last_7_days
+        ).count()
+
+        response = "🔮 **Business Forecast & Predictions:**\n\n"
+
+        response += f"**Based on Last 7 Days:**\n"
+        response += f"Average Daily Revenue: ₱{(recent_revenue / 7):,.2f}\n"
+        response += f"Average Daily Appointments: {(recent_appointments / 7):.1f}\n\n"
+
+        # Forecast for next 30 days
+        projected_revenue = (recent_revenue / 7) * 30
+        projected_appointments = (recent_appointments / 7) * 30
+
+        response += f"**Projected Next 30 Days:**\n"
+        response += f"💰 Est. Revenue: ₱{projected_revenue:,.2f}\n"
+        response += f"📅 Est. Appointments: {projected_appointments:.0f}\n\n"
+
+        response += "📊 **Trend Notes:**\n"
+        response += "• Monitor actual vs projected performance\n"
+        response += "• Adjust staffing based on forecast\n"
+        response += "• Plan inventory for projected demand\n"
 
         return response
