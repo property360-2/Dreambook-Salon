@@ -5,7 +5,7 @@ Utility functions for appointment management.
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
-from .models import Appointment, AppointmentSettings, BlockedRange
+from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 
 
 def get_calendar_data(year, month, user=None, is_staff=False):
@@ -257,8 +257,26 @@ def check_slot_availability(service, start_at, end_at, duration_minutes):
         ]
     ).count()
 
-    if overlapping_appointments >= settings.max_concurrent:
-        return False, "Full"
+    # Check 4a: Check for custom slot limits
+    slot_date = start_at.date()
+    slot_time_start = start_at.time()
+    slot_time_end = end_at.time()
+
+    # Find any slot limits that apply to this time slot
+    slot_limit = SlotLimit.objects.filter(
+        date=slot_date,
+        time_start__lte=slot_time_start,
+        time_end__gte=slot_time_end
+    ).first()
+
+    if slot_limit:
+        # Use the slot limit's max_slots instead of global max_concurrent
+        if overlapping_appointments >= slot_limit.max_slots:
+            return False, f"Full ({slot_limit.reason})" if slot_limit.reason else "Full"
+    else:
+        # Use global max concurrent setting
+        if overlapping_appointments >= settings.max_concurrent:
+            return False, "Full"
 
     # Check 5: Verify inventory availability
     for service_item in service.service_items.all():

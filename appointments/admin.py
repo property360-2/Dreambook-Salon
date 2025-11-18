@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Appointment, AppointmentSettings, BlockedRange
+from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 
 
 @admin.register(AppointmentSettings)
@@ -29,6 +29,25 @@ class BlockedRangeAdmin(admin.ModelAdmin):
     search_fields = ("reason",)
     readonly_fields = ("created_at", "updated_at")
     date_hierarchy = "start_at"
+
+
+@admin.register(SlotLimit)
+class SlotLimitAdmin(admin.ModelAdmin):
+    list_display = ("date", "time_start", "time_end", "max_slots", "reason", "created_at")
+    list_filter = ("date", "time_start", "created_at")
+    search_fields = ("reason",)
+    readonly_fields = ("created_at", "updated_at")
+    date_hierarchy = "date"
+
+    fieldsets = (
+        (None, {"fields": ("date", "time_start", "time_end")}),
+        ("Slot Configuration", {"fields": ("max_slots", "reason")}),
+        ("Timestamps", {"fields": ("created_at", "updated_at")}),
+    )
+
+    help_texts = {
+        "max_slots": "Set to a number lower than the default max concurrent appointments to limit this specific time slot",
+    }
 
 
 @admin.register(Appointment)
