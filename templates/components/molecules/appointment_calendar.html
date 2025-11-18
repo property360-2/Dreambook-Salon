@@ -27,7 +27,7 @@
   <div class="space-y-2">
     <!-- Day headers -->
     <div class="grid grid-cols-7 gap-1">
-      {% for day_name in "MonTueWedThuFriSatSun" %}
+      {% for day_name in calendar.day_names %}
         <div class="text-center font-semibold text-light-muted text-xs py-2">
           {{ day_name }}
         </div>
