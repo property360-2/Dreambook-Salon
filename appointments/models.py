@@ -61,6 +61,41 @@ class BlockedRange(models.Model):
         return start < self.end_at and end > self.start_at
 
 
+class SlotLimit(models.Model):
+    """
+    Represents custom max concurrent slot limits for specific date/time combinations.
+    Allows admins to limit the number of concurrent appointments for specific times.
+    """
+
+    date = models.DateField(help_text="The date for this slot limit")
+    time_start = models.TimeField(help_text="Start time (e.g., 09:00)")
+    time_end = models.TimeField(help_text="End time (e.g., 09:30)")
+    max_slots = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Maximum concurrent appointments for this time slot",
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Optional reason for the slot limit (e.g., Staff absent)",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["date", "time_start"]
+        verbose_name = "Slot Limit"
+        verbose_name_plural = "Slot Limits"
+        unique_together = ("date", "time_start", "time_end")
+        indexes = [
+            models.Index(fields=["date", "time_start", "time_end"]),
+        ]
+
+    def __str__(self):
+        return f"{self.date} {self.time_start}-{self.time_end}: {self.max_slots} slots"
+
+
 class Appointment(models.Model):
     """Appointment model for booking services."""
 

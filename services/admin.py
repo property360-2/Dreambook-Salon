@@ -16,8 +16,23 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name", "price", "duration_minutes", "is_active", "created_at")
     list_filter = ("is_active", "created_at")
     search_fields = ("name", "description")
-    inlines = [ServiceItemInline]
     readonly_fields = ("created_at", "updated_at")
+
+    def has_change_permission(self, request, obj=None):
+        """Prevent viewing and editing individual service details."""
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        """Prevent viewing individual service details."""
+        return False
+
+    def has_add_permission(self, request):
+        """Prevent adding new services."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deleting services."""
+        return False
 
 
 @admin.register(ServiceItem)
