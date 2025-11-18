@@ -105,6 +105,14 @@
                 </form>
               {% endif %}
 
+              <div class="mb-6 p-4 bg-light-elevated rounded-xl border border-light-border">
+                <h4 class="text-sm font-semibold text-light-text mb-3">Manage Slot Limits</h4>
+                <p class="text-light-muted text-xs mb-3">Set max concurrent appointments for this time slot</p>
+                <a href="/admin/appointments/slotlimit/add/?date={{ appointment.start_at|date:'Y-m-d' }}&time_start={{ appointment.start_at|date:'H:i' }}&time_end={{ appointment.end_at|date:'H:i' }}" class="btn bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 w-full text-sm">
+                  Add Slot Limit for {{ appointment.start_at|date:"M d, Y g:i A" }}
+                </a>
+              </div>
+
               <div>
                 <h4 class="text-sm font-semibold text-light-text mb-2">Update Status</h4>
                 <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="flex gap-2 form-with-loading">

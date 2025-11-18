@@ -10,9 +10,14 @@
         <h1 class="text-4xl font-bold text-gradient mb-2">All Appointments</h1>
         <p class="text-light-muted">Manage and track all salon appointments</p>
       </div>
-      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
-        View Analytics
-      </a>
+      <div class="flex gap-2">
+        <a href="/admin/appointments/slotlimit/" class="btn bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 whitespace-nowrap">
+          Manage Slot Limits
+        </a>
+        <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
+          View Analytics
+        </a>
+      </div>
     </div>
 
     <!-- Filters -->

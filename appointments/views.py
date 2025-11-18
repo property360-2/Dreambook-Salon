@@ -332,8 +332,10 @@ class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
 
         # Add calendar data
         now = timezone.now()
-        year = int(self.request.GET.get('year', now.year))
-        month = int(self.request.GET.get('month', now.month))
+        year_param = self.request.GET.get('year', '')
+        month_param = self.request.GET.get('month', '')
+        year = int(year_param) if year_param else now.year
+        month = int(month_param) if month_param else now.month
 
         calendar_data = get_calendar_data(year, month, user=None, is_staff=True)
         context['calendar'] = calendar_data
