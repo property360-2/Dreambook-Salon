@@ -5,7 +5,7 @@ Utility functions for appointment management.
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
-from .models import Appointment
+from .models import Appointment, AppointmentSettings, BlockedRange
 
 
 def get_calendar_data(year, month, user=None, is_staff=False):
@@ -157,3 +157,112 @@ def get_day_appointments(year, month, day, user=None):
         start_at__gte=day_start,
         start_at__lte=day_end
     ).order_by('start_at')
+
+
+def get_available_slots(service, date, start_hour=9, end_hour=18, interval_minutes=30):
+    """
+    Get available time slots for a service on a specific date.
+
+    Args:
+        service: Service object
+        date: Date object for the booking date
+        start_hour: Start hour of business day (default 9 AM)
+        end_hour: End hour of business day (default 6 PM)
+        interval_minutes: Time interval between slots (default 30 mins)
+
+    Returns:
+        List of dicts with:
+            - time: Time string (HH:MM format)
+            - datetime: Full datetime object
+            - is_available: Boolean indicating if slot is available
+            - reason: Reason if unavailable (None if available)
+    """
+    slots = []
+    settings = AppointmentSettings.get_settings()
+    now = timezone.now()
+    service_duration = service.duration_minutes
+
+    # Generate all possible time slots for the day
+    current_time = datetime.combine(date, datetime.min.time()).replace(hour=start_hour)
+    end_time = datetime.combine(date, datetime.min.time()).replace(hour=end_hour)
+
+    # Ensure we're working with the same timezone
+    if timezone.is_naive(current_time):
+        current_time = timezone.make_aware(current_time)
+    if timezone.is_naive(end_time):
+        end_time = timezone.make_aware(end_time)
+
+    while current_time + timedelta(minutes=service_duration) <= end_time:
+        slot_end = current_time + timedelta(minutes=service_duration)
+
+        # Check availability
+        is_available, reason = check_slot_availability(
+            service, current_time, slot_end, service_duration
+        )
+
+        slots.append({
+            'time': current_time.strftime('%I:%M %p').lstrip('0'),  # Remove leading zero
+            'datetime': current_time,
+            'is_available': is_available,
+            'reason': reason,
+        })
+
+        current_time += timedelta(minutes=interval_minutes)
+
+    return slots
+
+
+def check_slot_availability(service, start_at, end_at, duration_minutes):
+    """
+    Check if a specific time slot is available.
+
+    Args:
+        service: Service object
+        start_at: Start datetime
+        end_at: End datetime
+        duration_minutes: Service duration in minutes
+
+    Returns:
+        tuple: (is_available: bool, reason: str or None)
+    """
+    settings = AppointmentSettings.get_settings()
+    now = timezone.now()
+
+    # Check 1: Not in the past
+    if start_at < now:
+        return False, "Time has passed"
+
+    # Check 2: Within booking window
+    max_future = now + timedelta(days=settings.booking_window_days)
+    if start_at > max_future:
+        return False, f"Beyond booking window ({settings.booking_window_days} days)"
+
+    # Check 3: Not in a blocked range
+    blocked_ranges = BlockedRange.objects.filter(
+        start_at__lt=end_at,
+        end_at__gt=start_at
+    )
+    if blocked_ranges.exists():
+        blocked = blocked_ranges.first()
+        return False, "Blocked" if not blocked.reason else blocked.reason
+
+    # Check 4: Not exceeding max concurrent appointments
+    overlapping_appointments = Appointment.objects.filter(
+        start_at__lt=end_at,
+        end_at__gt=start_at,
+        status__in=[
+            Appointment.Status.PENDING,
+            Appointment.Status.CONFIRMED,
+            Appointment.Status.IN_PROGRESS
+        ]
+    ).count()
+
+    if overlapping_appointments >= settings.max_concurrent:
+        return False, "Full"
+
+    # Check 5: Verify inventory availability
+    for service_item in service.service_items.all():
+        if service_item.item.stock < service_item.qty_per_service:
+            return False, f"No stock: {service_item.item.name}"
+
+    return True, None

@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import timedelta, datetime
 from .models import Appointment, AppointmentSettings, BlockedRange
-from .utils import get_calendar_data, get_day_appointments
+from .utils import get_calendar_data, get_day_appointments, get_available_slots
 from services.models import Service
 from core.mixins import CustomerRequiredMixin, StaffOrAdminRequiredMixin
 
@@ -189,6 +189,23 @@ class AppointmentDetailView(LoginRequiredMixin, DetailView):
             qs = qs.filter(customer=self.request.user)
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        """Add available time slots for the booking date."""
+        context = super().get_context_data(**kwargs)
+        appointment = self.get_object()
+
+        # Get available slots for the appointment date
+        booking_date = appointment.start_at.date()
+        available_slots = get_available_slots(appointment.service, booking_date)
+
+        # Separate available and unavailable slots
+        context['available_slots'] = [s for s in available_slots if s['is_available']]
+        context['unavailable_slots'] = [s for s in available_slots if not s['is_available']]
+        context['all_slots'] = available_slots
+        context['booking_date'] = booking_date
+
+        return context
 
 
 class AppointmentCancelView(LoginRequiredMixin, View):

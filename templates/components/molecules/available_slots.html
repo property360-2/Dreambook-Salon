@@ -1,0 +1,70 @@
+<!-- Available Time Slots Display -->
+<div class="card p-6">
+  <h3 class="text-xl font-bold text-light-text mb-4">Available Booking Slots</h3>
+  <p class="text-light-muted text-sm mb-4">on {{ booking_date|date:"F d, Y" }}</p>
+
+  <!-- No slots message -->
+  {% if not all_slots %}
+    <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-center">
+      <p class="text-amber-700 font-medium">No time slots available for this date</p>
+    </div>
+  {% else %}
+    <!-- Available slots grid -->
+    {% if available_slots %}
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold text-accent-600 mb-3">Available Times</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {% for slot in available_slots %}
+            <div class="p-3 rounded-lg border-2 border-accent-300 bg-accent-50 text-center cursor-default hover:bg-accent-100 transition-colors">
+              <span class="text-sm font-semibold text-accent-700">{{ slot.time }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Unavailable slots (if any) -->
+    {% if unavailable_slots %}
+      <details class="group">
+        <summary class="cursor-pointer text-sm font-medium text-light-muted hover:text-light-text transition-colors py-2">
+          <span class="inline-flex items-center gap-2">
+            <span class="group-open:hidden">Show unavailable times</span>
+            <span class="hidden group-open:inline">Hide unavailable times</span>
+            <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </span>
+        </summary>
+
+        <div class="mt-4 pt-4 border-t border-light-border">
+          <h4 class="text-sm font-semibold text-light-muted mb-3">Unavailable Times</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {% for slot in unavailable_slots %}
+              <div class="p-3 rounded-lg border-2 border-light-border bg-light-elevated text-center cursor-not-allowed group/slot"
+                   title="{% if slot.reason %}{{ slot.reason }}{% else %}Not available{% endif %}">
+                <span class="text-sm font-semibold text-light-muted">{{ slot.time }}</span>
+                {% if slot.reason %}
+                  <span class="block text-xs text-light-muted mt-1 opacity-75">{{ slot.reason }}</span>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </details>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="mt-6 pt-4 border-t border-light-border">
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-accent-500"></div>
+          <span class="text-light-muted">{{ available_slots|length }} Available</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-light-border"></div>
+          <span class="text-light-muted">{{ unavailable_slots|length }} Unavailable</span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
