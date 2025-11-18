@@ -7,11 +7,12 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from .forms import CustomerRegistrationForm, EmailAuthenticationForm
 from .mixins import StaffOrAdminRequiredMixin
 from appointments.models import Appointment
+from appointments.utils import get_calendar_data
 from payments.models import Payment
 from inventory.models import Item
 from services.models import Service
@@ -142,6 +143,30 @@ class DashboardView(StaffOrAdminRequiredMixin, TemplateView):
         context['recent_payments'] = Payment.objects.select_related(
             'appointment', 'appointment__service'
         ).order_by('-created_at')[:5]
+
+        # === CALENDAR DATA ===
+        year = int(self.request.GET.get('year', now.year))
+        month = int(self.request.GET.get('month', now.month))
+
+        calendar_data = get_calendar_data(year, month, user=None, is_staff=True)
+        context['calendar'] = calendar_data
+        context['current_year'] = year
+        context['current_month'] = month
+
+        # Get previous and next month for navigation
+        if month == 1:
+            context['prev_month'] = 12
+            context['prev_year'] = year - 1
+        else:
+            context['prev_month'] = month - 1
+            context['prev_year'] = year
+
+        if month == 12:
+            context['next_month'] = 1
+            context['next_year'] = year + 1
+        else:
+            context['next_month'] = month + 1
+            context['next_year'] = year
 
         return context
 

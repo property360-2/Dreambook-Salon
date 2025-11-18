@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Q
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .models import Appointment, AppointmentSettings, BlockedRange
+from .utils import get_calendar_data, get_day_appointments
 from services.models import Service
 from core.mixins import CustomerRequiredMixin, StaffOrAdminRequiredMixin
 
@@ -139,6 +140,38 @@ class MyAppointmentsView(CustomerRequiredMixin, ListView):
             customer=self.request.user
         ).select_related('service').order_by('-start_at')
 
+    def get_context_data(self, **kwargs):
+        """Add calendar data to context."""
+        context = super().get_context_data(**kwargs)
+
+        # Get current month/year
+        now = timezone.now()
+        year = int(self.request.GET.get('year', now.year))
+        month = int(self.request.GET.get('month', now.month))
+
+        # Generate calendar data
+        calendar_data = get_calendar_data(year, month, user=self.request.user, is_staff=False)
+        context['calendar'] = calendar_data
+        context['current_year'] = year
+        context['current_month'] = month
+
+        # Get previous and next month for navigation
+        if month == 1:
+            context['prev_month'] = 12
+            context['prev_year'] = year - 1
+        else:
+            context['prev_month'] = month - 1
+            context['prev_year'] = year
+
+        if month == 12:
+            context['next_month'] = 1
+            context['next_year'] = year + 1
+        else:
+            context['next_month'] = month + 1
+            context['next_year'] = year
+
+        return context
+
 
 class AppointmentDetailView(LoginRequiredMixin, DetailView):
     """Appointment detail view - customers see their own, staff see all."""
@@ -223,6 +256,32 @@ class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
         context['status_choices'] = Appointment.Status.choices
         context['current_status'] = self.request.GET.get('status', '')
         context['date_filter'] = self.request.GET.get('date_filter', 'upcoming')
+
+        # Add calendar data
+        now = timezone.now()
+        year = int(self.request.GET.get('year', now.year))
+        month = int(self.request.GET.get('month', now.month))
+
+        calendar_data = get_calendar_data(year, month, user=None, is_staff=True)
+        context['calendar'] = calendar_data
+        context['current_year'] = year
+        context['current_month'] = month
+
+        # Get previous and next month for navigation
+        if month == 1:
+            context['prev_month'] = 12
+            context['prev_year'] = year - 1
+        else:
+            context['prev_month'] = month - 1
+            context['prev_year'] = year
+
+        if month == 12:
+            context['next_month'] = 1
+            context['next_year'] = year + 1
+        else:
+            context['next_month'] = month + 1
+            context['next_year'] = year
+
         return context
 
 

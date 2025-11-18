@@ -1,0 +1,202 @@
+{% load static %}
+
+<div class="card p-6">
+  <!-- Calendar Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-4">
+      <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-ghost text-sm px-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </a>
+      <h3 class="text-xl font-bold text-light-text min-w-max">
+        {{ calendar.month_name }} {{ current_year }}
+      </h3>
+      <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-ghost text-sm px-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+    <a href="?year={{ now|date:'Y' }}&month={{ now|date:'m' }}" class="btn btn-outline text-sm">
+      Today
+    </a>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="space-y-2">
+    <!-- Day headers -->
+    <div class="grid grid-cols-7 gap-1">
+      {% for day_name in "MonTueWedThuFriSatSun" %}
+        <div class="text-center font-semibold text-light-muted text-xs py-2">
+          {{ day_name }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Calendar days -->
+    <div class="grid grid-cols-7 gap-1">
+      {% for day in calendar.days %}
+        {% if day.is_current_month %}
+          <button
+            type="button"
+            class="aspect-square p-2 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:shadow-soft group
+              {% if day.is_today %}
+                border-primary-500 bg-primary-50
+              {% elif day.appointment_count > 0 %}
+                border-accent-300 bg-accent-50
+              {% else %}
+                border-light-border bg-light-surface
+              {% endif %}"
+            onclick="showDayAppointments('{{ day.date }}', '{{ day.day_num }}')"
+            data-date="{{ day.date }}"
+            title="Click to view appointments"
+          >
+            <div class="h-full flex flex-col justify-between">
+              <span class="text-sm font-semibold text-light-text">{{ day.day_num }}</span>
+              {% if day.appointment_count > 0 %}
+                <div class="flex items-center justify-center">
+                  <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full
+                    {% if day.has_pending %}
+                      bg-accent-500
+                    {% else %}
+                      bg-primary-500
+                    {% endif %}">
+                    {{ day.appointment_count }}
+                  </span>
+                </div>
+              {% endif %}
+            </div>
+          </button>
+        {% else %}
+          <!-- Empty cell for previous/next month -->
+          <div class="aspect-square p-2 rounded-lg border-2 border-transparent bg-light-elevated/30"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="mt-6 pt-6 border-t border-light-border flex flex-wrap gap-6 text-sm">
+    <div class="flex items-center gap-2">
+      <div class="w-4 h-4 rounded border-2 border-primary-500"></div>
+      <span class="text-light-muted">Today</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-5 h-5 rounded-full bg-accent-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+      <span class="text-light-muted">Pending/Confirmed</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+      <span class="text-light-muted">Completed</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day appointments modal/section -->
+<div id="day-appointments-modal" class="hidden fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
+  <div class="bg-light-bg rounded-2xl shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+    <div class="sticky top-0 bg-light-surface border-b border-light-border p-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-2xl font-bold text-light-text" id="modal-date-title">Appointments</h3>
+        <p class="text-light-muted text-sm" id="modal-date-subtitle"></p>
+      </div>
+      <button type="button" onclick="closeDayAppointments()" class="text-light-muted hover:text-light-text">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div id="appointments-list" class="p-6 space-y-3">
+      <!-- Appointments will be populated here -->
+    </div>
+  </div>
+</div>
+
+<script>
+  function showDayAppointments(dateStr, dayNum) {
+    const [year, month, day] = dateStr.split('-');
+    const appointmentsData = {
+      {% for date, appts in calendar.appointment_details.items %}
+        '{{ date }}': [
+          {% for appt in appts %}
+            {
+              id: {{ appt.id }},
+              service: '{{ appt.service.name }}',
+              time: '{{ appt.start_at|date:"g:i A" }}',
+              endTime: '{{ appt.end_at|date:"g:i A" }}',
+              status: '{{ appt.get_status_display }}',
+              statusValue: '{{ appt.status }}',
+              customer: '{{ appt.customer.get_full_name|default:appt.customer.email }}',
+              price: '{{ appt.service.price }}',
+              url: '{% url "appointments:detail" appt.id %}',
+            },
+          {% endfor %}
+        ],
+      {% endfor %}
+    };
+
+    const appts = appointmentsData[dateStr] || [];
+    const dateObj = new Date(year, month - 1, day);
+    const dateFormatter = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    document.getElementById('modal-date-title').textContent = dateFormatter.format(dateObj);
+    document.getElementById('modal-date-subtitle').textContent = appts.length + ' appointment' + (appts.length !== 1 ? 's' : '');
+
+    const appointmentsList = document.getElementById('appointments-list');
+
+    if (appts.length === 0) {
+      appointmentsList.innerHTML = '<p class="text-light-muted text-center py-8">No appointments on this day</p>';
+    } else {
+      appointmentsList.innerHTML = appts.map(appt => `
+        <a href="${appt.url}" class="block p-4 rounded-lg border border-light-border bg-light-elevated hover:shadow-soft transition-all">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <h4 class="font-semibold text-light-text">${appt.service}</h4>
+              <p class="text-sm text-light-muted">${appt.customer}</p>
+            </div>
+            <span class="badge ${
+              appt.statusValue === 'pending' ? 'badge-warning' :
+              appt.statusValue === 'confirmed' ? 'badge-info' :
+              appt.statusValue === 'completed' ? 'badge-success' :
+              'badge-danger'
+            } text-xs">
+              ${appt.status}
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-primary-600 font-semibold">${appt.time} - ${appt.endTime}</span>
+            <span class="text-gradient font-bold">₱${appt.price}</span>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    document.getElementById('day-appointments-modal').classList.remove('hidden');
+  }
+
+  function closeDayAppointments() {
+    document.getElementById('day-appointments-modal').classList.add('hidden');
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('day-appointments-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeDayAppointments();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeDayAppointments();
+    }
+  });
+</script>
+
+{% now "Y-m-d" as today %}
