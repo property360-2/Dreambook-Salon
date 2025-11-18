@@ -27,7 +27,7 @@
             {% endif %}
           </div>
         </div>
-        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_appointments' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% if user.role == 'CUSTOMER' %}{% url 'appointments:my_appointments' %}{% else %}{% url 'appointments:staff_list' %}{% endif %}" class="text-primary-600 hover:text-primary-300 transition-colors">
           ← Back to Appointments
         </a>
       </div>
@@ -37,46 +37,46 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Service Card -->
           <div class="card p-8">
-            <h2 class="text-3xl font-bold text-dark-text mb-6">{{ appointment.service.name }}</h2>
+            <h2 class="text-3xl font-bold text-light-text mb-6">{{ appointment.service.name }}</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <span class="text-dark-muted text-sm block mb-1">Customer</span>
-                <span class="text-dark-text font-semibold">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</span>
+                <span class="text-light-muted text-sm block mb-1">Customer</span>
+                <span class="text-light-text font-semibold">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</span>
               </div>
               <div>
-                <span class="text-dark-muted text-sm block mb-1">Date & Time</span>
-                <span class="text-dark-text font-semibold">{{ appointment.start_at|date:"F d, Y" }}</span>
+                <span class="text-light-muted text-sm block mb-1">Date & Time</span>
+                <span class="text-light-text font-semibold">{{ appointment.start_at|date:"F d, Y" }}</span>
                 <br>
-                <span class="text-primary-400">{{ appointment.start_at|date:"g:i A" }} - {{ appointment.end_at|date:"g:i A" }}</span>
+                <span class="text-primary-600">{{ appointment.start_at|date:"g:i A" }} - {{ appointment.end_at|date:"g:i A" }}</span>
               </div>
               <div>
-                <span class="text-dark-muted text-sm block mb-1">Duration</span>
-                <span class="text-dark-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
+                <span class="text-light-muted text-sm block mb-1">Duration</span>
+                <span class="text-light-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
               </div>
               <div>
-                <span class="text-dark-muted text-sm block mb-1">Price</span>
+                <span class="text-light-muted text-sm block mb-1">Price</span>
                 <span class="text-gradient font-bold text-2xl">₱{{ appointment.service.price }}</span>
               </div>
             </div>
 
             {% if appointment.notes %}
-              <div class="mt-6 p-4 bg-dark-elevated rounded-xl border border-dark-border">
-                <h3 class="text-lg font-bold text-dark-text mb-2">Notes</h3>
-                <p class="text-dark-muted">{{ appointment.notes }}</p>
+              <div class="mt-6 p-4 bg-light-elevated rounded-xl border border-light-border">
+                <h3 class="text-lg font-bold text-light-text mb-2">Notes</h3>
+                <p class="text-light-muted">{{ appointment.notes }}</p>
               </div>
             {% endif %}
 
-            <div class="mt-6 p-4 bg-dark-elevated rounded-xl border border-dark-border">
-              <h3 class="text-lg font-bold text-dark-text mb-2">Service Information</h3>
-              <p class="text-dark-muted">{{ appointment.service.description|default:"No description available." }}</p>
+            <div class="mt-6 p-4 bg-light-elevated rounded-xl border border-light-border">
+              <h3 class="text-lg font-bold text-light-text mb-2">Service Information</h3>
+              <p class="text-light-muted">{{ appointment.service.description|default:"No description available." }}</p>
             </div>
           </div>
 
           <!-- Staff Actions (if applicable) -->
           {% if user.role in 'STAFF,ADMIN' %}
             <div class="card p-6">
-              <h3 class="text-xl font-bold text-dark-text mb-4">Staff Actions</h3>
+              <h3 class="text-xl font-bold text-light-text mb-4">Staff Actions</h3>
 
               {% if appointment.status == 'IN_PROGRESS' %}
                 <form method="post" action="{% url 'appointments:complete' appointment.id %}" class="mb-4 form-with-loading">
@@ -88,7 +88,7 @@
               {% endif %}
 
               <div>
-                <h4 class="text-sm font-semibold text-dark-text mb-2">Update Status</h4>
+                <h4 class="text-sm font-semibold text-light-text mb-2">Update Status</h4>
                 <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="flex gap-2 form-with-loading">
                   {% csrf_token %}
                   <select name="status" class="input flex-1">
@@ -109,7 +109,7 @@
         <!-- Sidebar Actions -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24 space-y-3">
-            <h3 class="text-lg font-bold text-dark-text mb-4">Actions</h3>
+            <h3 class="text-lg font-bold text-light-text mb-4">Actions</h3>
 
             {% if user.role == 'CUSTOMER' and appointment.customer == user %}
               {% if appointment.payment_state == 'UNPAID' %}

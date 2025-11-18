@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Service Analytics</h1>
-        <p class="text-dark-muted">Performance metrics and insights for all services</p>
+        <p class="text-light-muted">Performance metrics and insights for all services</p>
       </div>
       <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         ← Back to Dashboard
@@ -17,7 +17,7 @@
 
     <!-- Service Performance Overview -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Service Performance Overview</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Service Performance Overview</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="stat-card">
           <div class="stat-label">Total Services</div>
@@ -28,8 +28,8 @@
           <div class="stat-value text-emerald-400">{{ active_services|default:0 }}</div>
         </div>
         <div class="stat-card bg-primary-500/10 border-primary-500/20">
-          <div class="stat-label text-primary-400">Total Bookings</div>
-          <div class="stat-value text-primary-400">{{ total_bookings|default:0 }}</div>
+          <div class="stat-label text-primary-600">Total Bookings</div>
+          <div class="stat-value text-primary-600">{{ total_bookings|default:0 }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Avg Bookings per Service</div>
@@ -41,7 +41,7 @@
     {% if services %}
       <!-- Service Performance Details -->
       <div class="mb-12">
-        <h2 class="text-2xl font-bold text-dark-text mb-6">Service Performance Details</h2>
+        <h2 class="text-2xl font-bold text-light-text mb-6">Service Performance Details</h2>
         <div class="card overflow-hidden">
           <div class="overflow-x-auto">
             <table class="table">
@@ -60,24 +60,24 @@
                 {% for service in services %}
                   <tr>
                     <td>
-                      <a href="{% url 'services:detail' service.id %}" class="text-primary-400 hover:text-primary-300 font-semibold">
+                      <a href="{% url 'services:detail' service.id %}" class="text-primary-600 hover:text-primary-300 font-semibold">
                         {{ service.name }}
                       </a>
                     </td>
-                    <td class="text-dark-text">{{ service.total_bookings|default:0 }}</td>
+                    <td class="text-light-text">{{ service.total_bookings|default:0 }}</td>
                     <td class="text-emerald-400">{{ service.completed_bookings|default:0 }}</td>
                     <td class="text-red-400">{{ service.cancelled_bookings|default:0 }}</td>
                     <td>
                       {% if service.total_bookings > 0 %}
-                        <span class="{% if service.completion_rate >= 90 %}text-emerald-400{% elif service.completion_rate >= 70 %}text-primary-400{% else %}text-amber-400{% endif %} font-semibold">
+                        <span class="{% if service.completion_rate >= 90 %}text-emerald-400{% elif service.completion_rate >= 70 %}text-primary-600{% else %}text-amber-400{% endif %} font-semibold">
                           {{ service.completion_rate|floatformat:1 }}%
                         </span>
                       {% else %}
-                        <span class="text-dark-muted">N/A</span>
+                        <span class="text-light-muted">N/A</span>
                       {% endif %}
                     </td>
                     <td class="text-gradient font-bold">₱{{ service.total_revenue|default:'0.00'|floatformat:2 }}</td>
-                    <td class="text-dark-muted">₱{{ service.average_revenue|default:'0.00'|floatformat:2 }}</td>
+                    <td class="text-light-muted">₱{{ service.average_revenue|default:'0.00'|floatformat:2 }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -89,7 +89,7 @@
       <!-- Top Performing Services -->
       {% if top_services %}
         <div class="mb-12">
-          <h2 class="text-2xl font-bold text-dark-text mb-6">Top Performing Services</h2>
+          <h2 class="text-2xl font-bold text-light-text mb-6">Top Performing Services</h2>
           <div class="space-y-4">
             {% for service in top_services %}
               <div class="card p-6">
@@ -98,8 +98,8 @@
                     {{ forloop.counter }}
                   </div>
                   <div class="flex-1">
-                    <h4 class="text-xl font-bold text-dark-text mb-1">{{ service.name }}</h4>
-                    <p class="text-dark-muted">{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }} · <span class="text-gradient font-semibold">₱{{ service.total_revenue|floatformat:2 }}</span> revenue</p>
+                    <h4 class="text-xl font-bold text-light-text mb-1">{{ service.name }}</h4>
+                    <p class="text-light-muted">{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }} · <span class="text-gradient font-semibold">₱{{ service.total_revenue|floatformat:2 }}</span> revenue</p>
                   </div>
                   <div>
                     {% if service.completion_rate >= 90 %}
@@ -120,15 +120,15 @@
       <!-- Empty State -->
       <div class="card p-12 text-center">
         <div class="text-6xl mb-4">📋</div>
-        <h3 class="text-2xl font-bold text-dark-text mb-2">No service analytics data available</h3>
-        <p class="text-dark-muted">Service performance metrics will appear here</p>
+        <h3 class="text-2xl font-bold text-light-text mb-2">No service analytics data available</h3>
+        <p class="text-light-muted">Service performance metrics will appear here</p>
       </div>
     {% endif %}
 
     <!-- Insights & Recommendations -->
     {% if low_performing_services or high_cancellation_services %}
       <div class="mb-12">
-        <h2 class="text-2xl font-bold text-dark-text mb-6">Insights & Recommendations</h2>
+        <h2 class="text-2xl font-bold text-light-text mb-6">Insights & Recommendations</h2>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {% if low_performing_services %}
             <div class="card p-6 border-amber-500/20 bg-amber-500/5">
@@ -136,11 +136,11 @@
                 <span>⚠️</span>
                 Low Performing Services
               </h4>
-              <p class="text-dark-muted mb-4">The following services have low booking rates and may need promotion or review:</p>
+              <p class="text-light-muted mb-4">The following services have low booking rates and may need promotion or review:</p>
               <ul class="space-y-2">
                 {% for service in low_performing_services %}
-                  <li class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
-                    <span class="text-dark-text">{{ service.name }}</span>
+                  <li class="flex items-center justify-between p-3 bg-light-elevated rounded-lg border border-light-border">
+                    <span class="text-light-text">{{ service.name }}</span>
                     <span class="text-amber-400 font-semibold">{{ service.total_bookings }} booking{{ service.total_bookings|pluralize }}</span>
                   </li>
                 {% endfor %}
@@ -154,11 +154,11 @@
                 <span>🚨</span>
                 High Cancellation Rate
               </h4>
-              <p class="text-dark-muted mb-4">These services have higher than average cancellation rates:</p>
+              <p class="text-light-muted mb-4">These services have higher than average cancellation rates:</p>
               <ul class="space-y-2">
                 {% for service in high_cancellation_services %}
-                  <li class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
-                    <span class="text-dark-text">{{ service.name }}</span>
+                  <li class="flex items-center justify-between p-3 bg-light-elevated rounded-lg border border-light-border">
+                    <span class="text-light-text">{{ service.name }}</span>
                     <span class="text-red-400 font-semibold">{{ service.cancellation_rate|floatformat:1 }}%</span>
                   </li>
                 {% endfor %}

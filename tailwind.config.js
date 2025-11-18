@@ -4,53 +4,54 @@ module.exports = {
     './templates/**/*.html',
     './static/js/**/*.js',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Premium dark mode palette
-        dark: {
-          bg: '#0a0a0f',
-          surface: '#12121a',
-          elevated: '#1a1a24',
-          hover: '#222230',
-          border: '#2a2a3a',
-          text: '#e4e4e7',
-          muted: '#a1a1aa',
-        },
+        // Minimalist light mode palette from color-palette.md
         primary: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+          50: '#f9f8fc',
+          100: '#f3f1f9',
+          200: '#e8e4f4',
+          300: '#d9cfed',
+          400: '#b5a8d1',
+          500: '#78597A', // Dusty Lavender
+          600: '#6b4f6d',
+          700: '#5e4560',
+          800: '#514553',
+          900: '#443a46',
+          950: '#2d2530',
         },
         accent: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          950: '#083344',
+          50: '#f0f7f5',
+          100: '#e1f0ed',
+          200: '#c3e1db',
+          300: '#a5d1c9',
+          400: '#6bafa1',
+          500: '#2E8166', // Jungle Teal
+          600: '#2a7059',
+          700: '#265f4d',
+          800: '#224e41',
+          900: '#1e3d35',
+          950: '#192f2a',
+        },
+        light: {
+          bg: '#FCFCFC', // White
+          surface: '#F8F7FA', // Very light lavender
+          elevated: '#F3F1F9', // Slightly darker light lavender
+          hover: '#EDE9F3', // Light hover state
+          border: '#DDD6F0', // Light border
+          text: '#2D2D2D', // Dark text for contrast
+          muted: '#6B6B7A', // Muted text
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(139, 92, 246, 0.3)',
-        'glow-accent': '0 0 20px rgba(6, 182, 212, 0.3)',
+        'glow': '0 0 20px rgba(120, 89, 122, 0.15)',
+        'glow-accent': '0 0 20px rgba(46, 129, 102, 0.15)',
+        'soft': '0 2px 8px rgba(120, 89, 122, 0.08)',
+        'soft-lg': '0 4px 16px rgba(120, 89, 122, 0.12)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

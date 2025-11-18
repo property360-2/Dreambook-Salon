@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Revenue Analytics</h1>
-        <p class="text-dark-muted">Track and analyze your revenue performance</p>
+        <p class="text-light-muted">Track and analyze your revenue performance</p>
       </div>
       <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost whitespace-nowrap">
         ← Back to Dashboard
@@ -17,7 +17,7 @@
 
     <!-- Revenue Overview -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue Overview</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Revenue Overview</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="stat-card">
           <div class="stat-label">Total Revenue</div>
@@ -36,34 +36,34 @@
 
     <!-- Revenue by Period -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue by Period</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Revenue by Period</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="card p-6">
-          <h3 class="text-lg font-semibold text-dark-text mb-3">Today</h3>
+          <h3 class="text-lg font-semibold text-light-text mb-3">Today</h3>
           <p class="text-3xl font-bold text-gradient mb-2">₱{{ today_revenue|default:'0.00' }}</p>
-          <p class="text-sm text-dark-muted">{{ today_count|default:0 }} payment{{ today_count|pluralize }}</p>
+          <p class="text-sm text-light-muted">{{ today_count|default:0 }} payment{{ today_count|pluralize }}</p>
         </div>
         <div class="card p-6">
-          <h3 class="text-lg font-semibold text-dark-text mb-3">This Week</h3>
+          <h3 class="text-lg font-semibold text-light-text mb-3">This Week</h3>
           <p class="text-3xl font-bold text-gradient mb-2">₱{{ week_revenue|default:'0.00' }}</p>
-          <p class="text-sm text-dark-muted">{{ week_count|default:0 }} payment{{ week_count|pluralize }}</p>
+          <p class="text-sm text-light-muted">{{ week_count|default:0 }} payment{{ week_count|pluralize }}</p>
         </div>
         <div class="card p-6">
-          <h3 class="text-lg font-semibold text-dark-text mb-3">This Month</h3>
+          <h3 class="text-lg font-semibold text-light-text mb-3">This Month</h3>
           <p class="text-3xl font-bold text-gradient mb-2">₱{{ month_revenue|default:'0.00' }}</p>
-          <p class="text-sm text-dark-muted">{{ month_count|default:0 }} payment{{ month_count|pluralize }}</p>
+          <p class="text-sm text-light-muted">{{ month_count|default:0 }} payment{{ month_count|pluralize }}</p>
         </div>
         <div class="card p-6">
-          <h3 class="text-lg font-semibold text-dark-text mb-3">This Year</h3>
+          <h3 class="text-lg font-semibold text-light-text mb-3">This Year</h3>
           <p class="text-3xl font-bold text-gradient mb-2">₱{{ year_revenue|default:'0.00' }}</p>
-          <p class="text-sm text-dark-muted">{{ year_count|default:0 }} payment{{ year_count|pluralize }}</p>
+          <p class="text-sm text-light-muted">{{ year_count|default:0 }} payment{{ year_count|pluralize }}</p>
         </div>
       </div>
     </div>
 
     <!-- Daily Revenue Trend -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Daily Revenue Trend</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Daily Revenue Trend</h2>
       {% if daily_revenue %}
         <div class="card overflow-hidden">
           <div class="overflow-x-auto">
@@ -78,9 +78,9 @@
               <tbody>
                 {% for day in daily_revenue %}
                   <tr>
-                    <td class="text-dark-text font-semibold">{{ day.date|date:"M d, Y" }}</td>
+                    <td class="text-light-text font-semibold">{{ day.date|date:"M d, Y" }}</td>
                     <td class="text-gradient font-bold text-lg">₱{{ day.revenue|floatformat:2 }}</td>
-                    <td class="text-dark-muted">{{ day.count }} payment{{ day.count|pluralize }}</td>
+                    <td class="text-light-muted">{{ day.count }} payment{{ day.count|pluralize }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -90,15 +90,15 @@
       {% else %}
         <div class="card p-12 text-center">
           <div class="text-6xl mb-4">📊</div>
-          <h3 class="text-2xl font-bold text-dark-text mb-2">No revenue data available</h3>
-          <p class="text-dark-muted">Revenue trends will appear here as payments are processed</p>
+          <h3 class="text-2xl font-bold text-light-text mb-2">No revenue data available</h3>
+          <p class="text-light-muted">Revenue trends will appear here as payments are processed</p>
         </div>
       {% endif %}
     </div>
 
     <!-- Revenue by Service -->
     <div class="mb-12">
-      <h2 class="text-2xl font-bold text-dark-text mb-6">Revenue by Service</h2>
+      <h2 class="text-2xl font-bold text-light-text mb-6">Revenue by Service</h2>
       {% if service_revenue %}
         <div class="card overflow-hidden">
           <div class="overflow-x-auto">
@@ -114,10 +114,10 @@
               <tbody>
                 {% for service in service_revenue %}
                   <tr>
-                    <td class="text-dark-text font-semibold">{{ service.name }}</td>
-                    <td class="text-primary-400">{{ service.booking_count }} booking{{ service.booking_count|pluralize }}</td>
+                    <td class="text-light-text font-semibold">{{ service.name }}</td>
+                    <td class="text-primary-600">{{ service.booking_count }} booking{{ service.booking_count|pluralize }}</td>
                     <td class="text-gradient font-bold text-lg">₱{{ service.total_revenue|floatformat:2 }}</td>
-                    <td class="text-dark-muted">₱{{ service.average_price|floatformat:2 }}</td>
+                    <td class="text-light-muted">₱{{ service.average_price|floatformat:2 }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -127,8 +127,8 @@
       {% else %}
         <div class="card p-12 text-center">
           <div class="text-6xl mb-4">💰</div>
-          <h3 class="text-2xl font-bold text-dark-text mb-2">No service revenue data</h3>
-          <p class="text-dark-muted">Service-based revenue breakdown will appear here</p>
+          <h3 class="text-2xl font-bold text-light-text mb-2">No service revenue data</h3>
+          <p class="text-light-muted">Service-based revenue breakdown will appear here</p>
         </div>
       {% endif %}
     </div>

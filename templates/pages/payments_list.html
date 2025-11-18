@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Payment History</h1>
-        <p class="text-dark-muted">Track all your transactions</p>
+        <p class="text-light-muted">Track all your transactions</p>
       </div>
       {% if user.role in 'STAFF,ADMIN' %}
         <a href="{% url 'payments:stats' %}" class="btn btn-primary whitespace-nowrap">
@@ -21,7 +21,7 @@
     <div class="card p-6 mb-8">
       <form method="get" class="flex flex-col sm:flex-row gap-4 items-end">
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-dark-text mb-2">Status:</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">Status:</label>
           <select name="status" class="input">
             <option value="">All</option>
             <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
@@ -31,7 +31,7 @@
         </div>
 
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-dark-text mb-2">Method:</label>
+          <label class="block text-sm font-semibold text-light-text mb-2">Method:</label>
           <select name="method" class="input">
             <option value="">All</option>
             <option value="GCASH" {% if request.GET.method == 'GCASH' %}selected{% endif %}>GCash</option>
@@ -67,12 +67,12 @@
             <tbody>
               {% for payment in payments %}
                 <tr>
-                  <td class="font-mono text-sm text-primary-400">{{ payment.txn_id }}</td>
-                  <td class="text-dark-muted">{{ payment.created_at|date:"M d, Y" }}</td>
+                  <td class="font-mono text-sm text-primary-600">{{ payment.txn_id }}</td>
+                  <td class="text-light-muted">{{ payment.created_at|date:"M d, Y" }}</td>
                   {% if user.role in 'STAFF,ADMIN' %}
-                    <td class="text-dark-text">{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</td>
+                    <td class="text-light-text">{{ payment.appointment.customer.get_full_name|default:payment.appointment.customer.email }}</td>
                   {% endif %}
-                  <td class="font-semibold text-dark-text">{{ payment.appointment.service.name }}</td>
+                  <td class="font-semibold text-light-text">{{ payment.appointment.service.name }}</td>
                   <td class="text-gradient font-bold text-lg">₱{{ payment.amount }}</td>
                   <td><span class="badge badge-info">{{ payment.get_method_display }}</span></td>
                   <td>
@@ -85,7 +85,7 @@
                     {% endif %}
                   </td>
                   <td>
-                    <a href="{% url 'payments:detail' payment.id %}" class="text-primary-400 hover:text-primary-300 font-semibold text-sm">
+                    <a href="{% url 'payments:detail' payment.id %}" class="text-primary-600 hover:text-primary-300 font-semibold text-sm">
                       View
                     </a>
                   </td>
@@ -102,7 +102,7 @@
           {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-ghost text-sm">Previous</a>
           {% endif %}
-          <span class="px-4 py-2 text-dark-text font-semibold">
+          <span class="px-4 py-2 text-light-text font-semibold">
             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
           </span>
           {% if page_obj.has_next %}
@@ -114,8 +114,8 @@
       <!-- Empty State -->
       <div class="card p-12 text-center">
         <div class="text-6xl mb-4">💳</div>
-        <h3 class="text-2xl font-bold text-dark-text mb-2">No payments found</h3>
-        <p class="text-dark-muted">No transactions match your filters</p>
+        <h3 class="text-2xl font-bold text-light-text mb-2">No payments found</h3>
+        <p class="text-light-muted">No transactions match your filters</p>
       </div>
     {% endif %}
   </div>

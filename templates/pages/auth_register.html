@@ -13,8 +13,8 @@
           </div>
           <h1 class="text-3xl font-bold text-gradient">Dreambook Salon</h1>
         </div>
-        <h2 class="text-3xl font-bold text-dark-text mb-2">Join Dreambook</h2>
-        <p class="text-dark-muted">Set up your profile to start booking and collaborating</p>
+        <h2 class="text-3xl font-bold text-light-text mb-2">Join Dreambook</h2>
+        <p class="text-light-muted">Set up your profile to start booking and collaborating</p>
       </div>
 
       <!-- Register Card -->
@@ -32,7 +32,7 @@
 
           {% for field in form %}
             <div>
-              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-light-text mb-2">
                 {{ field.label }}
               </label>
               <input
@@ -48,7 +48,7 @@
                 <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
               {% endif %}
               {% if field.help_text %}
-                <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+                <p class="mt-1 text-sm text-light-muted">{{ field.help_text }}</p>
               {% endif %}
             </div>
           {% endfor %}
@@ -60,8 +60,8 @@
 
         <!-- Footer -->
         <div class="mt-6 text-center">
-          <span class="text-dark-muted">Already onboard?</span>
-          <a href="{% url 'core:login' %}" class="text-primary-400 hover:text-primary-300 font-semibold ml-1 transition-colors">
+          <span class="text-light-muted">Already onboard?</span>
+          <a href="{% url 'core:login' %}" class="text-primary-600 hover:text-primary-300 font-semibold ml-1 transition-colors">
             Sign in
           </a>
         </div>

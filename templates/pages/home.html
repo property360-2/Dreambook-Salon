@@ -15,7 +15,7 @@
         <h1 class="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
           Modern pampering for <span class="text-gradient">Manila creatives</span>
         </h1>
-        <p class="text-xl text-dark-muted mb-10 max-w-2xl mx-auto animate-slide-up">
+        <p class="text-xl text-light-muted mb-10 max-w-2xl mx-auto animate-slide-up">
           Discover our curated services and track availability without calling the front desk. Experience premium salon services in a modern, sophisticated environment.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
@@ -46,24 +46,24 @@
         {% for service in featured_services %}
           <div class="card card-hover p-6 group">
             <div class="flex items-start justify-between mb-4">
-              <h3 class="text-xl font-bold text-dark-text group-hover:text-primary-400 transition-colors">
+              <h3 class="text-xl font-bold text-light-text group-hover:text-primary-600 transition-colors">
                 {{ service.name }}
               </h3>
               <span class="badge badge-info">{{ service.duration_minutes }} min</span>
             </div>
-            <p class="text-dark-muted mb-4 line-clamp-2">{{ service.description|default:"Premium salon service" }}</p>
-            <div class="flex items-center justify-between pt-4 border-t border-dark-border">
+            <p class="text-light-muted mb-4 line-clamp-2">{{ service.description|default:"Premium salon service" }}</p>
+            <div class="flex items-center justify-between pt-4 border-t border-light-border">
               <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
               {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
-                <a href="{% url 'appointments:book' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                <a href="{% url 'appointments:book' %}" class="text-primary-600 hover:text-primary-300 font-semibold transition-colors">
                   Book now →
                 </a>
               {% elif not request.user.is_authenticated %}
-                <a href="{% url 'core:login' %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                <a href="{% url 'core:login' %}" class="text-primary-600 hover:text-primary-300 font-semibold transition-colors">
                   Sign in to book →
                 </a>
               {% else %}
-                <a href="{% url 'services:detail' service.id %}" class="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+                <a href="{% url 'services:detail' service.id %}" class="text-primary-600 hover:text-primary-300 font-semibold transition-colors">
                   View details →
                 </a>
               {% endif %}
@@ -72,12 +72,12 @@
         {% empty %}
           <div class="col-span-full text-center py-12">
             <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center">
-              <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-12 h-12 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <h3 class="text-2xl font-bold text-dark-text mb-2">Services Coming Soon</h3>
-            <p class="text-dark-muted">We're preparing our premium services for you. Check back soon!</p>
+            <h3 class="text-2xl font-bold text-light-text mb-2">Services Coming Soon</h3>
+            <p class="text-light-muted">We're preparing our premium services for you. Check back soon!</p>
           </div>
         {% endfor %}
       </div>
@@ -91,7 +91,7 @@
   </section>
 
   <!-- Stats Section -->
-  <section class="section bg-dark-surface/50">
+  <section class="section bg-light-surface/50">
     <div class="container-custom">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="stat-card text-center">

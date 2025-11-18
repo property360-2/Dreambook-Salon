@@ -38,7 +38,7 @@
             </a>
           </div>
         </div>
-        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% url 'inventory:list' %}" class="text-primary-600 hover:text-primary-300 transition-colors">
           ← Back to Inventory
         </a>
       </div>
@@ -48,30 +48,30 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Item Info Card -->
           <div class="card p-8">
-            <h2 class="text-2xl font-bold text-dark-text mb-6">Item Information</h2>
+            <h2 class="text-2xl font-bold text-light-text mb-6">Item Information</h2>
 
             <div class="space-y-4 mb-8">
               <div>
-                <span class="text-dark-muted text-sm block mb-1">Description</span>
-                <p class="text-dark-text">{{ item.description|default:"No description available." }}</p>
+                <span class="text-light-muted text-sm block mb-1">Description</span>
+                <p class="text-light-text">{{ item.description|default:"No description available." }}</p>
               </div>
 
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mt-6">
-                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
-                  <span class="text-dark-muted text-sm block mb-2">Current Stock</span>
+                <div class="text-center p-4 bg-light-elevated rounded-xl border border-light-border">
+                  <span class="text-light-muted text-sm block mb-2">Current Stock</span>
                   <span class="{% if item.stock <= 0 %}text-red-400{% elif item.is_low_stock %}text-amber-400{% else %}text-emerald-400{% endif %} text-3xl font-bold block">
                     {{ item.stock }}
                   </span>
-                  <span class="text-dark-muted text-sm">{{ item.unit }}</span>
+                  <span class="text-light-muted text-sm">{{ item.unit }}</span>
                 </div>
-                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
-                  <span class="text-dark-muted text-sm block mb-2">Threshold</span>
-                  <span class="text-primary-400 text-3xl font-bold block">{{ item.threshold }}</span>
-                  <span class="text-dark-muted text-sm">{{ item.unit }}</span>
+                <div class="text-center p-4 bg-light-elevated rounded-xl border border-light-border">
+                  <span class="text-light-muted text-sm block mb-2">Threshold</span>
+                  <span class="text-primary-600 text-3xl font-bold block">{{ item.threshold }}</span>
+                  <span class="text-light-muted text-sm">{{ item.unit }}</span>
                 </div>
-                <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
-                  <span class="text-dark-muted text-sm block mb-2">Unit Type</span>
-                  <span class="text-dark-text text-xl font-bold block">{{ item.unit }}</span>
+                <div class="text-center p-4 bg-light-elevated rounded-xl border border-light-border">
+                  <span class="text-light-muted text-sm block mb-2">Unit Type</span>
+                  <span class="text-light-text text-xl font-bold block">{{ item.unit }}</span>
                 </div>
               </div>
             </div>
@@ -83,12 +83,12 @@
               <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
               </svg>
-              <h3 class="text-xl font-bold text-dark-text">Restock Item</h3>
+              <h3 class="text-xl font-bold text-light-text">Restock Item</h3>
             </div>
             <form method="post" action="{% url 'inventory:restock' item.id %}" class="space-y-4 form-with-loading">
               {% csrf_token %}
               <div>
-                <label for="restock_quantity" class="block text-sm font-semibold text-dark-text mb-2">
+                <label for="restock_quantity" class="block text-sm font-semibold text-light-text mb-2">
                   Quantity to Add
                   <span class="text-red-400">*</span>
                 </label>
@@ -103,16 +103,16 @@
                     required
                     class="input pr-16"
                   >
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-dark-muted text-sm">
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-light-muted text-sm">
                     {{ item.unit }}
                   </span>
                 </div>
-                <p class="mt-2 text-sm text-dark-muted">
+                <p class="mt-2 text-sm text-light-muted">
                   This will be added to the current stock of {{ item.stock }} {{ item.unit }}
                 </p>
               </div>
               <div>
-                <label for="restock_notes" class="block text-sm font-semibold text-dark-text mb-2">
+                <label for="restock_notes" class="block text-sm font-semibold text-light-text mb-2">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -138,12 +138,12 @@
               <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
               </svg>
-              <h3 class="text-xl font-bold text-dark-text">Adjust Stock</h3>
+              <h3 class="text-xl font-bold text-light-text">Adjust Stock</h3>
             </div>
             <form method="post" action="{% url 'inventory:adjust' item.id %}" class="space-y-4 form-with-loading">
               {% csrf_token %}
               <div>
-                <label for="adjustment" class="block text-sm font-semibold text-dark-text mb-2">
+                <label for="adjustment" class="block text-sm font-semibold text-light-text mb-2">
                   Adjustment Amount
                   <span class="text-red-400">*</span>
                 </label>
@@ -157,16 +157,16 @@
                     required
                     class="input pr-16"
                   >
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-dark-muted text-sm">
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-light-muted text-sm">
                     {{ item.unit }}
                   </span>
                 </div>
-                <p class="mt-2 text-sm text-dark-muted">
+                <p class="mt-2 text-sm text-light-muted">
                   Use positive numbers to add stock or negative numbers to remove stock
                 </p>
               </div>
               <div>
-                <label for="adjust_reason" class="block text-sm font-semibold text-dark-text mb-2">
+                <label for="adjust_reason" class="block text-sm font-semibold text-light-text mb-2">
                   Reason (Optional)
                 </label>
                 <textarea
@@ -190,19 +190,19 @@
         <!-- Sidebar -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24">
-            <h3 class="text-lg font-bold text-dark-text mb-4">Used in Services</h3>
+            <h3 class="text-lg font-bold text-light-text mb-4">Used in Services</h3>
             {% if services_using_item %}
               <div class="space-y-2">
                 {% for si in services_using_item %}
-                  <a href="{% url 'services:detail' si.service.id %}" class="block p-3 bg-dark-elevated rounded-lg border border-dark-border hover:border-primary-500/50 transition-all">
-                    <div class="font-semibold text-dark-text mb-1">{{ si.service.name }}</div>
-                    <div class="text-sm text-primary-400">{{ si.qty_per_service }} {{ item.unit }} per service</div>
+                  <a href="{% url 'services:detail' si.service.id %}" class="block p-3 bg-light-elevated rounded-lg border border-light-border hover:border-primary-500/50 transition-all">
+                    <div class="font-semibold text-light-text mb-1">{{ si.service.name }}</div>
+                    <div class="text-sm text-primary-600">{{ si.qty_per_service }} {{ item.unit }} per service</div>
                   </a>
                 {% endfor %}
               </div>
             {% else %}
-              <div class="p-4 bg-dark-elevated rounded-lg border border-dark-border text-center">
-                <p class="text-sm text-dark-muted">Not used in any services</p>
+              <div class="p-4 bg-light-elevated rounded-lg border border-light-border text-center">
+                <p class="text-sm text-light-muted">Not used in any services</p>
               </div>
             {% endif %}
           </div>

@@ -8,7 +8,7 @@
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold text-gradient mb-2">{{ form_title }}</h1>
-        <a href="{% url 'inventory:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% url 'inventory:list' %}" class="text-primary-600 hover:text-primary-300 transition-colors">
           ← Back to Inventory
         </a>
       </div>
@@ -28,7 +28,7 @@
 
           {% for field in form %}
             <div>
-              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-dark-text mb-2">
+              <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-light-text mb-2">
                 {{ field.label }}
                 {% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
               </label>
@@ -36,7 +36,7 @@
               {% if field.name == 'is_active' %}
                 <div class="flex items-center">
                   {{ field }}
-                  <label for="{{ field.id_for_label }}" class="ml-2 text-sm text-dark-muted">
+                  <label for="{{ field.id_for_label }}" class="ml-2 text-sm text-light-muted">
                     Track this item in inventory
                   </label>
                 </div>
@@ -48,13 +48,13 @@
                 <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
               {% endif %}
               {% if field.help_text %}
-                <p class="mt-1 text-sm text-dark-muted">{{ field.help_text }}</p>
+                <p class="mt-1 text-sm text-light-muted">{{ field.help_text }}</p>
               {% endif %}
             </div>
           {% endfor %}
 
           <!-- Submit Buttons -->
-          <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-dark-border">
+          <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-light-border">
             <button type="submit" class="btn btn-primary flex-1">
               {{ submit_text }}
             </button>

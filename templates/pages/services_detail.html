@@ -15,7 +15,7 @@
             <span class="badge badge-danger">Inactive</span>
           {% endif %}
         </div>
-        <a href="{% url 'services:list' %}" class="text-primary-400 hover:text-primary-300 transition-colors">
+        <a href="{% url 'services:list' %}" class="text-primary-600 hover:text-primary-300 transition-colors">
           ← Back to Services
         </a>
       </div>
@@ -25,19 +25,19 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Service Info Card -->
           <div class="card p-8">
-            <h2 class="text-2xl font-bold text-dark-text mb-4">Description</h2>
-            <p class="text-dark-muted text-lg leading-relaxed mb-8">
+            <h2 class="text-2xl font-bold text-light-text mb-4">Description</h2>
+            <p class="text-light-muted text-lg leading-relaxed mb-8">
               {{ service.description|default:"No description available." }}
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border">
-                <span class="text-dark-muted text-sm block mb-2">Duration</span>
-                <span class="text-2xl font-bold text-primary-400">{{ service.duration_minutes }}</span>
-                <span class="text-dark-muted text-sm">minutes</span>
+              <div class="text-center p-4 bg-light-elevated rounded-xl border border-light-border">
+                <span class="text-light-muted text-sm block mb-2">Duration</span>
+                <span class="text-2xl font-bold text-primary-600">{{ service.duration_minutes }}</span>
+                <span class="text-light-muted text-sm">minutes</span>
               </div>
-              <div class="text-center p-4 bg-dark-elevated rounded-xl border border-dark-border sm:col-span-2">
-                <span class="text-dark-muted text-sm block mb-2">Price</span>
+              <div class="text-center p-4 bg-light-elevated rounded-xl border border-light-border sm:col-span-2">
+                <span class="text-light-muted text-sm block mb-2">Price</span>
                 <span class="text-4xl font-bold text-gradient">₱{{ service.price }}</span>
               </div>
             </div>
@@ -46,12 +46,12 @@
           <!-- Required Inventory (if any) -->
           {% if required_inventory %}
             <div class="card p-6">
-              <h3 class="text-xl font-bold text-dark-text mb-4">Required Inventory</h3>
+              <h3 class="text-xl font-bold text-light-text mb-4">Required Inventory</h3>
               <div class="space-y-2">
                 {% for si in required_inventory %}
-                  <div class="flex items-center justify-between p-3 bg-dark-elevated rounded-lg border border-dark-border">
-                    <span class="text-dark-text font-semibold">{{ si.item.name }}</span>
-                    <span class="text-primary-400">{{ si.qty_per_service }} {{ si.item.unit }}</span>
+                  <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg border border-light-border">
+                    <span class="text-light-text font-semibold">{{ si.item.name }}</span>
+                    <span class="text-primary-600">{{ si.qty_per_service }} {{ si.item.unit }}</span>
                   </div>
                 {% endfor %}
               </div>
@@ -62,7 +62,7 @@
         <!-- Sidebar Actions -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24">
-            <h3 class="text-lg font-bold text-dark-text mb-4">Book This Service</h3>
+            <h3 class="text-lg font-bold text-light-text mb-4">Book This Service</h3>
 
             {% if user.is_authenticated %}
               {% if service.is_active %}
@@ -73,7 +73,7 @@
                   Book Now
                 </a>
                 <div class="p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl animate-pulse-slow">
-                  <p class="text-sm text-primary-400 text-center">
+                  <p class="text-sm text-primary-600 text-center">
                     ✨ Book your appointment and experience premium care
                   </p>
                 </div>
@@ -97,8 +97,8 @@
                 </svg>
                 Login to Book
               </a>
-              <div class="p-4 bg-dark-elevated border border-dark-border rounded-xl">
-                <p class="text-sm text-dark-muted text-center">
+              <div class="p-4 bg-light-elevated border border-light-border rounded-xl">
+                <p class="text-sm text-light-muted text-center">
                   Sign in to book this service
                 </p>
               </div>

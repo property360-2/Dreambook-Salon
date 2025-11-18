@@ -1,4 +1,4 @@
-<footer class="bg-dark-surface border-t border-dark-border mt-20">
+<footer class="bg-light-surface border-t border-light-border mt-20">
   <div class="container-custom py-12">
     <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
       <!-- Brand -->
@@ -11,15 +11,15 @@
 
       <!-- Copyright -->
       {% now 'Y' as current_year %}
-      <p class="text-dark-muted text-sm">
+      <p class="text-light-muted text-sm">
         © {{ current_year }} Dreambook Salon. All rights reserved.
       </p>
 
       <!-- Links -->
       <div class="flex items-center space-x-6">
-        <a href="{% url 'services:list' %}" class="text-sm text-dark-muted hover:text-primary-400 transition-colors">Services</a>
-        <a href="{% url 'inventory:list' %}" class="text-sm text-dark-muted hover:text-primary-400 transition-colors">Inventory</a>
-        <a href="#contact" class="text-sm text-dark-muted hover:text-primary-400 transition-colors">Contact</a>
+        <a href="{% url 'services:list' %}" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Services</a>
+        <a href="{% url 'inventory:list' %}" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Inventory</a>
+        <a href="#contact" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Contact</a>
       </div>
     </div>
   </div>

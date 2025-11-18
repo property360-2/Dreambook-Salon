@@ -3,10 +3,8 @@
     <div class="flex items-center justify-between h-16">
       <!-- Logo/Brand -->
       <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group">
-        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-glow transition-all duration-300">
-          <span class="text-white font-bold text-xl">D</span>
-        </div>
-        <span class="text-xl font-bold text-gradient">Dreambook Salon</span>
+        <img src="{% static 'images/logo.jpg' %}" alt="Dreambook Salon Logo" class="h-10 w-10 rounded-lg object-cover shadow-soft group-hover:shadow-glow transition-all duration-300">
+        <span class="text-lg font-bold text-gradient hidden sm:inline">Dreambook Salon</span>
       </a>
 
       <!-- Desktop Navigation Links -->
@@ -33,8 +31,8 @@
       <!-- Account Section -->
       <div class="hidden md:flex items-center space-x-4">
         {% if request.user.is_authenticated %}
-          <span class="hidden lg:block text-sm text-dark-muted">
-            Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
+          <span class="hidden lg:block text-sm text-light-muted">
+            Hi, <span class="text-primary-600 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
           </span>
           {% if request.user.role == 'CUSTOMER' %}
             <a href="{% url 'appointments:book' %}" class="btn btn-primary text-sm px-4 py-2">
@@ -48,7 +46,7 @@
             </button>
           </form>
         {% else %}
-          <a href="{% url 'core:register' %}" class="text-dark-text hover:text-primary-400 transition-colors">
+          <a href="{% url 'core:register' %}" class="text-light-text hover:text-primary-600 transition-colors">
             Create account
           </a>
           <a href="{% url 'core:login' %}" class="btn btn-primary text-sm px-4 py-2">
@@ -58,8 +56,8 @@
       </div>
 
       <!-- Mobile Menu Button -->
-      <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-dark-hover transition-colors">
-        <svg class="w-6 h-6 text-dark-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-light-hover transition-colors">
+        <svg class="w-6 h-6 text-light-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </button>
@@ -89,9 +87,9 @@
         {% if request.user.is_authenticated %}
 
           <!-- Mobile Account Section -->
-          <li class="pt-4 border-t border-dark-border">
-            <span class="block text-sm text-dark-muted px-4 py-2">
-              Hi, <span class="text-primary-400 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
+          <li class="pt-4 border-t border-light-border">
+            <span class="block text-sm text-light-muted px-4 py-2">
+              Hi, <span class="text-primary-600 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
             </span>
           </li>
           {% if request.user.role == 'CUSTOMER' %}
