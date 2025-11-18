@@ -8,6 +8,11 @@ from .views import (
     AppointmentCompleteView,
     AppointmentUpdateStatusView,
     CheckSlotAvailabilityView,
+    SlotLimitListView,
+    SlotLimitCreateView,
+    SlotLimitUpdateView,
+    SlotLimitDeleteView,
+    SlotLimitDetailView,
 )
 
 app_name = 'appointments'
@@ -26,4 +31,11 @@ urlpatterns = [
     path('staff/', StaffAppointmentListView.as_view(), name='staff_list'),
     path('<int:pk>/complete/', AppointmentCompleteView.as_view(), name='complete'),
     path('<int:pk>/update-status/', AppointmentUpdateStatusView.as_view(), name='update_status'),
+
+    # Slot Limit Management views
+    path('slot-limits/', SlotLimitListView.as_view(), name='slotlimit_list'),
+    path('slot-limits/add/', SlotLimitCreateView.as_view(), name='slotlimit_create'),
+    path('slot-limits/<int:pk>/', SlotLimitDetailView.as_view(), name='slotlimit_detail'),
+    path('slot-limits/<int:pk>/edit/', SlotLimitUpdateView.as_view(), name='slotlimit_edit'),
+    path('slot-limits/<int:pk>/delete/', SlotLimitDeleteView.as_view(), name='slotlimit_delete'),
 ]

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Slot Limits · Dreambook Salon{% endblock title %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Manage Slot Limits</h1>
+        <p class="text-light-muted">Control availability for specific times</p>
+      </div>
+      <a href="{% url 'appointments:slotlimit_create' %}" class="btn btn-primary whitespace-nowrap">
+        + Add Slot Limit
+      </a>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card bg-blue-500/10 border border-blue-500/20 p-6 mb-8">
+      <div class="flex gap-4">
+        <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-blue-400 mb-1">What are Slot Limits?</h3>
+          <p class="text-blue-300/80 text-sm">Set maximum concurrent appointments for specific dates and times. Useful for staff meetings, maintenance, or reduced availability.</p>
+        </div>
+      </div>
+    </div>
+
+    {% if slot_limits %}
+      <!-- Slot Limits Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time Range</th>
+                <th>Max Slots</th>
+                <th>Reason</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for slot_limit in slot_limits %}
+                <tr>
+                  <td class="font-semibold text-light-text">
+                    {{ slot_limit.date|date:"M d, Y" }}
+                  </td>
+                  <td class="text-light-text">
+                    {{ slot_limit.time_start|date:"g:i A" }} - {{ slot_limit.time_end|date:"g:i A" }}
+                  </td>
+                  <td>
+                    <span class="badge badge-primary">{{ slot_limit.max_slots }}</span>
+                  </td>
+                  <td class="text-light-muted">
+                    {% if slot_limit.reason %}
+                      {{ slot_limit.reason }}
+                    {% else %}
+                      <span class="text-light-border italic">No reason</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-sm text-light-muted">
+                    {{ slot_limit.created_at|date:"M d, Y" }}
+                  </td>
+                  <td>
+                    <div class="flex gap-2">
+                      <a href="{% url 'appointments:slotlimit_detail' slot_limit.id %}" class="btn btn-sm btn-ghost">
+                        View
+                      </a>
+                      <a href="{% url 'appointments:slotlimit_edit' slot_limit.id %}" class="btn btn-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
+                        Edit
+                      </a>
+                      <form method="post" action="{% url 'appointments:slotlimit_delete' slot_limit.id %}" class="inline confirm-action"
+                            data-confirm-title="Delete Slot Limit?"
+                            data-confirm-message="Are you sure you want to delete this slot limit for {{ slot_limit.date }}?"
+                            data-confirm-text="Yes, Delete"
+                            data-danger="true">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20">
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <div class="flex justify-center items-center gap-4 mt-8">
+          {% if page_obj.has_previous %}
+            <a href="?page=1" class="btn btn-ghost">First</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-ghost">Previous</a>
+          {% endif %}
+
+          <div class="flex gap-2">
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <span class="btn btn-primary pointer-events-none">{{ num }}</span>
+              {% else %}
+                <a href="?page={{ num }}" class="btn btn-ghost">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-ghost">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-ghost">Last</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <!-- Empty State -->
+      <div class="card p-12 text-center">
+        <div class="w-16 h-16 bg-light-elevated rounded-lg flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-light-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-light-text mb-2">No Slot Limits Yet</h3>
+        <p class="text-light-muted mb-6">Create your first slot limit to control availability for specific times.</p>
+        <a href="{% url 'appointments:slotlimit_create' %}" class="btn btn-primary inline-block">
+          Create First Slot Limit
+        </a>
+      </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-8">
+      <a href="{% url 'appointments:staff_list' %}" class="text-primary-600 hover:text-primary-300 transition-colors">
+        ← Back to Appointments
+      </a>
+    </div>
+  </div>
+{% endblock content %}

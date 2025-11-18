@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
 from datetime import timedelta, datetime
-from .models import Appointment, AppointmentSettings, BlockedRange
+from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 from .utils import get_calendar_data, get_day_appointments, get_available_slots, check_slot_availability
 from services.models import Service
 from core.mixins import CustomerRequiredMixin, StaffOrAdminRequiredMixin
@@ -423,3 +423,127 @@ class AppointmentUpdateStatusView(StaffOrAdminRequiredMixin, View):
 
         messages.success(request, f"Appointment status updated to {appointment.get_status_display()}")
         return redirect('appointments:detail', pk=pk)
+
+
+# Slot Limit Management Views
+class SlotLimitListView(StaffOrAdminRequiredMixin, ListView):
+    """List all slot limits."""
+
+    model = SlotLimit
+    template_name = 'pages/slotlimit_list.html'
+    context_object_name = 'slot_limits'
+    paginate_by = 20
+    ordering = ['-date', 'time_start']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Manage Slot Limits'
+
+        # Add filter options
+        date_filter = self.request.GET.get('date')
+        if date_filter:
+            self.object_list = self.object_list.filter(date=date_filter)
+            context['filtered_date'] = date_filter
+
+        return context
+
+
+class SlotLimitCreateView(StaffOrAdminRequiredMixin, CreateView):
+    """Create a new slot limit."""
+
+    model = SlotLimit
+    template_name = 'pages/slotlimit_form.html'
+    fields = ['date', 'time_start', 'time_end', 'max_slots', 'reason']
+    success_url = reverse_lazy('appointments:slotlimit_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Add Slot Limit'
+        context['form_title'] = 'Create New Slot Limit'
+
+        # Pre-fill from query parameters
+        date = self.request.GET.get('date')
+        time_start = self.request.GET.get('time_start')
+        time_end = self.request.GET.get('time_end')
+
+        if date:
+            context['form'].initial['date'] = date
+        if time_start:
+            context['form'].initial['time_start'] = time_start
+        if time_end:
+            context['form'].initial['time_end'] = time_end
+
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "Slot limit created successfully!")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Failed to create slot limit. Please check the form.")
+        return super().form_invalid(form)
+
+
+class SlotLimitUpdateView(StaffOrAdminRequiredMixin, View):
+    """Update a slot limit."""
+
+    def get(self, request, pk):
+        slot_limit = get_object_or_404(SlotLimit, pk=pk)
+        return render(request, 'pages/slotlimit_form.html', {
+            'slot_limit': slot_limit,
+            'page_title': 'Edit Slot Limit',
+            'form_title': f'Edit Slot Limit: {slot_limit.date} {slot_limit.time_start}-{slot_limit.time_end}',
+            'is_edit': True,
+        })
+
+    def post(self, request, pk):
+        slot_limit = get_object_or_404(SlotLimit, pk=pk)
+
+        slot_limit.date = request.POST.get('date', slot_limit.date)
+        slot_limit.time_start = request.POST.get('time_start', slot_limit.time_start)
+        slot_limit.time_end = request.POST.get('time_end', slot_limit.time_end)
+        slot_limit.max_slots = int(request.POST.get('max_slots', slot_limit.max_slots))
+        slot_limit.reason = request.POST.get('reason', '')
+
+        try:
+            slot_limit.save()
+            messages.success(request, "Slot limit updated successfully!")
+            return redirect('appointments:slotlimit_list')
+        except Exception as e:
+            messages.error(request, f"Failed to update slot limit: {str(e)}")
+            return redirect('appointments:slotlimit_detail', pk=pk)
+
+
+class SlotLimitDeleteView(StaffOrAdminRequiredMixin, View):
+    """Delete a slot limit."""
+
+    def post(self, request, pk):
+        slot_limit = get_object_or_404(SlotLimit, pk=pk)
+        date_str = f"{slot_limit.date} {slot_limit.time_start}-{slot_limit.time_end}"
+
+        slot_limit.delete()
+        messages.success(request, f"Slot limit deleted: {date_str}")
+
+        return redirect('appointments:slotlimit_list')
+
+
+class SlotLimitDetailView(StaffOrAdminRequiredMixin, DetailView):
+    """View slot limit details."""
+
+    model = SlotLimit
+    template_name = 'pages/slotlimit_detail.html'
+    context_object_name = 'slot_limit'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        slot_limit = self.get_object()
+        context['page_title'] = f'Slot Limit: {slot_limit.date}'
+        context['appointments_count'] = Appointment.objects.filter(
+            start_at__date=slot_limit.date,
+            status__in=[
+                Appointment.Status.PENDING,
+                Appointment.Status.CONFIRMED,
+                Appointment.Status.IN_PROGRESS
+            ]
+        ).count()
+        return context
