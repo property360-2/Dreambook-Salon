@@ -16,7 +16,7 @@
 
       <!-- Form -->
       <div class="card p-8">
-        <form method="post" class="space-y-6 form-with-loading validate-realtime">
+        <form method="post" enctype="multipart/form-data" class="space-y-6 form-with-loading validate-realtime">
           {% csrf_token %}
 
           {% if form.non_field_errors %}
@@ -41,20 +41,39 @@
                 </label>
 
                 {% if field.name == 'is_active' %}
+                  <!-- Checkbox Field -->
                   <div class="flex items-center">
                     {{ field }}
                     <label for="{{ field.id_for_label }}" class="ml-2 text-sm text-light-muted">
                       Make this service available for booking
                     </label>
                   </div>
+                {% elif field.name == 'image' %}
+                  <!-- Image Upload Field with Preview -->
+                  <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                      <!-- File Input -->
+                      <div class="flex-1">
+                        {{ field }}
+                        <p class="mt-2 text-xs text-light-muted">Recommended: 600x400px or larger</p>
+                      </div>
+                      <!-- Preview -->
+                      {% if form.instance.image %}
+                        <div class="w-32 h-32 bg-light-elevated rounded-lg overflow-hidden border border-light-border">
+                          <img src="{{ form.instance.image.url }}" alt="Current service image" class="w-full h-full object-cover">
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
                 {% else %}
+                  <!-- Regular Text Fields -->
                   {{ field }}
                 {% endif %}
 
                 {% if field.errors %}
                   <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
                 {% endif %}
-                {% if field.help_text %}
+                {% if field.help_text and field.name != 'image' %}
                   <p class="mt-1 text-sm text-light-muted">{{ field.help_text }}</p>
                 {% endif %}
               </div>
