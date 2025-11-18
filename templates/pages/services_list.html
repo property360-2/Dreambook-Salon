@@ -24,11 +24,26 @@
       <!-- Services Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {% for service in services %}
-          <div class="card p-6 group {% if not service.is_active %}opacity-60{% endif %}">
-            <div class="flex items-start justify-between mb-4">
-              <h3 class="text-xl font-bold text-light-text group-hover:text-primary-600 transition-colors">
-                <a href="{% url 'services:detail' service.id %}">{{ service.name }}</a>
-              </h3>
+          <div class="card p-0 group {% if not service.is_active %}opacity-60{% endif %} overflow-hidden">
+            <!-- Service Image -->
+            <div class="relative h-40 bg-gradient-to-br from-primary-100 to-accent-100 overflow-hidden">
+              {% if service.image %}
+                <img src="{{ service.image.url }}" alt="{{ service.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-primary-300/30 to-accent-300/30 flex items-center justify-center">
+                  <svg class="w-16 h-16 text-primary-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Service Details -->
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-4">
+                <h3 class="text-xl font-bold text-light-text group-hover:text-primary-600 transition-colors">
+                  <a href="{% url 'services:detail' service.id %}">{{ service.name }}</a>
+                </h3>
               <div class="flex flex-col gap-1 items-end">
                 <span class="badge badge-info">{{ service.duration_minutes }} min</span>
                 {% if not service.is_active %}
@@ -37,11 +52,18 @@
               </div>
             </div>
             <p class="text-light-muted mb-4 line-clamp-3">{{ service.description|default:"No description" }}</p>
-            <div class="flex items-center justify-between pt-4 border-t border-light-border mb-4">
-              <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
-              <a href="{% url 'services:detail' service.id %}" class="text-primary-600 group-hover:text-primary-300 font-semibold transition-colors">
-                View details →
-              </a>
+            <div class="pt-4 border-t border-light-border mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl font-bold text-gradient">₱{{ service.price }}</span>
+                <a href="{% url 'services:detail' service.id %}" class="text-primary-600 hover:text-primary-700 font-semibold transition-colors text-sm">
+                  View details →
+                </a>
+              </div>
+              {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
+                <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary text-sm w-full text-center">
+                  📅 Book Now
+                </a>
+              {% endif %}
             </div>
 
             {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
@@ -61,6 +83,7 @@
                 </a>
               </div>
             {% endif %}
+            </div>
           </div>
         {% endfor %}
       </div>

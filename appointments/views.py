@@ -81,7 +81,27 @@ class AppointmentBookingView(CustomerRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['services'] = Service.objects.filter(is_active=True)
         context['settings'] = AppointmentSettings.get_settings()
+
+        # Pre-populate service if provided in URL query
+        service_id = self.request.GET.get('service')
+        if service_id:
+            try:
+                context['selected_service'] = Service.objects.get(id=service_id, is_active=True)
+            except Service.DoesNotExist:
+                pass
+
         return context
+
+    def get_initial(self):
+        """Pre-populate service field if provided in URL."""
+        initial = super().get_initial()
+        service_id = self.request.GET.get('service')
+        if service_id:
+            try:
+                initial['service'] = Service.objects.get(id=service_id, is_active=True)
+            except Service.DoesNotExist:
+                pass
+        return initial
 
     def form_valid(self, form):
         appointment = form.save(commit=False)
