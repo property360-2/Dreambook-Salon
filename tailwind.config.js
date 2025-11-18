@@ -68,6 +68,9 @@ module.exports = {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
+      gridTemplateColumns: {
+        '7': 'repeat(7, minmax(0, 1fr))',
+      },
     },
   },
   plugins: [],
