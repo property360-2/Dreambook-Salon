@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Chatbot Analytics · Dreambook Salon{% endblock title %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-12">
+      <h1 class="text-4xl font-bold text-gradient mb-2">Chatbot Analytics</h1>
+      <p class="text-light-muted">AI Assistant Performance & User Insights</p>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <!-- Total Messages -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-light-muted text-sm mb-1">Total Messages</p>
+            <p class="text-3xl font-bold text-light-text">{{ analytics.overall_stats.total_messages }}</p>
+            <p class="text-xs text-light-muted mt-2">Last {{ analytics.overall_stats.period_days }} days</p>
+          </div>
+          <div class="text-4xl">💬</div>
+        </div>
+      </div>
+
+      <!-- Average Confidence -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-light-muted text-sm mb-1">Avg Confidence</p>
+            <p class="text-3xl font-bold text-primary-600">{{ analytics.overall_stats.average_confidence }}</p>
+            <div class="w-full bg-light-border rounded-full h-2 mt-2">
+              <div class="bg-primary-500 h-2 rounded-full" style="width: {{ analytics.overall_stats.average_confidence|mul:10 }}%"></div>
+            </div>
+          </div>
+          <div class="text-4xl">🎯</div>
+        </div>
+      </div>
+
+      <!-- Helpfulness Rate -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-light-muted text-sm mb-1">Helpfulness</p>
+            <p class="text-3xl font-bold text-emerald-500">{{ analytics.user_satisfaction.satisfaction_percentage }}%</p>
+            <p class="text-xs text-light-muted mt-2">{{ analytics.user_satisfaction.total_responses_rated }} rated</p>
+          </div>
+          <div class="text-4xl">👍</div>
+        </div>
+      </div>
+
+      <!-- Feedback Rate -->
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-light-muted text-sm mb-1">Feedback Rate</p>
+            <p class="text-3xl font-bold text-blue-500">{{ analytics.overall_stats.feedback_rate }}%</p>
+            <p class="text-xs text-light-muted mt-2">Users providing feedback</p>
+          </div>
+          <div class="text-4xl">⭐</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confidence Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+      <!-- High Confidence -->
+      <div class="card p-6 border-l-4 border-l-emerald-500">
+        <h3 class="font-bold text-light-text mb-4">High Confidence</h3>
+        <p class="text-2xl font-bold text-emerald-500">{{ analytics.confidence_distribution.high_confidence.count }}</p>
+        <p class="text-sm text-light-muted mt-1">{{ analytics.confidence_distribution.high_confidence.percentage }}% (≥ 0.85)</p>
+        <div class="w-full bg-light-border rounded-full h-2 mt-3">
+          <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ analytics.confidence_distribution.high_confidence.percentage }}%"></div>
+        </div>
+      </div>
+
+      <!-- Medium Confidence -->
+      <div class="card p-6 border-l-4 border-l-amber-500">
+        <h3 class="font-bold text-light-text mb-4">Medium Confidence</h3>
+        <p class="text-2xl font-bold text-amber-500">{{ analytics.confidence_distribution.medium_confidence.count }}</p>
+        <p class="text-sm text-light-muted mt-1">{{ analytics.confidence_distribution.medium_confidence.percentage }}% (0.70-0.85)</p>
+        <div class="w-full bg-light-border rounded-full h-2 mt-3">
+          <div class="bg-amber-500 h-2 rounded-full" style="width: {{ analytics.confidence_distribution.medium_confidence.percentage }}%"></div>
+        </div>
+      </div>
+
+      <!-- Low Confidence -->
+      <div class="card p-6 border-l-4 border-l-red-500">
+        <h3 class="font-bold text-light-text mb-4">Low Confidence</h3>
+        <p class="text-2xl font-bold text-red-500">{{ analytics.confidence_distribution.low_confidence.count }}</p>
+        <p class="text-sm text-light-muted mt-1">{{ analytics.confidence_distribution.low_confidence.percentage }}% (< 0.70)</p>
+        <div class="w-full bg-light-border rounded-full h-2 mt-3">
+          <div class="bg-red-500 h-2 rounded-full" style="width: {{ analytics.confidence_distribution.low_confidence.percentage }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Intents -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+      <div class="card overflow-hidden">
+        <div class="p-6 border-b border-light-border">
+          <h3 class="text-xl font-bold text-light-text">Top Intents</h3>
+          <p class="text-sm text-light-muted mt-1">Most frequently detected user intents</p>
+        </div>
+        <div class="divide-y divide-light-border">
+          {% for intent in analytics.intent_distribution.intents %}
+            <div class="p-4 flex items-center justify-between hover:bg-light-elevated transition-colors">
+              <div>
+                <p class="font-semibold text-light-text">{{ intent.intent }}</p>
+                <p class="text-sm text-light-muted">{{ intent.count }} occurrences</p>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-primary-600">{{ intent.percentage }}%</p>
+                <div class="w-24 bg-light-border rounded-full h-2 mt-1">
+                  <div class="bg-primary-500 h-2 rounded-full" style="width: {{ intent.percentage }}%"></div>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="p-4 text-center text-light-muted">No intents tracked yet</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Session Analytics -->
+      <div class="card overflow-hidden">
+        <div class="p-6 border-b border-light-border">
+          <h3 class="text-xl font-bold text-light-text">Session Analytics</h3>
+          <p class="text-sm text-light-muted mt-1">User conversation patterns</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-light-muted">Total Sessions</span>
+            <span class="font-bold text-light-text">{{ analytics.session_analytics.total_sessions }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-light-muted">Avg Messages/Session</span>
+            <span class="font-bold text-light-text">{{ analytics.session_analytics.average_messages_per_session }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-light-muted">Longest Session</span>
+            <span class="font-bold text-light-text">{{ analytics.session_analytics.longest_session_messages }} messages</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-light-muted">Shortest Session</span>
+            <span class="font-bold text-light-text">{{ analytics.session_analytics.shortest_session_messages }} message{{ analytics.session_analytics.shortest_session_messages|pluralize }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problematic Intents (Needs Improvement) -->
+    {% if analytics.problematic_intents %}
+      <div class="card overflow-hidden mb-12">
+        <div class="p-6 border-b border-light-border bg-red-500/5">
+          <h3 class="text-xl font-bold text-light-text">⚠️ Intents Needing Improvement</h3>
+          <p class="text-sm text-light-muted mt-1">Low confidence intents that should be reviewed</p>
+        </div>
+        <div class="divide-y divide-light-border">
+          {% for item in analytics.problematic_intents %}
+            <div class="p-4 border-l-4 border-l-red-500">
+              <div class="flex items-center justify-between mb-2">
+                <p class="font-semibold text-light-text">{{ item.intent }}</p>
+                <span class="bg-red-500/10 text-red-600 px-3 py-1 rounded text-sm font-semibold">{{ item.average_confidence }}</span>
+              </div>
+              <p class="text-sm text-light-muted mb-2">{{ item.occurrences }} times detected</p>
+              <p class="text-sm text-light-muted italic">💡 {{ item.recommendation }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Recommendations -->
+    {% if analytics.recommendations %}
+      <div class="card overflow-hidden mb-12">
+        <div class="p-6 border-b border-light-border bg-blue-500/5">
+          <h3 class="text-xl font-bold text-light-text">💡 AI Recommendations</h3>
+          <p class="text-sm text-light-muted mt-1">Data-driven suggestions for improvement</p>
+        </div>
+        <div class="divide-y divide-light-border">
+          {% for rec in analytics.recommendations %}
+            <div class="p-6">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <h4 class="font-bold text-light-text">{{ rec.title }}</h4>
+                  <span class="inline-block mt-2 px-2 py-1 rounded text-xs font-semibold {% if rec.priority == 'high' %}bg-red-500/10 text-red-600{% elif rec.priority == 'medium' %}bg-amber-500/10 text-amber-600{% else %}bg-emerald-500/10 text-emerald-600{% endif %}">
+                    {{ rec.priority|upper }} PRIORITY
+                  </span>
+                </div>
+                {% if rec.priority == 'high' %}
+                  <span class="text-2xl">🔴</span>
+                {% elif rec.priority == 'medium' %}
+                  <span class="text-2xl">🟡</span>
+                {% else %}
+                  <span class="text-2xl">🟢</span>
+                {% endif %}
+              </div>
+              <p class="text-light-muted text-sm mb-2">{{ rec.description }}</p>
+              <p class="text-sm font-semibold text-primary-600">→ {{ rec.action }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Satisfaction Breakdown -->
+    <div class="card overflow-hidden">
+      <div class="p-6 border-b border-light-border">
+        <h3 class="text-xl font-bold text-light-text">User Satisfaction Breakdown</h3>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-emerald-500">{{ analytics.user_satisfaction.helpful_count }}</div>
+            <p class="text-light-muted text-sm mt-2">👍 Helpful Responses</p>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-red-500">{{ analytics.user_satisfaction.unhelpful_count }}</div>
+            <p class="text-light-muted text-sm mt-2">👎 Not Helpful</p>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-primary-600">{{ analytics.user_satisfaction.total_responses_rated }}</div>
+            <p class="text-light-muted text-sm mt-2">⭐ Total Rated</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+</style>
+{% endblock content %}

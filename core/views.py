@@ -9,8 +9,9 @@ from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
 from datetime import timedelta, datetime
 
-from .forms import CustomerRegistrationForm, EmailAuthenticationForm
+from .forms import CustomerRegistrationForm, EmailAuthenticationForm, UserManagementForm
 from .mixins import StaffOrAdminRequiredMixin
+from .models import User
 from appointments.models import Appointment
 from appointments.utils import get_calendar_data
 from payments.models import Payment
@@ -199,3 +200,251 @@ class CustomerRegistrationView(FormView):
         login(self.request, user)
         messages.success(self.request, "Welcome aboard! You're now signed in.")
         return super().form_valid(form)
+
+
+# ===== USER MANAGEMENT VIEWS (Manager/Admin Only) =====
+
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic.edit import FormMixin
+from django.http import HttpResponseRedirect
+from .forms import UserManagementForm
+from audit_log.models import AuditLog
+
+
+class UserManagementListView(StaffOrAdminRequiredMixin, ListView):
+    """List all users for management"""
+    model = User
+    template_name = 'pages/user_management_list.html'
+    context_object_name = 'users'
+    paginate_by = 20
+
+    def get_queryset(self):
+        """Filter users based on search"""
+        queryset = User.objects.all().order_by('-date_joined')
+
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search)
+            )
+
+        role_filter = self.request.GET.get('role')
+        if role_filter:
+            queryset = queryset.filter(role=role_filter)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['roles'] = User.Roles.choices
+        context['search'] = self.request.GET.get('search', '')
+        context['selected_role'] = self.request.GET.get('role', '')
+        return context
+
+
+class UserCreateView(StaffOrAdminRequiredMixin, CreateView):
+    """Create new user"""
+    model = User
+    template_name = 'pages/user_management_form.html'
+    form_class = UserManagementForm
+    success_url = reverse_lazy('core:user_list')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Log the action
+        AuditLog.log_action(
+            user=self.request.user,
+            action_type='USER_CREATE',
+            description=f"Created user {form.instance.email} with role {form.instance.role}",
+            obj=form.instance,
+            request=self.request
+        )
+        messages.success(self.request, f"User {form.instance.email} created successfully!")
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New User'
+        context['roles'] = User.Roles.choices
+        return context
+
+
+class UserUpdateView(StaffOrAdminRequiredMixin, UpdateView):
+    """Update user details and role"""
+    model = User
+    template_name = 'pages/user_management_form.html'
+    form_class = UserManagementForm
+    success_url = reverse_lazy('core:user_list')
+
+    def form_valid(self, form):
+        # Track changes
+        changes = {}
+        original = User.objects.get(pk=self.object.pk)
+
+        if original.role != form.cleaned_data['role']:
+            changes['role'] = {
+                'before': original.get_role_display(),
+                'after': form.cleaned_data['role']
+            }
+
+        if original.first_name != form.cleaned_data.get('first_name'):
+            changes['first_name'] = {
+                'before': original.first_name,
+                'after': form.cleaned_data.get('first_name')
+            }
+
+        response = super().form_valid(form)
+
+        # Log the action
+        if changes:
+            AuditLog.log_action(
+                user=self.request.user,
+                action_type='USER_UPDATE',
+                description=f"Updated user {form.instance.email}",
+                obj=form.instance,
+                changes=changes,
+                request=self.request
+            )
+
+        messages.success(self.request, f"User {form.instance.email} updated successfully!")
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit User: {self.object.email}'
+        context['roles'] = User.Roles.choices
+        context['is_edit'] = True
+        return context
+
+
+class UserDetailView(StaffOrAdminRequiredMixin, DetailView):
+    """View user details and activity"""
+    model = User
+    template_name = 'pages/user_management_detail.html'
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get user's audit logs
+        user_actions = AuditLog.objects.filter(
+            user=self.object
+        ).order_by('-timestamp')[:20]
+        context['user_actions'] = user_actions
+        context['total_actions'] = AuditLog.objects.filter(user=self.object).count()
+        return context
+
+
+class UserDeactivateView(StaffOrAdminRequiredMixin, DetailView):
+    """Deactivate user account"""
+    model = User
+    template_name = 'pages/user_management_confirm.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action_type'] = 'deactivate'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = False
+        user.save()
+
+        AuditLog.log_action(
+            user=request.user,
+            action_type='USER_DEACTIVATE',
+            description=f"Deactivated user {user.email}",
+            obj=user,
+            request=request
+        )
+
+        messages.warning(request, f"User {user.email} has been deactivated.")
+        return HttpResponseRedirect(reverse_lazy('core:user_list'))
+
+
+class UserReactivateView(StaffOrAdminRequiredMixin, DetailView):
+    """Reactivate deactivated user account"""
+    model = User
+    template_name = 'pages/user_management_confirm.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action_type'] = 'reactivate'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = True
+        user.save()
+
+        AuditLog.log_action(
+            user=request.user,
+            action_type='USER_REACTIVATE',
+            description=f"Reactivated user {user.email}",
+            obj=user,
+            request=request
+        )
+
+        messages.success(request, f"User {user.email} has been reactivated.")
+        return HttpResponseRedirect(reverse_lazy('core:user_list'))
+
+
+class UserResetPasswordView(StaffOrAdminRequiredMixin, DetailView):
+    """Send password reset link to user"""
+    model = User
+    template_name = 'pages/user_management_confirm.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action_type'] = 'reset_password'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+
+        user = self.get_object()
+
+        # Generate password reset token
+        token = default_token_generator.make_token(user)
+
+        # Create reset URL (you'll need to add this to your URL config)
+        reset_url = request.build_absolute_uri(
+            reverse_lazy('password_reset_confirm', kwargs={'uidb64': user.pk, 'token': token})
+        )
+
+        # Log the action
+        AuditLog.log_action(
+            user=request.user,
+            action_type='PASSWORD_RESET',
+            description=f"Password reset initiated for {user.email}",
+            obj=user,
+            request=request
+        )
+
+        messages.info(request, f"Password reset link sent to {user.email}")
+        return HttpResponseRedirect(reverse_lazy('core:user_list'))
+
+
+class UserDeleteView(StaffOrAdminRequiredMixin, DeleteView):
+    """Permanently delete user account (admin only)"""
+    model = User
+    template_name = 'pages/user_management_confirm_delete.html'
+    success_url = reverse_lazy('core:user_list')
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        email = user.email
+
+        # Log before deletion
+        AuditLog.log_action(
+            user=request.user,
+            action_type='USER_DELETE',
+            description=f"Deleted user {email}",
+            request=request
+        )
+
+        messages.error(request, f"User {email} has been permanently deleted.")
+        return super().delete(request, *args, **kwargs)

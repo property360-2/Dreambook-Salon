@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.get_full_name|default:user.email }} - User Details - Dreambook Salon{% endblock %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <!-- Header -->
+  <div class="mb-8 animate-slide-up">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">
+          {{ user.get_full_name|default:"User Profile" }}
+        </h1>
+        <p class="text-light-muted">Manage user account and view activity history</p>
+      </div>
+      <a href="{% url 'core:user_list' %}" class="btn btn-ghost text-lg">
+        ← Back to Users
+      </a>
+    </div>
+  </div>
+
+  <!-- User Details Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <!-- Main Info Card -->
+    <div class="lg:col-span-2 card p-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-light-text mb-2">Account Information</h2>
+          <p class="text-sm text-light-muted">View and manage user details</p>
+        </div>
+        <a href="{% url 'core:user_edit' user.id %}" class="btn btn-primary">
+          ✏️ Edit User
+        </a>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Email -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Email</label>
+          <p class="text-lg font-mono text-light-text">{{ user.email }}</p>
+        </div>
+
+        <!-- Full Name -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Full Name</label>
+          <p class="text-lg text-light-text">
+            {{ user.get_full_name|default:"(No name provided)" }}
+          </p>
+        </div>
+
+        <!-- Role -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">User Role</label>
+          <div class="mt-2">
+            {% if user.role == 'ADMIN' %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                👑 Administrator
+              </span>
+            {% elif user.role == 'STAFF' %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-700">
+                💼 Staff Member
+              </span>
+            {% else %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                👤 Customer
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Account Status</label>
+          <div class="mt-2">
+            {% if user.is_active %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
+                ✅ Active
+              </span>
+            {% else %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
+                ⏸️ Inactive
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Joined Date -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Account Created</label>
+          <p class="text-light-text">
+            {{ user.date_joined|date:"F d, Y \a\t g:i A" }}
+          </p>
+        </div>
+
+        <!-- Last Login -->
+        <div class="border-b border-light-border pb-4 last:border-b-0">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Last Login</label>
+          <p class="text-light-text">
+            {% if user.last_login %}
+              {{ user.last_login|date:"F d, Y \a\t g:i A" }}
+            {% else %}
+              <span class="text-light-muted">Never logged in</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Sidebar -->
+    <div class="lg:col-span-1">
+      <!-- Quick Actions Card -->
+      <div class="card p-6 mb-6">
+        <h3 class="text-lg font-bold text-light-text mb-4">⚡ Quick Actions</h3>
+        <div class="space-y-2">
+          {% if user.is_active %}
+            <form method="post" action="{% url 'core:user_deactivate' user.id %}"
+                  onclick="return confirm('Are you sure you want to deactivate this user? They will not be able to log in.');">
+              {% csrf_token %}
+              <button type="submit" class="w-full btn btn-ghost text-left text-red-600 hover:text-red-700 justify-start">
+                ⏸️ Deactivate User
+              </button>
+            </form>
+          {% else %}
+            <form method="post" action="{% url 'core:user_reactivate' user.id %}"
+                  onclick="return confirm('Reactivate this user and allow them to log in again?');">
+              {% csrf_token %}
+              <button type="submit" class="w-full btn btn-ghost text-left text-green-600 hover:text-green-700 justify-start">
+                ✅ Reactivate User
+              </button>
+            </form>
+          {% endif %}
+
+          <form method="post" action="{% url 'core:user_reset_password' user.id %}"
+                onclick="return confirm('Send a password reset email to {{ user.email }}?');">
+            {% csrf_token %}
+            <button type="submit" class="w-full btn btn-ghost text-left text-primary-600 hover:text-primary-700 justify-start">
+              🔐 Reset Password
+            </button>
+          </form>
+
+          <a href="{% url 'core:user_delete' user.id %}" class="block btn btn-ghost text-left text-red-600 hover:text-red-700 justify-start">
+            🗑️ Delete User
+          </a>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card p-6 bg-light-bg">
+        <h3 class="text-sm font-bold text-light-text mb-3">📌 Note</h3>
+        <p class="text-xs text-light-muted">
+          Deactivating a user prevents login but preserves their data. Deletion is permanent and cannot be undone.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit History Section -->
+  <div class="card p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-light-text mb-1">📋 Activity History</h2>
+        <p class="text-sm text-light-muted">Recent actions related to this user</p>
+      </div>
+      <a href="{% url 'audit_log:dashboard' %}?target_user={{ user.id }}" class="btn btn-ghost text-sm">
+        View Full Audit Trail →
+      </a>
+    </div>
+
+    {% if user_actions %}
+      <div class="overflow-x-auto">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Performed By</th>
+              <th>Description</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in user_actions %}
+              <tr class="hover:bg-light-hover transition-colors">
+                <td>
+                  <span class="text-sm text-light-muted">{{ log.timestamp|date:"M d, Y H:i" }}</span>
+                </td>
+                <td>
+                  {% if log.action_type == 'CREATE' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">
+                      ✨ Created
+                    </span>
+                  {% elif log.action_type == 'UPDATE' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">
+                      ✏️ Updated
+                    </span>
+                  {% elif log.action_type == 'USER_DEACTIVATE' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-700">
+                      ⏸️ Deactivated
+                    </span>
+                  {% elif log.action_type == 'USER_REACTIVATE' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">
+                      ✅ Reactivated
+                    </span>
+                  {% elif log.action_type == 'PASSWORD_RESET' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">
+                      🔐 Reset Password
+                    </span>
+                  {% elif log.action_type == 'ROLE_CHANGE' %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-purple-100 text-purple-700">
+                      👑 Role Changed
+                    </span>
+                  {% else %}
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">
+                      {{ log.get_action_type_display }}
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="text-sm text-light-text font-medium">{{ log.user.get_full_name|default:log.user.email }}</span>
+                </td>
+                <td>
+                  <span class="text-sm text-light-muted">{{ log.description|truncatewords:15 }}</span>
+                </td>
+                <td>
+                  <span class="text-xs text-light-muted font-mono">{{ log.ip_address|default:"N/A" }}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if user_actions.count < total_actions %}
+        <div class="mt-4 pt-4 border-t border-light-border text-center">
+          <p class="text-sm text-light-muted mb-3">
+            Showing {{ user_actions.count }} of {{ total_actions }} actions
+          </p>
+          <a href="{% url 'audit_log:dashboard' %}?target_user={{ user.id }}" class="btn btn-primary btn-sm">
+            📊 View Complete Audit Trail
+          </a>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="text-center py-12">
+        <svg class="w-16 h-16 mx-auto mb-4 text-light-muted opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="text-light-text font-semibold text-lg mb-2">No activity yet</p>
+        <p class="text-light-muted">No audit logs found for this user</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

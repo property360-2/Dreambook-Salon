@@ -1,8 +1,9 @@
 from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum, Count, Q, F, Avg
-from django.db.models.functions import ExtractHour
+from django.db.models.functions import ExtractHour, TruncDate, TruncMonth
+from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta, datetime
 from core.mixins import StaffOrAdminRequiredMixin
@@ -213,12 +214,50 @@ class ServiceAnalyticsView(StaffOrAdminRequiredMixin, TemplateView):
 
         context['services'] = services
 
-        # Completion rate
+        # Completion rate and average revenue
+        total_all_bookings = 0
         for service in services:
+            # Completion rate
             if service.total_bookings > 0:
                 service.completion_rate = (service.completed_bookings / service.total_bookings) * 100
+                # Average revenue per booking
+                revenue = float(service.total_revenue) if service.total_revenue else 0
+                service.average_revenue = revenue / service.total_bookings
+                # Cancellation rate
+                service.cancellation_rate = (service.cancelled_bookings / service.total_bookings) * 100
             else:
                 service.completion_rate = 0
+                service.average_revenue = 0
+                service.cancellation_rate = 0
+
+            total_all_bookings += service.total_bookings
+
+        # Overview stats
+        total_services = Service.objects.count()
+        active_services = Service.objects.filter(is_active=True).count()
+        total_revenue_all = services.aggregate(total=Sum('total_revenue'))['total'] or 0
+
+        context['total_services'] = total_services
+        context['active_services'] = active_services
+        context['total_bookings'] = total_all_bookings
+        context['average_bookings'] = round(total_all_bookings / total_services, 1) if total_services > 0 else 0
+
+        # Top performing services (by revenue)
+        top_services = sorted(
+            services,
+            key=lambda x: float(x.total_revenue) if x.total_revenue else 0,
+            reverse=True
+        )[:5]
+        context['top_services'] = top_services
+
+        # Low performing services (less than average bookings)
+        avg_bookings = context['average_bookings']
+        low_performing = [s for s in services if s.total_bookings < avg_bookings and s.total_bookings > 0]
+        context['low_performing_services'] = low_performing[:5]
+
+        # High cancellation services (more than 20% cancellation rate)
+        high_cancellation = [s for s in services if s.cancellation_rate > 20]
+        context['high_cancellation_services'] = high_cancellation[:5]
 
         return context
 
@@ -233,26 +272,88 @@ class InventoryAnalyticsView(StaffOrAdminRequiredMixin, TemplateView):
 
         # All inventory items with usage stats
         items = Item.objects.annotate(
-            services_using=Count('service_links')
-        ).order_by('stock')
+            service_count=Count('service_links')
+        ).filter(is_active=True).order_by('stock')
 
-        context['items'] = items
-
-        # Critical alerts
-        context['out_of_stock'] = items.filter(stock=0, is_active=True)
-        context['low_stock'] = items.filter(
+        # Critical alerts - separate by status
+        out_of_stock_items = items.filter(stock=0)
+        low_stock_items = items.filter(
             stock__gt=0,
-            stock__lte=F('threshold'),
-            is_active=True
+            stock__lte=F('threshold')
         )
-        context['in_stock'] = items.filter(
-            stock__gt=F('threshold'),
-            is_active=True
+        in_stock_items = items.filter(
+            stock__gt=F('threshold')
         )
 
-        # Stock value estimation (if we had cost field)
-        # For now, just show quantities
-        context['total_items'] = items.count()
+        # Counts for stat cards
+        total_items = items.count()
+        in_stock_count = in_stock_items.count()
+        low_stock_count = low_stock_items.count()
+        out_of_stock_count = out_of_stock_items.count()
+
+        context['total_items'] = total_items
+        context['in_stock_count'] = in_stock_count
+        context['low_stock_count'] = low_stock_count
+        context['out_of_stock_count'] = out_of_stock_count
+
+        # Percentages for progress bars
+        if total_items > 0:
+            context['in_stock_percentage'] = (in_stock_count / total_items) * 100
+            context['low_stock_percentage'] = (low_stock_count / total_items) * 100
+            context['out_of_stock_percentage'] = (out_of_stock_count / total_items) * 100
+        else:
+            context['in_stock_percentage'] = 0
+            context['low_stock_percentage'] = 0
+            context['out_of_stock_percentage'] = 0
+
+        # Alerts tables
+        context['out_of_stock_items'] = out_of_stock_items
+        context['low_stock_items'] = low_stock_items
+
+        # Inventory usage with daily usage calculation
+        item_usage = []
+        for item in items:
+            # Calculate estimated daily usage (simplified: based on services using it)
+            # In a real system, you'd track actual usage per appointment
+            daily_usage = item.service_count * 0.5  # Rough estimate
+
+            # Calculate days until depleted
+            if daily_usage > 0:
+                days_until_depleted = float(item.stock) / daily_usage
+            else:
+                days_until_depleted = None
+
+            item_usage.append({
+                'id': item.id,
+                'name': item.name,
+                'unit': item.unit,
+                'stock': float(item.stock),
+                'threshold': float(item.threshold),
+                'service_count': item.service_count,
+                'daily_usage': daily_usage,
+                'days_until_depleted': days_until_depleted
+            })
+
+        context['item_usage'] = item_usage
+
+        # Recommendations
+        # Items needing immediate restocking
+        items_to_restock = []
+        for item in item_usage:
+            if item['days_until_depleted'] and item['days_until_depleted'] <= 14:
+                items_to_restock.append({
+                    'name': item['name'],
+                    'days_until_depleted': item['days_until_depleted']
+                })
+
+        items_to_restock.sort(key=lambda x: x['days_until_depleted'])
+        context['items_to_restock'] = items_to_restock
+
+        # Unused items (not used in any services)
+        unused_items = items.filter(service_count=0)
+        context['unused_items'] = unused_items
+
+        # Stock value estimation
         context['total_stock_units'] = items.aggregate(
             total=Sum('stock')
         )['total'] or 0
@@ -497,3 +598,209 @@ class BusinessIntelligenceView(StaffOrAdminRequiredMixin, TemplateView):
         ).filter(visit_count__gt=1).count()
 
         return round((repeat_customers / total_customers) * 100, 1)
+
+
+# ===== CHART.JS API ENDPOINTS =====
+
+class WeeklySeasonalChartDataView(StaffOrAdminRequiredMixin, View):
+    """API endpoint for weekly seasonal pattern chart data.
+
+    Returns JSON with 7-day pattern centered on today.
+    {
+        "dates": ["2025-11-15", "2025-11-16", ...],
+        "values": [1500.00, 2000.00, ...],
+        "today": "2025-11-21"
+    }
+    """
+
+    def get(self, request):
+        now = timezone.now()
+        today = now.date()
+
+        # Get 7 days of data (today - 3 days to today + 3 days)
+        start_date = now - timedelta(days=3)
+        end_date = now + timedelta(days=4)
+
+        dates = []
+        values = []
+
+        # Generate data for each day
+        current = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        while current.date() < end_date.date():
+            day_end = current + timedelta(days=1)
+            date_str = current.date().isoformat()
+
+            # Get revenue for this day
+            revenue = Payment.objects.filter(
+                status=Payment.Status.PAID,
+                created_at__gte=current,
+                created_at__lt=day_end
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            dates.append(date_str)
+            values.append(float(revenue))
+
+            current = day_end
+
+        return JsonResponse({
+            'dates': dates,
+            'values': values,
+            'today': today.isoformat()
+        })
+
+
+class MonthlyServiceDemandChartDataView(StaffOrAdminRequiredMixin, View):
+    """API endpoint for monthly service demand chart.
+
+    Returns JSON with monthly demand broken down by service.
+    {
+        "months": ["Jan", "Feb", ...],
+        "services": [
+            {
+                "name": "Hair Cutting",
+                "monthlyData": [5, 8, 12, ...],
+                "color": "#d4af37"
+            },
+            ...
+        ]
+    }
+    """
+
+    def get(self, request):
+        now = timezone.now()
+        months_back = 12  # Get last 12 months
+
+        # Generate month labels
+        months = []
+        month_dates = []
+        for i in range(months_back, 0, -1):
+            month_date = now - timedelta(days=30*i)
+            months.append(month_date.strftime('%b'))
+            month_dates.append(month_date)
+
+        # Color palette for services (cycling through black and gold variations)
+        colors = ['#d4af37', '#b8964a', '#ffd700', '#8b7535', '#d4af37']
+
+        # Get active services
+        services_list = []
+        active_services = Service.objects.filter(is_active=True).order_by('-id')[:5]
+
+        for idx, service in enumerate(active_services):
+            monthly_data = []
+
+            for month_date in month_dates:
+                month_end = month_date + timedelta(days=30)
+                count = Appointment.objects.filter(
+                    service=service,
+                    start_at__gte=month_date,
+                    start_at__lt=month_end,
+                    status=Appointment.Status.COMPLETED
+                ).count()
+                monthly_data.append(count)
+
+            services_list.append({
+                'name': service.name,
+                'monthlyData': monthly_data,
+                'color': colors[idx % len(colors)]
+            })
+
+        return JsonResponse({
+            'months': months,
+            'services': services_list
+        })
+
+
+class RevenueVsCancellationsChartDataView(StaffOrAdminRequiredMixin, View):
+    """API endpoint for revenue vs cancellations comparison chart.
+
+    Returns JSON with monthly revenue and cancellation counts.
+    {
+        "months": ["Jan", "Feb", ...],
+        "revenue": [5000.00, 6500.00, ...],
+        "cancellations": [2, 3, 5, ...]
+    }
+    """
+
+    def get(self, request):
+        now = timezone.now()
+        months_back = 12  # Get last 12 months
+
+        # Generate month labels and dates
+        months = []
+        month_dates = []
+        for i in range(months_back, 0, -1):
+            month_date = now - timedelta(days=30*i)
+            months.append(month_date.strftime('%b'))
+            month_dates.append(month_date)
+
+        revenue_data = []
+        cancellation_data = []
+
+        for month_date in month_dates:
+            month_end = month_date + timedelta(days=30)
+
+            # Get revenue for the month
+            revenue = Payment.objects.filter(
+                status=Payment.Status.PAID,
+                created_at__gte=month_date,
+                created_at__lt=month_end
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            revenue_data.append(float(revenue))
+
+            # Get cancellations for the month
+            cancellations = Appointment.objects.filter(
+                status=Appointment.Status.CANCELLED,
+                created_at__gte=month_date,
+                created_at__lt=month_end
+            ).count()
+            cancellation_data.append(cancellations)
+
+        return JsonResponse({
+            'months': months,
+            'revenue': revenue_data,
+            'cancellations': cancellation_data
+        })
+
+
+class StylistUtilizationChartDataView(StaffOrAdminRequiredMixin, View):
+    """API endpoint for stylist utilization rate chart.
+
+    Returns JSON with stylist names and utilization percentages.
+    {
+        "stylists": ["Sarah", "Maria", ...],
+        "utilization": [85.5, 92.0, ...]
+    }
+    """
+
+    def get(self, request):
+        now = timezone.now()
+        days_back = 30  # Analyze last 30 days
+        start_date = now - timedelta(days=days_back)
+
+        # Get unique customers (approximating stylists - in a real system, we'd track stylists)
+        # For demo, we'll use customers as a proxy for service providers
+        customers_data = Appointment.objects.filter(
+            start_at__gte=start_date,
+            status__in=[Appointment.Status.COMPLETED, Appointment.Status.IN_PROGRESS]
+        ).values('customer__first_name').annotate(
+            total_appointments=Count('id'),
+            completed_appointments=Count('id', filter=Q(status=Appointment.Status.COMPLETED))
+        ).order_by('-completed_appointments')[:10]
+
+        stylists = []
+        utilization = []
+
+        for data in customers_data:
+            name = data['customer__first_name'] or 'Unknown'
+            if data['total_appointments'] > 0:
+                rate = (data['completed_appointments'] / data['total_appointments']) * 100
+            else:
+                rate = 0
+
+            stylists.append(name)
+            utilization.append(min(100, round(rate, 1)))  # Cap at 100%
+
+        return JsonResponse({
+            'stylists': stylists[:10],
+            'utilization': utilization[:10]
+        })

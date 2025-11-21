@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User - Confirm - Dreambook Salon{% endblock %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <div class="max-w-2xl mx-auto">
+    <!-- Header with Warning -->
+    <div class="mb-8 animate-slide-up text-center">
+      <div class="mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center animate-pulse">
+          <span class="text-3xl">⚠️</span>
+        </div>
+        <h1 class="text-4xl font-bold text-red-600 mb-2">Delete User Account</h1>
+        <p class="text-light-muted">This action cannot be undone</p>
+      </div>
+    </div>
+
+    <!-- Critical Warning Card -->
+    <div class="card p-8 border-2 border-red-500 bg-red-50 mb-6">
+      <div class="flex gap-4 mb-4">
+        <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0V7a2 2 0 012-2h2.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2h-2.586a1 1 0 01-.707-.293l-5.414-5.414a1 1 0 01-.293-.707V9m0 0a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2z"></path>
+        </svg>
+        <div>
+          <h2 class="text-lg font-bold text-red-700 mb-2">Permanent Deletion Warning</h2>
+          <p class="text-red-600 text-sm mb-3">
+            Deleting this user account is <strong>permanent and irreversible</strong>. This action will:
+          </p>
+          <ul class="text-red-600 text-sm space-y-2 ml-4 list-disc">
+            <li>Permanently delete the user account</li>
+            <li>Remove all user personal information from the system</li>
+            <li>Possibly impact historical records and reports</li>
+            <li>Not be reversible through the interface</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Information Card -->
+    <div class="card p-8 mb-6">
+      <h2 class="text-lg font-bold text-light-text mb-4">User Account Details</h2>
+      <div class="space-y-4">
+        <div class="pb-4 border-b border-light-border">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Email Address</label>
+          <p class="text-lg font-mono text-light-text break-all">{{ user.email }}</p>
+        </div>
+        <div class="pb-4 border-b border-light-border">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Full Name</label>
+          <p class="text-lg text-light-text">{{ user.get_full_name|default:"(No name provided)" }}</p>
+        </div>
+        <div class="pb-4 border-b border-light-border">
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">User Role</label>
+          <div class="mt-2">
+            {% if user.role == 'ADMIN' %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                👑 Administrator
+              </span>
+            {% elif user.role == 'STAFF' %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-primary-100 text-primary-700">
+                💼 Staff Member
+              </span>
+            {% else %}
+              <span class="inline-flex px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                👤 Customer
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-light-muted uppercase tracking-wider mb-1 block">Account Created</label>
+          <p class="text-light-text">{{ user.date_joined|date:"F d, Y \a\t g:i A" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Prompt -->
+    <div class="card p-8 border-2 border-yellow-300 bg-yellow-50 mb-6">
+      <h2 class="text-lg font-bold text-yellow-700 mb-4">⚠️ Confirm Deletion</h2>
+      <p class="text-yellow-600 text-sm mb-4">
+        Type the user's email address below to confirm you understand this action is permanent:
+      </p>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <div>
+          <label class="text-sm font-semibold text-light-text block mb-2">
+            Email Address (type to confirm)
+          </label>
+          <input
+            type="text"
+            name="confirm_email"
+            placeholder="Enter user email to confirm"
+            class="input w-full {% if form.errors %}border-red-500{% endif %}"
+            autocomplete="off"
+            required>
+          {% if form.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.errors.confirm_email %}
+                <p>• {{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="text-xs text-light-muted mt-2">
+            Must exactly match: <code class="bg-light-bg px-2 py-1 rounded font-mono text-xs">{{ user.email }}</code>
+          </p>
+        </div>
+
+        <!-- Additional Confirmation -->
+        <label class="flex items-start gap-3 cursor-pointer p-3 bg-light-bg rounded">
+          <input
+            type="checkbox"
+            name="confirm_deletion"
+            required
+            class="mt-1 w-4 h-4 accent-red-600">
+          <span class="text-sm text-light-text">
+            I understand this action is <strong>permanent</strong> and cannot be undone. I accept full responsibility for deleting this user account.
+          </span>
+        </label>
+
+        <!-- Action Buttons -->
+        <div class="pt-6 border-t border-light-border flex gap-3 justify-end">
+          <a href="{% url 'core:user_detail' user.id %}" class="btn btn-ghost">
+            ← Cancel - Keep Account
+          </a>
+          <button type="submit" class="btn bg-red-600 hover:bg-red-700 text-white" disabled id="deleteBtn">
+            🗑️ Permanently Delete User
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Alternatives Section -->
+    <div class="card p-6 bg-light-bg">
+      <h3 class="font-bold text-light-text mb-3">💡 Recommended Alternative</h3>
+      <p class="text-sm text-light-muted mb-4">
+        Instead of permanently deleting this user, consider <strong>deactivating</strong> their account. This preserves their data and activity history, which is useful for compliance and auditing. You can reactivate them later if needed.
+      </p>
+      <a href="{% url 'core:user_detail' user.id %}" class="text-primary-600 hover:text-primary-700 font-semibold text-sm">
+        Go back and deactivate instead →
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Enable delete button only when email matches
+    const confirmInput = document.querySelector('input[name="confirm_email"]');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const targetEmail = '{{ user.email }}';
+
+    if (confirmInput && deleteBtn) {
+      confirmInput.addEventListener('input', function() {
+        deleteBtn.disabled = this.value !== targetEmail;
+      });
+    }
+  </script>
+</div>
+{% endblock %}

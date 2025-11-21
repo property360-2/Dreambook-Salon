@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Downpayment Configuration · Dreambook Salon{% endblock title %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <!-- Header -->
+  <div class="mb-12">
+    <h1 class="text-4xl font-bold text-gradient mb-2">Service Downpayment Configuration</h1>
+    <p class="text-light-muted">Manage downpayment requirements and amounts for each service</p>
+  </div>
+
+  <!-- GCash QR Code Upload -->
+  <div class="card p-6 mb-12 bg-primary-50 border-2 border-primary-500/20">
+    <h2 class="text-2xl font-bold text-primary-900 mb-4">GCash QR Code</h2>
+    <form id="gcash-qr-form" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Upload Section -->
+        <div>
+          <label class="block text-sm font-semibold text-primary-900 mb-2">Upload QR Code Image</label>
+          <div class="border-2 border-dashed border-primary-300 rounded-lg p-6 bg-white hover:border-primary-500 transition-colors cursor-pointer" id="qr-drop-zone">
+            <input type="file" name="qr_image" id="qr-image-input" accept="image/*" class="hidden">
+            <div class="text-center">
+              <svg class="mx-auto h-12 w-12 text-primary-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v4a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-8l-3.172-3.172a4 4 0 00-5.656 0L28 20M9 20l3.172-3.172a4 4 0 015.656 0L28 20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="text-primary-900 font-medium">Drop QR code image here or click to select</p>
+              <p class="text-primary-700 text-sm mt-1">PNG, JPG, or GIF up to 10MB</p>
+            </div>
+            <div id="qr-file-name" class="text-center mt-3 text-sm text-primary-600 hidden"></div>
+          </div>
+        </div>
+
+        <!-- Current QR Section -->
+        <div>
+          <label class="block text-sm font-semibold text-primary-900 mb-2">Current Active QR Code</label>
+          <div class="bg-white p-4 rounded-lg border border-primary-300 h-full flex flex-col items-center justify-center">
+            {% if current_qr %}
+              <div class="text-center">
+                <img src="{{ current_qr.qr_image.url }}" alt="Current GCash QR" class="max-w-xs h-auto rounded mb-3">
+                <p class="text-sm text-primary-900 font-medium">{{ current_qr.description }}</p>
+                <p class="text-xs text-primary-700 mt-1">Updated: {{ current_qr.updated_at|date:"M d, Y H:i" }}</p>
+              </div>
+            {% else %}
+              <div class="text-center">
+                <svg class="w-12 h-12 text-primary-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-primary-900 font-medium">No QR Code Uploaded Yet</p>
+                <p class="text-sm text-primary-700 mt-1">Upload one to get started</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-primary" id="qr-submit-btn">Upload QR Code</button>
+        <span class="text-sm text-primary-700 flex items-center hidden" id="qr-status"></span>
+      </div>
+    </form>
+  </div>
+
+  <!-- Settings Table -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-light-elevated border-b border-light-border">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-light-text">Service Name</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-light-text">Service Price</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-light-text">Requires Downpayment</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-light-text">Downpayment Amount (₱)</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold text-light-text">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-light-border">
+          {% for service in services %}
+            <tr class="hover:bg-light-elevated transition-colors service-row" data-service-id="{{ service.id }}">
+              <td class="px-6 py-4 text-sm text-light-text font-medium">{{ service.name }}</td>
+              <td class="px-6 py-4 text-sm text-light-muted">₱{{ service.price|floatformat:2 }}</td>
+              <td class="px-6 py-4 text-sm">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" class="requires-downpayment-toggle w-4 h-4 text-primary-600 bg-light-elevated border-light-border rounded focus:ring-primary-500" {% if service.requires_downpayment %}checked{% endif %}>
+                  <span class="text-light-text">{{ service.get_requires_downpayment_display|default:"Yes" }}</span>
+                </label>
+              </td>
+              <td class="px-6 py-4 text-sm">
+                <input type="number"
+                  class="downpayment-amount input input-sm w-32"
+                  step="0.01"
+                  min="0"
+                  value="{{ service.downpayment_amount|floatformat:2 }}"
+                  {% if not service.requires_downpayment %}disabled{% endif %}>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <button type="button" class="save-btn btn btn-primary btn-sm opacity-50 cursor-not-allowed" disabled>
+                  Save
+                </button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-light-muted">No active services available</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Helper Text -->
+  <div class="mt-8 p-4 bg-primary-500/10 border border-primary-500/20 rounded-lg">
+    <p class="text-sm text-light-text">
+      <strong>💡 Tip:</strong> When a service has downpayment enabled, customers will be required to upload a receipt to receive auto-approval. Without a receipt, appointments stay pending for admin review.
+    </p>
+  </div>
+</div>
+
+<style>
+  .service-row input[type="checkbox"]:checked + span::after {
+    content: " ✓";
+    color: #10b981;
+  }
+
+  .service-row input[type="checkbox"]:not(:checked) + span::after {
+    content: " ✗";
+    color: #ef4444;
+  }
+
+  .btn:disabled {
+    pointer-events: none;
+  }
+
+  .btn:not(:disabled) {
+    opacity: 1 !important;
+    cursor: pointer !important;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const rows = document.querySelectorAll('.service-row');
+
+  rows.forEach(row => {
+    const serviceId = row.dataset.serviceId;
+    const toggleCheckbox = row.querySelector('.requires-downpayment-toggle');
+    const amountInput = row.querySelector('.downpayment-amount');
+    const saveBtn = row.querySelector('.save-btn');
+
+    // Store original values for change detection
+    let originalRequiresDownpayment = toggleCheckbox.checked;
+    let originalDownpaymentAmount = amountInput.value;
+
+    // Function to enable/disable amount input based on checkbox
+    function updateAmountInput() {
+      if (toggleCheckbox.checked) {
+        amountInput.disabled = false;
+        amountInput.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        amountInput.disabled = true;
+        amountInput.value = '0.00';
+        amountInput.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+      checkForChanges();
+    }
+
+    // Function to check if anything changed
+    function checkForChanges() {
+      const hasChanged =
+        toggleCheckbox.checked !== originalRequiresDownpayment ||
+        amountInput.value !== originalDownpaymentAmount;
+
+      if (hasChanged && toggleCheckbox.checked) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else if (hasChanged && !toggleCheckbox.checked) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // Event listeners
+    toggleCheckbox.addEventListener('change', updateAmountInput);
+    amountInput.addEventListener('input', checkForChanges);
+
+    // Save button handler
+    saveBtn.addEventListener('click', async function() {
+      const formData = new FormData();
+      formData.append('service_id', serviceId);
+      formData.append('requires_downpayment', toggleCheckbox.checked);
+      formData.append('downpayment_amount', amountInput.value);
+      formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]')?.value || '');
+
+      try {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const response = await fetch('{% url "services:downpayment_config" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]')?.value || ''
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update original values
+          originalRequiresDownpayment = toggleCheckbox.checked;
+          originalDownpaymentAmount = amountInput.value;
+
+          // Show success message
+          const successMsg = document.createElement('div');
+          successMsg.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+          successMsg.textContent = '✓ ' + data.message;
+          document.body.appendChild(successMsg);
+
+          setTimeout(() => successMsg.remove(), 3000);
+
+          saveBtn.textContent = 'Save';
+          checkForChanges();
+        } else {
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+          errorMsg.textContent = '✗ ' + data.message;
+          document.body.appendChild(errorMsg);
+
+          setTimeout(() => errorMsg.remove(), 3000);
+
+          saveBtn.textContent = 'Save';
+          saveBtn.disabled = false;
+          saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        errorMsg.textContent = '✗ An error occurred';
+        document.body.appendChild(errorMsg);
+
+        setTimeout(() => errorMsg.remove(), 3000);
+
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    });
+
+    // Initialize
+    updateAmountInput();
+  });
+
+  // GCash QR Form Handler
+  const gcashQRForm = document.getElementById('gcash-qr-form');
+  const dropZone = document.getElementById('qr-drop-zone');
+  const fileInput = document.getElementById('qr-image-input');
+  const fileNameDisplay = document.getElementById('qr-file-name');
+  const submitBtn = document.getElementById('qr-submit-btn');
+
+  if (gcashQRForm && dropZone && fileInput) {
+    // Click to open file input
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag over
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-primary-500', 'bg-primary-50');
+    });
+
+    // Drag leave
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-primary-500', 'bg-primary-50');
+    });
+
+    // Drop
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-primary-500', 'bg-primary-50');
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        updateFileDisplay();
+      }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', updateFileDisplay);
+
+    function updateFileDisplay() {
+      if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        const fileSize = (fileInput.files[0].size / 1024 / 1024).toFixed(2);
+        fileNameDisplay.textContent = `Selected: ${fileName} (${fileSize}MB)`;
+        fileNameDisplay.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        fileNameDisplay.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // Form submission
+    gcashQRForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (fileInput.files.length === 0) {
+        alert('Please select a QR code image');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('qr_image', fileInput.files[0]);
+      formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]')?.value || '');
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading...';
+
+        const response = await fetch('{% url "services:downpayment_config" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]')?.value || ''
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Show success message
+          const successMsg = document.createElement('div');
+          successMsg.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+          successMsg.textContent = '✓ ' + data.message;
+          document.body.appendChild(successMsg);
+
+          setTimeout(() => successMsg.remove(), 3000);
+
+          // Reset form
+          gcashQRForm.reset();
+          fileNameDisplay.classList.add('hidden');
+          submitBtn.textContent = 'Upload QR Code';
+
+          // Reload page to show new QR code
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+          errorMsg.textContent = '✗ ' + data.message;
+          document.body.appendChild(errorMsg);
+
+          setTimeout(() => errorMsg.remove(), 3000);
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Upload QR Code';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        errorMsg.textContent = '✗ An error occurred during upload';
+        document.body.appendChild(errorMsg);
+
+        setTimeout(() => errorMsg.remove(), 3000);
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Upload QR Code';
+      }
+    });
+
+    // Initialize submit button state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  }
+});
+</script>
+
+{% endblock content %}

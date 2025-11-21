@@ -44,7 +44,7 @@
               {% if day.is_today %}
                 border-primary-500 bg-primary-50
               {% elif day.appointment_count > 0 %}
-                border-accent-300 bg-accent-50
+                border-primary-300 bg-primary-50
               {% else %}
                 border-light-border bg-light-surface
               {% endif %}"
@@ -58,7 +58,7 @@
                 <div class="flex items-center justify-center">
                   <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full
                     {% if day.has_pending %}
-                      bg-accent-500
+                      bg-primary-500
                     {% else %}
                       bg-primary-500
                     {% endif %}">
@@ -83,7 +83,7 @@
       <span class="text-light-muted">Today</span>
     </div>
     <div class="flex items-center gap-2">
-      <div class="w-5 h-5 rounded-full bg-accent-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+      <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
       <span class="text-light-muted">Pending/Confirmed</span>
     </div>
     <div class="flex items-center gap-2">

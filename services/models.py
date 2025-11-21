@@ -22,6 +22,17 @@ class Service(models.Model):
     is_active = models.BooleanField(
         default=True, help_text="Whether this service is available for booking"
     )
+    requires_downpayment = models.BooleanField(
+        default=True,
+        help_text="Whether a downpayment is required for this service"
+    )
+    downpayment_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0,
+        help_text="Downpayment amount required for this service"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

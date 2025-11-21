@@ -37,11 +37,11 @@
         <div class="lg:col-span-2 space-y-6">
           <!-- Service Image Card -->
           <div class="card p-0 overflow-hidden">
-            <div class="h-56 bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
+            <div class="h-56 bg-gradient-to-br from-primary-100 to-primary-100 flex items-center justify-center">
               {% if appointment.service.image %}
                 <img src="{{ appointment.service.image.url }}" alt="{{ appointment.service.name }}" class="w-full h-full object-cover">
               {% else %}
-                <div class="w-full h-full bg-gradient-to-br from-primary-300/30 to-accent-300/30 flex items-center justify-center">
+                <div class="w-full h-full bg-gradient-to-br from-primary-300/30 to-primary-300/30 flex items-center justify-center">
                   <svg class="w-24 h-24 text-primary-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
@@ -86,6 +86,83 @@
               <h3 class="text-lg font-bold text-light-text mb-2">Service Information</h3>
               <p class="text-light-muted">{{ appointment.service.description|default:"No description available." }}</p>
             </div>
+          </div>
+
+          <!-- Payment Status Card -->
+          <div class="card p-6 {% if appointment.service.requires_downpayment %}bg-amber-500/5 border-l-4 border-l-amber-500{% else %}bg-emerald-500/5 border-l-4 border-l-emerald-500{% endif %}">
+            <h3 class="text-lg font-bold text-light-text mb-4">Payment Status</h3>
+
+            {% if appointment.service.requires_downpayment %}
+              <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Downpayment Required</span>
+                  <span class="badge badge-warning">Yes</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Downpayment Amount</span>
+                  <span class="text-amber-400 font-bold">₱{{ appointment.service.downpayment_amount|floatformat:2 }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Downpayment Status</span>
+                  {% if appointment.payment_state == 'PAID' %}
+                    <span class="badge badge-success">✓ Paid & Verified</span>
+                  {% elif appointment.payment_state == 'PENDING' %}
+                    <span class="badge badge-warning">⏳ Pending Admin Approval</span>
+                  {% else %}
+                    <span class="badge badge-danger">Not Paid</span>
+                  {% endif %}
+                </div>
+                {% if appointment.payment_state == 'PENDING' %}
+                  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                      Your receipt has been uploaded and is awaiting admin verification. We will confirm your payment within 24 hours.
+                    </p>
+                  </div>
+                {% endif %}
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Balance Remaining</span>
+                  {% if appointment.payment_state == 'PAID' %}
+                    <span class="text-emerald-400 font-bold">₱{{ appointment.service.price|floatformat:2 }} (Full paid after downpayment)</span>
+                  {% else %}
+                    <span class="text-primary-600 font-bold">₱{{ appointment.service.price|floatformat:2 }}</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% else %}
+              <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Downpayment Required</span>
+                  <span class="badge badge-info">No</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Full Amount</span>
+                  <span class="text-gradient font-bold">₱{{ appointment.service.price|floatformat:2 }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-light-elevated rounded-lg">
+                  <span class="text-light-muted">Payment Status</span>
+                  {% if appointment.payment_state == 'PAID' %}
+                    <span class="badge badge-success">✓ Paid & Verified</span>
+                  {% elif appointment.payment_state == 'PENDING' %}
+                    <span class="badge badge-warning">⏳ Pending Admin Approval</span>
+                  {% else %}
+                    <span class="badge badge-danger">Not Paid</span>
+                  {% endif %}
+                </div>
+                {% if appointment.payment_state == 'PENDING' %}
+                  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                      Your receipt has been uploaded and is awaiting admin verification. We will confirm your payment within 24 hours.
+                    </p>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if user.role == 'CUSTOMER' and appointment.customer == user and appointment.payment_state != 'PAID' %}
+              <a href="{% url 'payments:initiate' appointment.id %}" class="btn btn-primary w-full mt-4">
+                Pay Now
+              </a>
+            {% endif %}
           </div>
 
           <!-- Available Time Slots -->

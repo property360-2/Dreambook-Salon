@@ -17,7 +17,7 @@
         <!-- Messages Area -->
         <div id="chatMessages" class="h-[500px] overflow-y-auto p-6 bg-light-bg">
           <div class="text-center py-12">
-            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30 animate-pulse-slow">
+            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30 animate-pulse-slow">
               <span class="text-white text-3xl">🤖</span>
             </div>
             <h3 class="text-light-text font-bold text-xl mb-2">AI Assistant</h3>
@@ -28,8 +28,8 @@
                 <p class="text-light-muted text-xs">Ask about revenue, analytics, inventory, or stats!</p>
               </div>
             {% else %}
-              <div class="inline-block bg-accent-500/10 border border-accent-500/20 rounded-lg px-4 py-2 text-left">
-                <p class="text-accent-600 text-sm font-semibold mb-1">💇 Customer Mode</p>
+              <div class="inline-block bg-primary-500/10 border border-primary-500/20 rounded-lg px-4 py-2 text-left">
+                <p class="text-primary-600 text-sm font-semibold mb-1">💇 Customer Mode</p>
                 <p class="text-light-muted text-xs">Ask about services, pricing, popular treatments!</p>
               </div>
             {% endif %}
@@ -104,9 +104,13 @@
       const data = await response.json();
 
       if (data.error) {
-        addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        addMessage('Sorry, I encountered an error. Please try again.', 'bot', null);
       } else {
-        addMessage(data.response, 'bot');
+        // Store session ID for feedback tracking
+        if (!window.chatSessionId) {
+          window.chatSessionId = data.session_id;
+        }
+        addMessage(data.response, 'bot', data);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -120,7 +124,7 @@
     }
   });
 
-  function addMessage(text, sender) {
+  function addMessage(text, sender, apiData = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `flex mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
 
@@ -137,12 +141,70 @@
       .replace(/\n/g, '<br>');
 
     contentDiv.innerHTML = formattedText;
-
     messageDiv.appendChild(contentDiv);
+
+    // Add feedback buttons for bot messages
+    if (sender === 'bot' && apiData) {
+      const feedbackDiv = document.createElement('div');
+      feedbackDiv.className = 'flex gap-1.5 mt-1.5 ml-0';
+
+      const helpfulBtn = document.createElement('button');
+      helpfulBtn.className = 'px-2 py-0.5 text-xs rounded text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 transition-colors cursor-pointer font-normal border-0 bg-transparent';
+      helpfulBtn.textContent = '👍';
+      helpfulBtn.type = 'button';
+      helpfulBtn.title = 'Helpful';
+      helpfulBtn.onclick = () => submitFeedback(apiData, true, helpfulBtn, unhelpfulBtn, feedbackDiv);
+
+      const unhelpfulBtn = document.createElement('button');
+      unhelpfulBtn.className = 'px-2 py-0.5 text-xs rounded text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors cursor-pointer font-normal border-0 bg-transparent';
+      unhelpfulBtn.textContent = '👎';
+      unhelpfulBtn.type = 'button';
+      unhelpfulBtn.title = 'Not helpful';
+      unhelpfulBtn.onclick = () => submitFeedback(apiData, false, helpfulBtn, unhelpfulBtn, feedbackDiv);
+
+      feedbackDiv.appendChild(helpfulBtn);
+      feedbackDiv.appendChild(unhelpfulBtn);
+      contentDiv.appendChild(feedbackDiv);
+    }
+
     chatMessages.appendChild(messageDiv);
 
     // Scroll to bottom smoothly
     chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function submitFeedback(apiData, isHelpful, btn1, btn2, feedbackDiv) {
+    try {
+      // Disable buttons
+      btn1.disabled = true;
+      btn2.disabled = true;
+
+      const response = await fetch('/api/chatbot/feedback/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+          conversation_id: apiData.conversation_id || apiData.session_id,
+          was_helpful: isHelpful
+        })
+      });
+
+      if (response.ok) {
+        // Show success - just change opacity of buttons to show they were submitted
+        feedbackDiv.style.opacity = '0.5';
+        feedbackDiv.style.pointerEvents = 'none';
+      } else {
+        // Re-enable buttons on error
+        btn1.disabled = false;
+        btn2.disabled = false;
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      btn1.disabled = false;
+      btn2.disabled = false;
+    }
   }
 
   // Focus input on load

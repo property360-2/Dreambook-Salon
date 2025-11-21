@@ -12,11 +12,11 @@
     <!-- Available slots grid -->
     {% if available_slots %}
       <div class="mb-6">
-        <h4 class="text-sm font-semibold text-accent-600 mb-3">Available Times</h4>
+        <h4 class="text-sm font-semibold text-primary-600 mb-3">Available Times</h4>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {% for slot in available_slots %}
-            <div class="p-3 rounded-lg border-2 border-accent-300 bg-accent-50 text-center cursor-default hover:bg-accent-100 transition-colors">
-              <span class="text-sm font-semibold text-accent-700">{{ slot.time }}</span>
+            <div class="p-3 rounded-lg border-2 border-primary-300 bg-primary-50 text-center cursor-default hover:bg-primary-100 transition-colors">
+              <span class="text-sm font-semibold text-accent-600">{{ slot.time }}</span>
             </div>
           {% endfor %}
         </div>
@@ -57,7 +57,7 @@
     <div class="mt-6 pt-4 border-t border-light-border">
       <div class="grid grid-cols-2 gap-3 text-sm">
         <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full bg-accent-500"></div>
+          <div class="w-3 h-3 rounded-full bg-primary-500"></div>
           <span class="text-light-muted">{{ available_slots|length }} Available</span>
         </div>
         <div class="flex items-center gap-2">

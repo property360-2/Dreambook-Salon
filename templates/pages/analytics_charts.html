@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Advanced Analytics Charts - Dreambook Salon{% endblock %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <!-- Header -->
+  <div class="mb-12 animate-slide-up">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">📊 Advanced Analytics</h1>
+        <p class="text-light-muted">Interactive charts and business intelligence insights</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost text-lg">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Weekly Seasonal Pattern Chart -->
+  <div class="card p-8 mb-8">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-light-text mb-2">📈 Weekly Seasonal Pattern</h2>
+      <p class="text-sm text-light-muted">
+        7-day revenue pattern with today highlighted. Shows your daily revenue trends for the week.
+      </p>
+    </div>
+    <div class="bg-light-bg p-6 rounded-lg">
+      <canvas id="weeklyChart" height="80"></canvas>
+    </div>
+    <div class="mt-4 p-3 bg-primary-50 border border-primary-200 rounded text-sm text-light-muted">
+      💡 <strong>Insight:</strong> The dashed line marks today. Use this pattern to anticipate demand and staff accordingly.
+    </div>
+  </div>
+
+  <!-- Monthly Service Demand Chart -->
+  <div class="card p-8 mb-8">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-light-text mb-2">💼 Monthly Demand by Service</h2>
+      <p class="text-sm text-light-muted">
+        Tracks demand for each service over the last 12 months. Helps identify seasonal trends.
+      </p>
+    </div>
+    <div class="bg-light-bg p-6 rounded-lg">
+      <canvas id="serviceDemandChart" height="80"></canvas>
+    </div>
+    <div class="mt-4 p-3 bg-primary-50 border border-primary-200 rounded text-sm text-light-muted">
+      💡 <strong>Insight:</strong> Services with consistent demand are your reliable revenue drivers.
+    </div>
+  </div>
+
+  <!-- Revenue vs Cancellations Chart -->
+  <div class="card p-8 mb-8">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-light-text mb-2">💰 Revenue vs Cancellations</h2>
+      <p class="text-sm text-light-muted">
+        Compares monthly revenue (gold) against cancellation counts (red). Lower cancellations = higher revenue.
+      </p>
+    </div>
+    <div class="bg-light-bg p-6 rounded-lg">
+      <canvas id="revenueChart" height="80"></canvas>
+    </div>
+    <div class="mt-4 p-3 bg-primary-50 border border-primary-200 rounded text-sm text-light-muted">
+      💡 <strong>Insight:</strong> Spikes in cancellations can indicate scheduling conflicts or staffing issues.
+    </div>
+  </div>
+
+  <!-- Stylist Utilization Chart -->
+  <div class="card p-8 mb-8">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-light-text mb-2">👥 Stylist Utilization Rates</h2>
+      <p class="text-sm text-light-muted">
+        Shows completion rates for top service providers over the last 30 days. Higher is better.
+      </p>
+    </div>
+    <div class="bg-light-bg p-6 rounded-lg">
+      <canvas id="utilizationChart" height="80"></canvas>
+    </div>
+    <div class="mt-4 p-3 bg-primary-50 border border-primary-200 rounded text-sm text-light-muted">
+      💡 <strong>Insight:</strong> Consistently high utilization indicates a healthy, productive team.
+    </div>
+  </div>
+
+  <!-- Key Insights Section -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <!-- Tips Card -->
+    <div class="card p-6">
+      <h3 class="text-lg font-bold text-light-text mb-4">📌 How to Use These Charts</h3>
+      <ul class="space-y-3 text-sm text-light-muted">
+        <li class="flex gap-3">
+          <span class="text-primary-600 font-bold flex-shrink-0">1.</span>
+          <span><strong>Weekly Pattern:</strong> Schedule staff based on forecasted demand for each day</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-primary-600 font-bold flex-shrink-0">2.</span>
+          <span><strong>Service Demand:</strong> Stock inventory for your most popular services</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-primary-600 font-bold flex-shrink-0">3.</span>
+          <span><strong>Revenue Trends:</strong> Identify months with high cancellations and investigate causes</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-primary-600 font-bold flex-shrink-0">4.</span>
+          <span><strong>Utilization:</strong> Recognize high performers and identify training opportunities</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Performance Metrics Card -->
+    <div class="card p-6">
+      <h3 class="text-lg font-bold text-light-text mb-4">🎯 Performance Metrics</h3>
+      <div class="space-y-4">
+        <div class="flex justify-between items-center pb-3 border-b border-light-border">
+          <span class="text-light-muted">Data Period</span>
+          <span class="font-semibold text-light-text">Last 12 Months</span>
+        </div>
+        <div class="flex justify-between items-center pb-3 border-b border-light-border">
+          <span class="text-light-muted">Chart Type</span>
+          <span class="font-semibold text-light-text">Interactive (Chart.js)</span>
+        </div>
+        <div class="flex justify-between items-center pb-3 border-b border-light-border">
+          <span class="text-light-muted">Auto-Update</span>
+          <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">
+            ✅ Real-time
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-light-muted">Theme</span>
+          <span class="font-semibold text-light-text">Black & Gold</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color Legend -->
+  <div class="card p-6 bg-light-bg">
+    <h3 class="text-lg font-bold text-light-text mb-4">🎨 Chart Color Legend</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 bg-primary-600 rounded"></div>
+        <span class="text-sm text-light-text">Primary Gold</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 bg-red-600 rounded"></div>
+        <span class="text-sm text-light-text">Danger Red</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 bg-green-600 rounded"></div>
+        <span class="text-sm text-light-text">Success Green</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 bg-accent rounded"></div>
+        <span class="text-sm text-light-text">Accent Black</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Initialization Scripts -->
+<script>
+  // Initialize all charts with their data endpoints
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Weekly Seasonal Chart
+    const weeklyData = await chartUtils.fetchChartData('{% url "analytics:api_weekly_seasonal" %}');
+    if (weeklyData) {
+      chartUtils.createWeeklySeasonalChart('weeklyChart', weeklyData);
+    }
+
+    // Monthly Service Demand Chart
+    const demandData = await chartUtils.fetchChartData('{% url "analytics:api_monthly_demand" %}');
+    if (demandData) {
+      chartUtils.createMonthlyServiceChart('serviceDemandChart', demandData);
+    }
+
+    // Revenue vs Cancellations Chart
+    const revenueData = await chartUtils.fetchChartData('{% url "analytics:api_revenue_cancellations" %}');
+    if (revenueData) {
+      chartUtils.createRevenueVsCancellationsChart('revenueChart', revenueData);
+    }
+
+    // Stylist Utilization Chart
+    const utilizationData = await chartUtils.fetchChartData('{% url "analytics:api_stylist_utilization" %}');
+    if (utilizationData) {
+      chartUtils.createUtilizationChart('utilizationChart', utilizationData);
+    }
+  });
+</script>
+{% endblock %}

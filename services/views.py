@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db import transaction
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 from .models import Service, ServiceItem
 from .forms import ServiceForm, ServiceItemFormSet
 from core.mixins import StaffOrAdminRequiredMixin
@@ -155,3 +158,82 @@ class ServiceDeleteView(StaffOrAdminRequiredMixin, DeleteView):
             messages.success(request, f'Service "{service_name}" deleted successfully!')
 
         return redirect(self.success_url)
+
+
+class ServiceDownpaymentConfigView(StaffOrAdminRequiredMixin, TemplateView):
+    """Admin view for managing downpayment configuration per service."""
+
+    template_name = 'pages/service_downpayment_config.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get all services
+        services = Service.objects.filter(is_active=True).order_by('name')
+        context['services'] = services
+
+        # Get current active GCash QR code
+        from payments.models import GCashQRCode
+        context['current_qr'] = GCashQRCode.get_active_qr()
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Handle both GCash QR upload and downpayment settings."""
+        from payments.models import GCashQRCode
+
+        # Check if this is a GCash QR upload
+        if 'qr_image' in request.FILES:
+            try:
+                qr_file = request.FILES['qr_image']
+
+                # Create or update GCash QR code
+                qr = GCashQRCode.objects.create(
+                    qr_image=qr_file,
+                    description='GCash Receive Payment',
+                    is_active=True
+                )
+
+                # Deactivate other QR codes
+                GCashQRCode.objects.exclude(pk=qr.pk).update(is_active=False)
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'GCash QR code uploaded successfully'
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=400)
+
+        # Otherwise handle downpayment settings update
+        service_id = request.POST.get('service_id')
+        requires_downpayment = request.POST.get('requires_downpayment') == 'true'
+        downpayment_amount = request.POST.get('downpayment_amount', '0')
+
+        try:
+            service = Service.objects.get(id=service_id)
+            service.requires_downpayment = requires_downpayment
+
+            # Only set amount if downpayment is required
+            if requires_downpayment:
+                service.downpayment_amount = float(downpayment_amount)
+            else:
+                service.downpayment_amount = 0
+
+            service.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Updated {service.name} successfully'
+            })
+        except Service.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Service not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Dreambook Salon{% endblock title %}</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}" />
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     {% block extra_head %}{% endblock extra_head %}
   </head>
   <body class="min-h-screen bg-light-bg">
@@ -21,6 +23,7 @@
 
     <script src="{% static 'js/ui-enhancements.js' %}"></script>
     <script src="{% static 'js/async-utils.js' %}"></script>
+    <script src="{% static 'js/charts-utils.js' %}"></script>
     {% block extra_scripts %}{% endblock extra_scripts %}
   </body>
 </html>

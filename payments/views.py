@@ -1,15 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, View, TemplateView
+from django.views.generic import ListView, DetailView, View, TemplateView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
+from django.urls import reverse_lazy
 import random
 import string
 from appointments.models import Appointment
 from core.mixins import StaffOrAdminRequiredMixin
-from .models import Payment
+from .models import Payment, GCashQRCode
+from .forms import GCashQRCodeForm
 
 
 def generate_transaction_id():
@@ -69,14 +71,27 @@ class PaymentInitiateView(LoginRequiredMixin, View):
             messages.info(request, "This appointment is already paid")
             return redirect('appointments:detail', pk=appointment_id)
 
+        # Calculate payment amount and type
+        service = appointment.service
+        is_downpayment_required = service.requires_downpayment
+        payment_amount = service.downpayment_amount if is_downpayment_required else service.price
+        payment_type = Payment.PaymentType.DOWNPAYMENT if is_downpayment_required else Payment.PaymentType.FULL_PAYMENT
+
+        # Get active GCash QR code
+        active_qr = GCashQRCode.get_active_qr()
+
         context = {
             'appointment': appointment,
             'payment_methods': Payment.Method.choices,
+            'payment_amount': payment_amount,
+            'payment_type': payment_type,
+            'is_downpayment_required': is_downpayment_required,
+            'active_qr': active_qr,
         }
         return render(request, 'pages/payments_initiate.html', context)
 
     def post(self, request, appointment_id):
-        """Process payment."""
+        """Process payment - customer uploads receipt for admin review."""
         appointment = get_object_or_404(Appointment, pk=appointment_id)
 
         # Check permissions
@@ -89,38 +104,41 @@ class PaymentInitiateView(LoginRequiredMixin, View):
             messages.info(request, "This appointment is already paid")
             return redirect('appointments:detail', pk=appointment_id)
 
-        payment_method = request.POST.get('payment_method')
-        if payment_method not in dict(Payment.Method.choices):
-            messages.error(request, "Invalid payment method")
+        # Calculate payment details based on service requirements
+        service = appointment.service
+        is_downpayment_required = service.requires_downpayment
+        payment_amount = service.downpayment_amount if is_downpayment_required else service.price
+        payment_type = Payment.PaymentType.DOWNPAYMENT if is_downpayment_required else Payment.PaymentType.FULL_PAYMENT
+
+        # Get receipt file
+        receipt_file = request.FILES.get('receipt_image')
+        if not receipt_file:
+            messages.error(request, "Please upload a payment receipt")
             return redirect('payments:initiate', appointment_id=appointment_id)
 
-        # Create payment record
+        # Create payment record - payment pending admin review
         with transaction.atomic():
             payment = Payment.objects.create(
                 appointment=appointment,
-                method=payment_method,
-                amount=appointment.service.price,
+                method=Payment.Method.PAY,
+                amount=payment_amount,
+                payment_type=payment_type,
                 status=Payment.Status.PENDING,
+                receipt_image=receipt_file,
+                is_verified=False,  # Requires admin review and verification
                 txn_id=generate_transaction_id(),
             )
 
-            # Simulate payment processing
-            is_successful, message = simulate_demo_payment(payment_method)
-
-            if is_successful:
-                payment.status = Payment.Status.PAID
-                payment.notes = message
-                appointment.payment_state = Appointment.PaymentState.PAID
-                messages.success(request, f"Payment successful! Transaction ID: {payment.txn_id}")
-            else:
-                payment.status = Payment.Status.FAILED
-                payment.notes = message
-                appointment.payment_state = Appointment.PaymentState.FAILED
-                messages.error(request, f"Payment failed: {message}")
+            # Set appointment payment state to PENDING (will be updated when admin verifies)
+            appointment.payment_state = Appointment.PaymentState.PENDING
 
             payment.save()
             appointment.save()
 
+        messages.success(
+            request,
+            f"Payment receipt received! Transaction ID: {payment.txn_id}. Our admin will review and confirm your payment within 24 hours."
+        )
         return redirect('payments:detail', pk=payment.pk)
 
 
@@ -269,3 +287,5 @@ class PaymentStatsView(StaffOrAdminRequiredMixin, TemplateView):
         ).order_by('-created_at')[:10]
 
         return context
+
+

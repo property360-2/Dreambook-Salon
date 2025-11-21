@@ -30,15 +30,25 @@
                 <span class="text-light-muted">Duration</span>
                 <span class="text-light-text font-semibold">{{ appointment.service.duration_minutes }} minutes</span>
               </div>
+              <div class="flex items-center justify-between p-4 bg-light-elevated rounded-lg border border-light-border">
+                <span class="text-light-muted">Total Service Price</span>
+                <span class="text-light-text font-semibold">₱{{ appointment.service.price }}</span>
+              </div>
+              {% if is_downpayment_required %}
+                <div class="flex items-center justify-between p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                  <span class="text-amber-600 font-semibold">Downpayment Required</span>
+                  <span class="text-amber-600 text-sm">{{ payment_amount|floatformat:2 }}</span>
+                </div>
+              {% endif %}
               <div class="flex items-center justify-between p-4 bg-primary-500/10 rounded-lg border border-primary-500/20">
-                <span class="text-primary-600 font-semibold">Amount to Pay</span>
-                <span class="text-gradient font-bold text-3xl">₱{{ appointment.service.price }}</span>
+                <span class="text-primary-600 font-semibold">{% if is_downpayment_required %}Downpayment Amount{% else %}Amount to Pay{% endif %}</span>
+                <span class="text-gradient font-bold text-3xl">₱{{ payment_amount }}</span>
               </div>
             </div>
           </div>
 
           <!-- Payment Form -->
-          <form method="post" class="card p-6">
+          <form method="post" enctype="multipart/form-data" class="card p-6">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -58,34 +68,46 @@
               </div>
             {% endif %}
 
-            <!-- Payment Methods -->
+            <!-- Payment Method (Hidden - Only Pay with Receipt) -->
+            <input type="hidden" name="payment_method" value="pay" required>
+
+            <!-- GCash QR Code Display -->
+            {% if active_qr %}
+              <div class="mb-6">
+                <div class="card p-6 bg-primary-50 border-2 border-primary-500/20">
+                  <h4 class="text-lg font-bold text-primary-900 mb-4">Step 1: Send Payment via GCash</h4>
+                  <p class="text-sm text-primary-800 mb-4">Scan or screenshot this QR code and send your payment:</p>
+                  <div class="flex justify-center bg-white p-4 rounded-lg">
+                    <img src="{{ active_qr.qr_image.url }}" alt="GCash QR Code" class="max-w-xs h-auto">
+                  </div>
+                  <p class="text-xs text-primary-700 text-center mt-3">
+                    Send ₱{{ payment_amount }} to complete payment
+                  </p>
+                </div>
+              </div>
+            {% else %}
+              <div class="mb-6">
+                <div class="card p-6 bg-yellow-50 border-2 border-yellow-500/20">
+                  <h4 class="text-lg font-bold text-yellow-900 mb-2">No GCash QR Code Available</h4>
+                  <p class="text-sm text-yellow-800">Please contact the salon to set up the GCash payment QR code.</p>
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Receipt Upload Section -->
             <div class="mb-6">
-              <h3 class="text-xl font-bold text-light-text mb-4">Select Payment Method</h3>
-              <div class="space-y-3">
-                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="GCASH" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
-                  <div class="flex-1">
-                    <span class="text-light-text font-semibold block mb-1">GCash</span>
-                    <span class="text-light-muted text-sm">Pay via GCash mobile wallet</span>
-                  </div>
-                  <span class="text-2xl">💰</span>
-                </label>
-                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="PAYMAYA" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
-                  <div class="flex-1">
-                    <span class="text-light-text font-semibold block mb-1">PayMaya</span>
-                    <span class="text-light-muted text-sm">Pay via PayMaya mobile wallet</span>
-                  </div>
-                  <span class="text-2xl">💳</span>
-                </label>
-                <label class="flex items-center p-4 bg-light-elevated rounded-xl border border-light-border hover:border-primary-500/50 cursor-pointer transition-all">
-                  <input type="radio" name="method" value="ONSITE" required class="mr-4 w-5 h-5 text-primary-500 border-light-border focus:ring-primary-500 focus:ring-2">
-                  <div class="flex-1">
-                    <span class="text-light-text font-semibold block mb-1">Pay at Salon</span>
-                    <span class="text-light-muted text-sm">Pay cash at the salon</span>
-                  </div>
-                  <span class="text-2xl">🏪</span>
-                </label>
+              <h4 class="text-lg font-bold text-light-text mb-4">Step 2: Upload Payment Receipt</h4>
+              <p class="text-sm text-light-muted mb-4">After sending your payment, upload a screenshot of the GCash receipt for verification. Our admin will review and confirm your payment within 24 hours.</p>
+              <div class="border-2 border-dashed border-light-border rounded-lg p-6 bg-light-elevated hover:border-primary-500 transition-colors cursor-pointer" id="drop-zone">
+                <input type="file" name="receipt_image" id="receipt-image" accept="image/*" class="hidden" required>
+                <div class="text-center">
+                  <svg class="mx-auto h-12 w-12 text-light-muted mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v4a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-8l-3.172-3.172a4 4 0 00-5.656 0L28 20M9 20l3.172-3.172a4 4 0 015.656 0L28 20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <p class="text-light-text font-medium">Drop receipt image here or click to select</p>
+                  <p class="text-light-muted text-sm mt-1">PNG, JPG, or GIF up to 10MB</p>
+                </div>
+                <div id="receipt-file-name" class="text-center mt-2 text-sm text-primary-600 hidden"></div>
               </div>
             </div>
 
@@ -104,23 +126,30 @@
         <!-- Sidebar Info -->
         <div class="lg:col-span-1">
           <div class="card p-6 sticky top-24">
-            <h3 class="text-lg font-bold text-light-text mb-4">Payment Information</h3>
+            <h3 class="text-lg font-bold text-light-text mb-4">Payment Process</h3>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p class="text-blue-800 text-sm"><strong>Important:</strong> Payment confirmation requires admin review. We will verify your receipt within 24 hours.</p>
+            </div>
             <div class="space-y-3 text-sm text-light-muted">
               <div class="flex items-start gap-2">
-                <span class="text-emerald-400">✓</span>
-                <p>All payments are processed securely</p>
+                <span class="font-bold text-primary-600">1</span>
+                <p>Use the GCash QR code above to send your payment</p>
               </div>
               <div class="flex items-start gap-2">
-                <span class="text-emerald-400">✓</span>
-                <p>You will receive a confirmation email after payment</p>
+                <span class="font-bold text-primary-600">2</span>
+                <p>Take a screenshot of the GCash receipt</p>
               </div>
               <div class="flex items-start gap-2">
-                <span class="text-emerald-400">✓</span>
-                <p>For online payments, you will be redirected to the payment provider</p>
+                <span class="font-bold text-primary-600">3</span>
+                <p>Upload the receipt screenshot below</p>
               </div>
               <div class="flex items-start gap-2">
-                <span class="text-emerald-400">✓</span>
-                <p>For onsite payments, please pay at the salon before your appointment</p>
+                <span class="font-bold text-primary-600">4</span>
+                <p>Our admin will review and confirm within 24 hours</p>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-bold text-primary-600">5</span>
+                <p>You'll receive a confirmation email once verified</p>
               </div>
             </div>
           </div>
@@ -128,4 +157,44 @@
       </div>
     </div>
   </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('receipt-image');
+    const receiptFileName = document.getElementById('receipt-file-name');
+
+    // File drop zone handling
+    if (dropZone) {
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-primary-500', 'bg-primary-50');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-primary-500', 'bg-primary-50');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary-500', 'bg-primary-50');
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          updateFileName();
+        }
+      });
+
+      fileInput.addEventListener('change', updateFileName);
+
+      function updateFileName() {
+        if (fileInput.files.length) {
+          receiptFileName.textContent = 'Selected: ' + fileInput.files[0].name;
+          receiptFileName.classList.remove('hidden');
+        }
+      }
+    }
+  });
+  </script>
 {% endblock content %}

@@ -1,25 +1,28 @@
-<footer class="bg-light-surface border-t border-light-border mt-20">
-  <div class="container-custom py-12">
-    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+<footer class="bg-gradient-to-r from-accent-800 to-accent-700 border-t-2 border-primary-500 mt-20">
+  <div class="container-custom py-16">
+    <div class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
       <!-- Brand -->
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/20">
-          <span class="text-white font-bold">D</span>
+      <div class="flex items-center space-x-4">
+        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+          <span class="text-accent-900 font-bold text-lg">D</span>
         </div>
-        <span class="text-lg font-semibold text-gradient">Dreambook Salon</span>
+        <div>
+          <p class="text-primary-500 font-bold text-lg">Dreambook Salon</p>
+          <p class="text-primary-300 text-xs">Premium Salon Management</p>
+        </div>
       </div>
 
       <!-- Copyright -->
       {% now 'Y' as current_year %}
-      <p class="text-light-muted text-sm">
+      <p class="text-primary-400 text-sm">
         © {{ current_year }} Dreambook Salon. All rights reserved.
       </p>
 
       <!-- Links -->
-      <div class="flex items-center space-x-6">
-        <a href="{% url 'services:list' %}" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Services</a>
-        <a href="{% url 'inventory:list' %}" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Inventory</a>
-        <a href="#contact" class="text-sm text-light-muted hover:text-primary-600 transition-colors">Contact</a>
+      <div class="flex items-center space-x-8">
+        <a href="{% url 'services:list' %}" class="text-sm text-primary-400 hover:text-primary-300 transition-colors font-medium">Services</a>
+        <a href="{% url 'inventory:list' %}" class="text-sm text-primary-400 hover:text-primary-300 transition-colors font-medium">Inventory</a>
+        <a href="#contact" class="text-sm text-primary-400 hover:text-primary-300 transition-colors font-medium">Contact</a>
       </div>
     </div>
   </div>

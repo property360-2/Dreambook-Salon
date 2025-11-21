@@ -28,7 +28,7 @@
             <div class="flex flex-col lg:flex-row gap-6">
               <!-- Service Image Thumbnail -->
               <div class="lg:w-32 lg:h-32 lg:flex-shrink-0">
-                <div class="h-24 lg:h-full bg-gradient-to-br from-primary-100 to-accent-100 rounded-xl overflow-hidden flex items-center justify-center">
+                <div class="h-24 lg:h-full bg-gradient-to-br from-primary-100 to-primary-100 rounded-xl overflow-hidden flex items-center justify-center">
                   {% if appointment.service.image %}
                     <img src="{{ appointment.service.image.url }}" alt="{{ appointment.service.name }}" class="w-full h-full object-cover">
                   {% else %}
@@ -127,7 +127,7 @@
     {% else %}
       <!-- Enhanced Empty State -->
       <div class="card p-16 text-center max-w-2xl mx-auto">
-        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
+        <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-primary-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
           <svg class="w-12 h-12 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>

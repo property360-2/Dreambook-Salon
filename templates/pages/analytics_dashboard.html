@@ -139,5 +139,264 @@
         </div>
       </div>
     </div>
+
+    <!-- Advanced Charts Section -->
+    <div class="mt-16 pt-12 border-t border-light-border">
+      <div class="mb-12">
+        <h2 class="text-3xl font-bold text-gradient mb-2">📊 Interactive Analytics Charts</h2>
+        <p class="text-light-muted">Visualize trends and patterns in your business data</p>
+      </div>
+
+      <!-- Weekly Seasonal Pattern Chart -->
+      <div class="card p-8 mb-8">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-light-text mb-2">📈 Weekly Seasonal Pattern</h3>
+          <p class="text-sm text-light-muted">
+            7-day revenue pattern showing your daily trends for the week. The dashed line marks today.
+          </p>
+        </div>
+        <div class="bg-light-bg p-6 rounded-lg">
+          <canvas id="weeklyChart" height="80"></canvas>
+        </div>
+        <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded text-sm text-emerald-700">
+          💡 <strong>Tip:</strong> Use this pattern to anticipate demand and schedule staff accordingly.
+        </div>
+      </div>
+
+      <!-- Monthly Service Demand Chart -->
+      <div class="card p-8 mb-8">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-light-text mb-2">💼 Monthly Demand by Service</h3>
+          <p class="text-sm text-light-muted">
+            Tracks demand for each service over the last 12 months. Identify seasonal trends and popular services.
+          </p>
+        </div>
+        <div class="bg-light-bg p-6 rounded-lg">
+          <canvas id="serviceDemandChart" height="80"></canvas>
+        </div>
+        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+          💡 <strong>Tip:</strong> Services with consistent demand are your reliable revenue drivers.
+        </div>
+      </div>
+
+      <!-- Revenue vs Cancellations Chart -->
+      <div class="card p-8 mb-8">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-light-text mb-2">💰 Revenue vs Cancellations</h3>
+          <p class="text-sm text-light-muted">
+            Compares monthly revenue (gold) against cancellation counts (red). Lower cancellations = higher revenue.
+          </p>
+        </div>
+        <div class="bg-light-bg p-6 rounded-lg">
+          <canvas id="revenueChart" height="80"></canvas>
+        </div>
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
+          💡 <strong>Tip:</strong> Spikes in cancellations can indicate scheduling conflicts or staffing issues.
+        </div>
+      </div>
+
+      <!-- Stylist Utilization Chart -->
+      <div class="card p-8 mb-8">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-light-text mb-2">👥 Stylist Utilization Rates</h3>
+          <p class="text-sm text-light-muted">
+            Shows completion rates for top service providers over the last 30 days. Higher rates indicate productivity.
+          </p>
+        </div>
+        <div class="bg-light-bg p-6 rounded-lg">
+          <canvas id="utilizationChart" height="80"></canvas>
+        </div>
+        <div class="mt-4 p-3 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
+          💡 <strong>Tip:</strong> Consistently high utilization indicates a healthy, productive team.
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Global Chart Configuration
+Chart.defaults.font.family = "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI'";
+Chart.defaults.color = '#8b8b8b';
+
+// Colors
+const colors = {
+  primary: '#d4af37',
+  accent: '#1a1a1a',
+  success: '#10b981',
+  danger: '#ef4444',
+  warning: '#f59e0b',
+  info: '#3b82f6'
+};
+
+// Weekly Seasonal Pattern Chart
+fetch('{% url "analytics:api_weekly_seasonal" %}')
+  .then(response => response.json())
+  .then(data => {
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          label: 'Daily Revenue',
+          data: data.values,
+          borderColor: colors.primary,
+          backgroundColor: 'rgba(212, 175, 55, 0.05)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 6,
+          pointBackgroundColor: colors.primary,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 8,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false }},
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: { callback: function(value) { return '₱' + value.toLocaleString(); }}
+          },
+          x: { grid: { display: false }}
+        }
+      }
+    });
+  });
+
+// Monthly Service Demand Chart
+fetch('{% url "analytics:api_monthly_demand" %}')
+  .then(response => response.json())
+  .then(data => {
+    const ctx = document.getElementById('serviceDemandChart').getContext('2d');
+    const datasets = data.services.map((service, idx) => ({
+      label: service.name,
+      data: service.monthlyData,
+      borderColor: service.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      tension: 0.4,
+      pointRadius: 4,
+      pointBackgroundColor: service.color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2
+    }));
+
+    new Chart(ctx, {
+      type: 'line',
+      data: { labels: data.months, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'top', labels: { padding: 20 }}},
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: { callback: function(value) { return value + ' bookings'; }}
+          },
+          x: { grid: { display: false }}
+        }
+      }
+    });
+  });
+
+// Revenue vs Cancellations Chart
+fetch('{% url "analytics:api_revenue_cancellations" %}')
+  .then(response => response.json())
+  .then(data => {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.months,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: data.revenue,
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: 'Cancellations',
+            data: data.cancellations,
+            backgroundColor: colors.danger,
+            borderColor: colors.danger,
+            borderWidth: 1,
+            borderRadius: 4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'top', labels: { padding: 20 }}},
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: { callback: function(value) { return '₱' + value.toLocaleString(); }}
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { callback: function(value) { return value + ' cancellations'; }}
+          },
+          x: { grid: { display: false }}
+        }
+      }
+    });
+  });
+
+// Stylist Utilization Chart
+fetch('{% url "analytics:api_stylist_utilization" %}')
+  .then(response => response.json())
+  .then(data => {
+    const ctx = document.getElementById('utilizationChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'barH',
+      type: 'bar',
+      data: {
+        labels: data.stylists,
+        datasets: [{
+          label: 'Utilization Rate (%)',
+          data: data.utilization,
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false }},
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: { callback: function(value) { return value + '%'; }}
+          },
+          y: { grid: { display: false }}
+        }
+      }
+    });
+  });
+</script>
+
 {% endblock content %}

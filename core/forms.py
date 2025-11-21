@@ -41,3 +41,42 @@ class CustomerRegistrationForm(StyledFormMixin, UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class UserManagementForm(StyledFormMixin, forms.ModelForm):
+    """Form for creating and editing users in admin/staff interface."""
+
+    password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(),
+        help_text="Leave blank to keep the current password"
+    )
+
+    class Meta:
+        model = User
+        fields = ("email", "first_name", "last_name", "role", "is_active")
+
+    def clean_email(self):
+        """Validate email uniqueness (except for the current user)."""
+        email = self.cleaned_data.get("email")
+        if email:
+            # Exclude current user if editing
+            qs = User.objects.filter(email=email)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+
+            if qs.exists():
+                raise forms.ValidationError("This email is already in use.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+
+        # Only set password if provided
+        if password:
+            user.set_password(password)
+
+        if commit:
+            user.save()
+        return user

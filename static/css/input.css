@@ -23,17 +23,17 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white
-           hover:from-primary-700 hover:to-primary-600
-           shadow-soft-lg shadow-primary-500/20 hover:shadow-glow
+    @apply bg-gradient-to-r from-primary-700 to-primary-600 text-light-text
+           hover:from-primary-800 hover:to-primary-700
+           shadow-soft-lg shadow-primary-500/30 hover:shadow-gold-glow
            focus:ring-primary-500;
   }
 
   .btn-accent {
-    @apply bg-gradient-to-r from-accent-600 to-accent-500 text-white
-           hover:from-accent-700 hover:to-accent-600
-           shadow-soft-lg shadow-accent-500/20 hover:shadow-glow-accent
-           focus:ring-accent-500;
+    @apply bg-gradient-to-r from-accent-700 to-accent-600 text-light-bg
+           hover:from-accent-800 hover:to-accent-700
+           shadow-soft-lg shadow-accent-700/30 hover:shadow-soft-lg
+           focus:ring-accent-700;
   }
 
   .btn-ghost {
@@ -107,7 +107,7 @@
 
   .section-title {
     @apply text-4xl md:text-5xl font-bold mb-4
-           bg-gradient-to-r from-primary-400 to-accent-400
+           bg-gradient-to-r from-primary-500 to-accent-900
            bg-clip-text text-transparent;
   }
 
@@ -145,7 +145,7 @@
   }
 
   .navbar-link-active {
-    @apply text-primary-600 bg-primary-100;
+    @apply text-primary-600 bg-light-elevated;
   }
 
   /* Premium Alert/Message Styles */
@@ -179,7 +179,7 @@
   }
 
   .stat-value {
-    @apply text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600
+    @apply text-3xl font-bold bg-gradient-to-r from-primary-500 to-accent-900
            bg-clip-text text-transparent;
   }
 
@@ -217,24 +217,24 @@
   .gradient-border {
     @apply border-2 border-transparent bg-clip-padding
            relative before:absolute before:inset-0 before:-z-10
-           before:bg-gradient-to-r before:from-primary-500 before:to-accent-500
+           before:bg-gradient-to-r before:from-primary-500 before:to-primary-700
            before:rounded-2xl;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-accent-600
+    @apply bg-gradient-to-r from-primary-500 to-accent-900
            bg-clip-text text-transparent;
   }
 
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500;
+    @apply bg-gradient-to-br from-primary-600 via-primary-500 to-primary-700;
   }
 
   .bg-mesh {
     background-image:
-      radial-gradient(at 40% 20%, rgba(120, 89, 122, 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(46, 129, 102, 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(120, 89, 122, 0.08) 0px, transparent 50%);
+      radial-gradient(at 40% 20%, rgba(212, 175, 55, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(26, 26, 26, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(212, 175, 55, 0.06) 0px, transparent 50%);
   }
 
   /* Toast notification animations */

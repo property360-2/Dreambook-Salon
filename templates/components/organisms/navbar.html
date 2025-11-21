@@ -1,34 +1,56 @@
 {% load static %}
 
-<nav class="navbar">
+<nav class="navbar border-b-2 border-primary-500">
   <div class="container-custom">
-    <div class="flex items-center justify-between h-16">
+    <div class="flex items-center justify-between h-16 gap-4">
       <!-- Logo/Brand -->
-      <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group">
-        <img src="{% static 'images/logo.jpg' %}" alt="Dreambook Salon Logo" class="h-10 w-10 rounded-lg object-cover shadow-soft group-hover:shadow-glow transition-all duration-300">
-        <span class="text-lg font-bold text-gradient hidden sm:inline">Dreambook Salon</span>
+      <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group flex-shrink-0">
+        <img src="{% static 'images/logo.jpg' %}" alt="Dreambook Salon Logo" class="h-11 w-11 rounded-xl object-cover shadow-soft group-hover:shadow-gold-glow transition-all duration-300">
+        <span class="text-xl font-bold text-gradient hidden sm:inline">Dreambook</span>
       </a>
 
       <!-- Desktop Navigation Links -->
-      <ul class="hidden md:flex items-center space-x-1">
+      <div class="hidden md:flex flex-1 justify-center">
         {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
           <!-- Staff/Admin Navigation -->
-          <li><a href="{% url 'core:dashboard' %}" class="navbar-link">Dashboard</a></li>
-          <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
-          <li><a href="{% url 'inventory:list' %}" class="navbar-link">Inventory</a></li>
-          <li><a href="{% url 'appointments:staff_list' %}" class="navbar-link">All Appointments</a></li>
-          <li><a href="{% url 'analytics:dashboard' %}" class="navbar-link">Analytics</a></li>
-          <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">🤖 AI Assistant</a></li>
+          <div class="flex items-center gap-2">
+            <a href="{% url 'core:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Dashboard</a>
+            <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
+            <a href="{% url 'services:downpayment_config' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Payments</a>
+            <a href="{% url 'inventory:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Inventory</a>
+            <a href="{% url 'appointments:staff_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Appointments</a>
+
+            <!-- Divider -->
+            <div class="h-6 w-px bg-light-border mx-2"></div>
+
+            <a href="{% url 'analytics:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
+
+            {% if request.user.role == 'ADMIN' %}
+              <!-- Divider -->
+              <div class="h-6 w-px bg-light-border mx-2"></div>
+
+              <a href="{% url 'core:user_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Staff</a>
+              <a href="{% url 'audit_log:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Audit</a>
+            {% endif %}
+
+            <!-- Divider -->
+            <div class="h-6 w-px bg-light-border mx-2"></div>
+
+            <a href="{% url 'chatbot:interface' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">AI Chat</a>
+          </div>
         {% else %}
           <!-- Customer/Guest Navigation -->
-          <li><a href="{% url 'core:home' %}" class="navbar-link">Home</a></li>
-          <li><a href="{% url 'services:list' %}" class="navbar-link">Services</a></li>
-          {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
-            <li><a href="{% url 'appointments:my_appointments' %}" class="navbar-link">My Appointments</a></li>
-            <li><a href="{% url 'chatbot:interface' %}" class="navbar-link">💬 Chat</a></li>
-          {% endif %}
+          <div class="flex items-center gap-2">
+            <a href="{% url 'core:home' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Home</a>
+            <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
+            {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
+              <div class="h-6 w-px bg-light-border mx-2"></div>
+              <a href="{% url 'appointments:my_appointments' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">My Appointments</a>
+              <a href="{% url 'chatbot:interface' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Chat</a>
+            {% endif %}
+          </div>
         {% endif %}
-      </ul>
+      </div>
 
       <!-- Account Section -->
       <div class="hidden md:flex items-center space-x-4">
@@ -67,59 +89,67 @@
 
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="hidden md:hidden pb-4">
-      <ul class="space-y-2 mt-4">
+      <div class="mt-4 space-y-1 px-2">
         {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
           <!-- Staff/Admin Mobile Navigation -->
-          <li><a href="{% url 'core:dashboard' %}" class="block navbar-link">Dashboard</a></li>
-          <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
-          <li><a href="{% url 'inventory:list' %}" class="block navbar-link">Inventory</a></li>
-          <li><a href="{% url 'appointments:staff_list' %}" class="block navbar-link">All Appointments</a></li>
-          <li><a href="{% url 'analytics:dashboard' %}" class="block navbar-link">Analytics</a></li>
-          <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">🤖 AI Assistant</a></li>
+          <a href="{% url 'core:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Dashboard</a>
+          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Services</a>
+          <a href="{% url 'services:downpayment_config' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Payments</a>
+          <a href="{% url 'inventory:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Inventory</a>
+          <a href="{% url 'appointments:staff_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Appointments</a>
+
+          <div class="h-px bg-light-border my-2"></div>
+
+          <a href="{% url 'analytics:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
+
+          {% if request.user.role == 'ADMIN' %}
+            <div class="h-px bg-light-border my-2"></div>
+
+            <a href="{% url 'core:user_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Staff Management</a>
+            <a href="{% url 'audit_log:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Audit Log</a>
+          {% endif %}
+
+          <div class="h-px bg-light-border my-2"></div>
+
+          <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">AI Chat</a>
         {% else %}
           <!-- Customer/Guest Mobile Navigation -->
-          <li><a href="{% url 'core:home' %}" class="block navbar-link">Home</a></li>
-          <li><a href="{% url 'services:list' %}" class="block navbar-link">Services</a></li>
+          <a href="{% url 'core:home' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Home</a>
+          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Services</a>
           {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
-            <li><a href="{% url 'appointments:my_appointments' %}" class="block navbar-link">My Appointments</a></li>
-            <li><a href="{% url 'chatbot:interface' %}" class="block navbar-link">💬 Chat</a></li>
+            <div class="h-px bg-light-border my-2"></div>
+            <a href="{% url 'appointments:my_appointments' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">My Appointments</a>
+            <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Chat</a>
           {% endif %}
         {% endif %}
+      </div>
 
-        {% if request.user.is_authenticated %}
-
-          <!-- Mobile Account Section -->
-          <li class="pt-4 border-t border-light-border">
-            <span class="block text-sm text-light-muted px-4 py-2">
+      {% if request.user.is_authenticated %}
+        <!-- Mobile Account Section -->
+        <div class="mt-4 pt-4 border-t border-light-border">
+          <div class="px-4 py-2">
+            <span class="text-sm text-light-muted">
               Hi, <span class="text-primary-600 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
             </span>
-          </li>
+          </div>
           {% if request.user.role == 'CUSTOMER' %}
-            <li>
-              <a href="{% url 'appointments:book' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
-                Book Now
-              </a>
-            </li>
-          {% endif %}
-          <li>
-            <form method="post" action="{% url 'core:logout' %}" class="mx-4">
-              {% csrf_token %}
-              <button type="submit" class="w-full btn btn-ghost text-sm text-center">
-                Sign out
-              </button>
-            </form>
-          </li>
-        {% else %}
-          <li>
-            <a href="{% url 'core:register' %}" class="block navbar-link">Create account</a>
-          </li>
-          <li>
-            <a href="{% url 'core:login' %}" class="block btn btn-primary text-sm mx-4 my-2 text-center">
-              Sign in
+            <a href="{% url 'appointments:book' %}" class="block btn btn-primary text-sm mx-2 my-2 text-center">
+              Book Now
             </a>
-          </li>
-        {% endif %}
-      </ul>
+          {% endif %}
+          <form method="post" action="{% url 'core:logout' %}" class="mx-2">
+            {% csrf_token %}
+            <button type="submit" class="w-full btn btn-ghost text-sm text-center">
+              Sign out
+            </button>
+          </form>
+        </div>
+      {% else %}
+        <div class="mt-4 pt-4 border-t border-light-border space-y-2 px-2">
+          <a href="{% url 'core:register' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors text-center">Create account</a>
+          <a href="{% url 'core:login' %}" class="block btn btn-primary text-sm text-center">Sign in</a>
+        </div>
+      {% endif %}
     </div>
   </div>
 </nav>
