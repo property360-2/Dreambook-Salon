@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import Payment, GCashQRCode
 
@@ -13,18 +14,22 @@ class PaymentAdmin(admin.ModelAdmin):
         "amount",
         "status",
         "is_verified",
+        "verification_type",
+        "verified_at",
         "created_at",
     )
-    list_filter = ("status", "method", "payment_type", "is_verified", "created_at")
+    list_filter = ("status", "method", "payment_type", "is_verified", "auto_verified", "created_at")
     search_fields = ("txn_id", "appointment__customer__email", "notes")
-    readonly_fields = ("created_at", "updated_at", "is_successful", "receipt_image_preview")
+    readonly_fields = ("created_at", "updated_at", "is_successful", "receipt_image_preview", "auto_verified", "verified_at")
     autocomplete_fields = ["appointment"]
     actions = ["verify_payment"]
 
     fieldsets = (
         (None, {"fields": ("appointment", "txn_id")}),
         ("Payment Details", {"fields": ("method", "payment_type", "amount", "status")}),
-        ("Receipt & Verification", {"fields": ("receipt_image", "receipt_image_preview", "is_verified")}),
+        ("Receipt & Verification", {
+            "fields": ("receipt_image", "receipt_image_preview", "is_verified", "auto_verified", "verified_at", "verified_by")
+        }),
         ("Additional Info", {"fields": ("notes", "is_successful")}),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )
@@ -32,14 +37,23 @@ class PaymentAdmin(admin.ModelAdmin):
     def receipt_image_preview(self, obj):
         """Display a preview of the receipt image."""
         if obj.receipt_image:
-            return f'<img src="{obj.receipt_image.url}" style="max-width: 200px; max-height: 200px;" />'
+            return format_html('<img src="{}" style="max-width: 200px; max-height: 200px;" />', obj.receipt_image.url)
         return "No receipt uploaded"
-    receipt_image_preview.allow_tags = True
     receipt_image_preview.short_description = "Receipt Preview"
+
+    def verification_type(self, obj):
+        """Display verification type with color coding."""
+        if obj.auto_verified:
+            return format_html('<span style="color: #17a2b8; font-weight: bold;">🤖 Auto-verified</span>')
+        elif obj.is_verified:
+            return format_html('<span style="color: #28a745; font-weight: bold;">✓ Manual verified</span>')
+        return format_html('<span style="color: #ffc107;">⏳ Pending</span>')
+    verification_type.short_description = "Verification Type"
 
     def verify_payment(self, request, queryset):
         """Admin action to verify pending payments and confirm appointments."""
         from django.db import transaction
+        from django.utils import timezone
         from appointments.models import Appointment
 
         verified_count = 0
@@ -49,6 +63,9 @@ class PaymentAdmin(admin.ModelAdmin):
                     # Mark payment as verified and paid
                     payment.status = Payment.Status.PAID
                     payment.is_verified = True
+                    payment.auto_verified = False  # Manual verification
+                    payment.verified_at = timezone.now()
+                    payment.verified_by = request.user
                     payment.save()
 
                     # Update appointment payment state

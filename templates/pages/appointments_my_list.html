@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load appointment_filters %}
 
 {% block title %}My Appointments · Dreambook Salon{% endblock title %}
 
@@ -43,15 +44,10 @@
               <div class="flex-1">
                 <div class="flex items-start justify-between mb-4">
                   <h3 class="text-2xl font-bold text-light-text">{{ appointment.service.name }}</h3>
-                  {% if appointment.status == 'CONFIRMED' %}
-                    <span class="badge badge-success">{{ appointment.get_status_display }}</span>
-                  {% elif appointment.status == 'PENDING' %}
-                    <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
-                  {% elif appointment.status == 'COMPLETED' %}
-                    <span class="badge badge-info">{{ appointment.get_status_display }}</span>
-                  {% else %}
-                    <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
-                  {% endif %}
+                  {# Customer-friendly status display #}
+                  <span class="badge {{ appointment.status|customer_status_badge_class }}">
+                    {{ appointment.status|customer_friendly_status }}
+                  </span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">

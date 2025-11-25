@@ -43,11 +43,67 @@ class ChatbotDBQueries:
 
     @staticmethod
     def get_service_by_name(service_name: str) -> Dict[str, Any]:
-        """Get specific service details by name."""
+        """Get specific service details by name with fuzzy matching."""
         try:
+            # Normalize input and apply synonyms
+            synonyms = {
+                'coloring': 'color',
+                'colouring': 'color',
+                'haircut': 'haircut',
+                'cut': 'haircut',
+                'massage': 'massage',
+                'facial': 'facial',
+                'manicure': 'manicure',
+                'pedicure': 'pedicure',
+                'rebond': 'rebond',
+                'rebonding': 'rebond',
+                'wax': 'waxing',
+                'waxing': 'waxing',
+            }
+
+            service_name_lower = service_name.lower().strip()
+
+            # Apply synonyms
+            for synonym, replacement in synonyms.items():
+                if synonym in service_name_lower:
+                    service_name_lower = service_name_lower.replace(synonym, replacement)
+
+            # Try exact/contains match first (with normalized name)
             service = Service.objects.filter(
-                Q(name__icontains=service_name) & Q(is_active=True)
+                Q(name__icontains=service_name_lower) & Q(is_active=True)
             ).prefetch_related('features').first()
+
+            # If not found, try original name
+            if not service:
+                service = Service.objects.filter(
+                    Q(name__icontains=service_name) & Q(is_active=True)
+                ).prefetch_related('features').first()
+
+            # If still not found, try word-based fuzzy match with OR logic
+            if not service:
+                words = service_name_lower.split()
+                # Build OR query for significant words
+                word_query = Q()
+                for word in words:
+                    if len(word) > 3:  # Only match meaningful words (4+ chars)
+                        word_query |= Q(name__icontains=word)
+
+                if word_query:
+                    # Get all matches and rank by number of matching words
+                    matches = Service.objects.filter(
+                        word_query & Q(is_active=True)
+                    ).prefetch_related('features')
+
+                    # Score each match by how many search words it contains
+                    best_match = None
+                    best_score = 0
+                    for match in matches:
+                        score = sum(1 for word in words if len(word) > 3 and word in match.name.lower())
+                        if score > best_score:
+                            best_score = score
+                            best_match = match
+
+                    service = best_match
 
             if not service:
                 return {
@@ -149,19 +205,37 @@ class ChatbotDBQueries:
             return {"error": str(e)}
 
     @staticmethod
-    def get_appointment_status(user_id: int, appointment_id: Optional[int] = None) -> Dict[str, Any]:
-        """Get appointment details for a customer."""
+    def get_appointment_status(user_id: Optional[int], appointment_id: Optional[int] = None, user_role: str = 'CUSTOMER') -> Dict[str, Any]:
+        """
+        Get appointment details.
+
+        Args:
+            user_id: The user requesting appointments
+            appointment_id: Specific appointment ID (optional)
+            user_role: User's role ('ADMIN', 'STAFF', 'CUSTOMER')
+
+        Returns:
+            Appointment data (customers only see their own, staff/admin see all)
+        """
         try:
             if appointment_id:
-                appointment = Appointment.objects.filter(
-                    id=appointment_id,
-                    customer_id=user_id
-                ).select_related('service').first()
+                # Build base query
+                if user_role in ['ADMIN', 'STAFF']:
+                    # Staff and Admin can see any appointment
+                    appointment = Appointment.objects.filter(
+                        id=appointment_id
+                    ).select_related('service', 'customer').first()
+                else:
+                    # Customers can only see their own appointments
+                    appointment = Appointment.objects.filter(
+                        id=appointment_id,
+                        customer_id=user_id  # CRITICAL SECURITY FILTER
+                    ).select_related('service').first()
 
                 if not appointment:
                     return {"found": False, "message": "Appointment not found"}
 
-                return {
+                result = {
                     "found": True,
                     "id": appointment.id,
                     "service": appointment.service.name,
@@ -169,31 +243,71 @@ class ChatbotDBQueries:
                     "status": appointment.get_status_display(),
                     "payment_status": appointment.get_payment_state_display(),
                 }
+
+                # Include customer info for staff/admin
+                if user_role in ['ADMIN', 'STAFF']:
+                    result['customer_name'] = appointment.customer.get_full_name() or appointment.customer.email
+                    result['customer_email'] = appointment.customer.email
+
+                return result
             else:
-                appointments = Appointment.objects.filter(
-                    customer_id=user_id
-                ).select_related('service').order_by('-start_at')[:5]
+                # List appointments
+                if user_role in ['ADMIN', 'STAFF']:
+                    # Staff and Admin can see all appointments
+                    appointments = Appointment.objects.all().select_related('service', 'customer').order_by('-start_at')[:10]
+                else:
+                    # Customers only see their own
+                    if not user_id:
+                        return {"found": False, "message": "You must be logged in to view appointments"}
+
+                    appointments = Appointment.objects.filter(
+                        customer_id=user_id
+                    ).select_related('service').order_by('-start_at')[:5]
+
+                result_list = []
+                for a in appointments:
+                    appt_data = {
+                        "id": a.id,
+                        "service": a.service.name,
+                        "date_time": a.start_at.strftime('%B %d, %Y at %I:%M %p'),
+                        "status": a.get_status_display(),
+                        "payment_status": a.get_payment_state_display(),
+                    }
+
+                    # Include customer info for staff/admin
+                    if user_role in ['ADMIN', 'STAFF']:
+                        appt_data['customer_name'] = a.customer.get_full_name() or a.customer.email
+                        appt_data['customer_email'] = a.customer.email
+
+                    result_list.append(appt_data)
 
                 return {
                     "found": True,
-                    "appointments": [
-                        {
-                            "id": a.id,
-                            "service": a.service.name,
-                            "date_time": a.start_at.strftime('%B %d, %Y at %I:%M %p'),
-                            "status": a.get_status_display(),
-                            "payment_status": a.get_payment_state_display(),
-                        }
-                        for a in appointments
-                    ],
-                    "count": len(appointments)
+                    "appointments": result_list,
+                    "count": len(result_list)
                 }
         except Exception as e:
             return {"error": str(e), "found": False}
 
     @staticmethod
-    def get_revenue_analytics(days: int = 30) -> Dict[str, Any]:
-        """Get revenue analytics (staff only)."""
+    def get_revenue_analytics(days: int = 30, user_role: str = 'CUSTOMER') -> Dict[str, Any]:
+        """
+        Get revenue analytics (staff and admin only).
+
+        Args:
+            days: Number of days to analyze
+            user_role: User's role ('ADMIN', 'STAFF', 'CUSTOMER')
+
+        Returns:
+            Revenue data or access denial
+        """
+        # Permission check
+        if user_role not in ['ADMIN', 'STAFF']:
+            return {
+                "error": "Permission denied",
+                "message": "Sorry, only staff and administrators can access revenue information. Please contact management for assistance."
+            }
+
         try:
             since_date = timezone.now() - timedelta(days=days)
 
@@ -225,8 +339,24 @@ class ChatbotDBQueries:
             return {"error": str(e)}
 
     @staticmethod
-    def get_appointment_analytics(days: int = 30) -> Dict[str, Any]:
-        """Get appointment statistics (staff only)."""
+    def get_appointment_analytics(days: int = 30, user_role: str = 'CUSTOMER') -> Dict[str, Any]:
+        """
+        Get appointment statistics (staff and admin only).
+
+        Args:
+            days: Number of days to analyze
+            user_role: User's role ('ADMIN', 'STAFF', 'CUSTOMER')
+
+        Returns:
+            Appointment analytics or access denial
+        """
+        # Permission check
+        if user_role not in ['ADMIN', 'STAFF']:
+            return {
+                "error": "Permission denied",
+                "message": "Sorry, only staff and administrators can access appointment analytics. Please contact management for assistance."
+            }
+
         try:
             since_date = timezone.now() - timedelta(days=days)
 
@@ -261,25 +391,91 @@ class ChatbotDBQueries:
             return {"error": str(e)}
 
     @staticmethod
-    def get_inventory_status() -> Dict[str, Any]:
-        """Get current inventory/stock status."""
-        try:
-            items = Item.objects.all().values('name', 'stock', 'unit', 'is_low_stock')
+    def get_inventory_status(user_role: str = 'CUSTOMER') -> Dict[str, Any]:
+        """
+        Get current inventory/stock status (staff and admin only).
 
-            low_stock_items = [item for item in items if item['is_low_stock']]
+        Args:
+            user_role: User's role ('ADMIN', 'STAFF', 'CUSTOMER')
 
+        Returns:
+            Inventory data or access denial
+        """
+        # Permission check
+        if user_role not in ['ADMIN', 'STAFF']:
             return {
-                "total_items": len(items),
+                "error": "Permission denied",
+                "message": "Sorry, only staff and administrators can access inventory information. Please contact management for assistance."
+            }
+
+        try:
+            items = Item.objects.all().values('name', 'stock', 'unit', 'threshold')
+
+            # Calculate low stock items
+            low_stock_items = []
+            all_items = []
+            for item in items:
+                is_low = item['stock'] <= item['threshold']
+                item_data = {
+                    'name': item['name'],
+                    'stock': item['stock'],
+                    'unit': item['unit'],
+                    'threshold': item['threshold'],
+                    'is_low_stock': is_low
+                }
+                all_items.append(item_data)
+                if is_low:
+                    low_stock_items.append(item_data)
+
+            # Both STAFF and ADMIN see full details
+            return {
+                "total_items": len(all_items),
                 "low_stock_count": len(low_stock_items),
                 "low_stock_items": low_stock_items,
-                "all_items": list(items)
+                "all_items": all_items
             }
         except Exception as e:
             return {"error": str(e)}
 
     @staticmethod
-    def get_tools_dict() -> Dict[str, callable]:
-        """Return dictionary of all available tools for the chatbot."""
+    def get_staff_list(user_role: str = 'CUSTOMER') -> Dict[str, Any]:
+        """
+        Get list of staff members (staff and admin only).
+
+        Args:
+            user_role: User's role ('ADMIN', 'STAFF', 'CUSTOMER')
+
+        Returns:
+            Staff list or access denial
+        """
+        # Permission check
+        if user_role not in ['ADMIN', 'STAFF']:
+            return {
+                "error": "Permission denied",
+                "message": "Sorry, only staff and administrators can access staff information. Please contact management for assistance."
+            }
+
+        try:
+            staff_members = User.objects.filter(
+                role__in=['STAFF', 'ADMIN']
+            ).values('id', 'first_name', 'last_name', 'email', 'role')
+
+            return {
+                "staff_count": len(staff_members),
+                "staff_members": list(staff_members)
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    @staticmethod
+    def get_tools_dict(user_role: str = 'CUSTOMER') -> Dict[str, callable]:
+        """
+        Return dictionary of all available tools for the chatbot.
+        Tools are role-aware and will enforce permissions.
+
+        Args:
+            user_role: The user's role ('ADMIN', 'STAFF', 'CUSTOMER')
+        """
         return {
             'list_services': lambda entities: ChatbotDBQueries.get_all_services(),
             'get_pricing': lambda entities: ChatbotDBQueries.get_service_by_name(
@@ -292,14 +488,26 @@ class ChatbotDBQueries:
             ),
             'popular_services': lambda entities: ChatbotDBQueries.get_popular_services(),
             'business_hours': lambda entities: ChatbotDBQueries.get_business_hours(),
-            'appointment_status': lambda entities: ChatbotDBQueries.get_appointment_status(
-                user_id=entities.get('user_id')
+            'my_appointments': lambda entities: ChatbotDBQueries.get_appointment_status(
+                user_id=entities.get('user_id'),
+                user_role=user_role
+            ),
+            'all_appointments': lambda entities: ChatbotDBQueries.get_appointment_status(
+                user_id=None,  # No specific user - get all
+                user_role=user_role
             ),
             'revenue_analytics': lambda entities: ChatbotDBQueries.get_revenue_analytics(
-                days=entities.get('days', 30)
+                days=entities.get('days', 30),
+                user_role=user_role
             ),
             'appointment_analytics': lambda entities: ChatbotDBQueries.get_appointment_analytics(
-                days=entities.get('days', 30)
+                days=entities.get('days', 30),
+                user_role=user_role
             ),
-            'inventory_status': lambda entities: ChatbotDBQueries.get_inventory_status(),
+            'inventory_status': lambda entities: ChatbotDBQueries.get_inventory_status(
+                user_role=user_role
+            ),
+            'staff_list': lambda entities: ChatbotDBQueries.get_staff_list(
+                user_role=user_role
+            ),
         }

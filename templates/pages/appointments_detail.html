@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load appointment_filters %}
 
 {% block title %}Appointment Details · Dreambook Salon{% endblock title %}
 
@@ -10,16 +11,20 @@
         <div class="flex items-center justify-between mb-4">
           <h1 class="text-4xl font-bold text-gradient">Appointment Details</h1>
           <div class="flex items-center gap-2">
-            {% if appointment.status == 'CONFIRMED' %}
-              <span class="badge badge-success">{{ appointment.get_status_display }}</span>
-            {% elif appointment.status == 'PENDING' %}
-              <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
-            {% elif appointment.status == 'COMPLETED' %}
-              <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+            {# Role-based status display #}
+            {% if user.role == 'CUSTOMER' %}
+              {# Customer-friendly status view #}
+              <span class="badge {{ appointment.status|customer_status_badge_class }}">
+                {{ appointment.status|customer_friendly_status }}
+              </span>
             {% else %}
-              <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+              {# Staff view - full status detail #}
+              <span class="badge {{ appointment.status|staff_status_badge_class }}">
+                {{ appointment.get_status_display }}
+              </span>
             {% endif %}
 
+            {# Payment status badge #}
             {% if appointment.payment_state == 'PAID' %}
               <span class="badge badge-success">{{ appointment.get_payment_state_display }}</span>
             {% else %}

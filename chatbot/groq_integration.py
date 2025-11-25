@@ -40,7 +40,7 @@ class GroqChatbot:
             )
 
         self.client = Groq(api_key=api_key)
-        self.model = "mixtral-8x7b-32768"  # Fast and capable model
+        self.model = "llama-3.1-8b-instant"  # Fast and capable model (updated from deprecated mixtral)
         self.available = True
 
     def detect_intent(self, user_message: str, user_role: str = "customer", conversation_context: Optional[List[Dict]] = None) -> Dict[str, Any]:
@@ -64,32 +64,53 @@ class GroqChatbot:
             context_text = f"Previous conversation:\n{context_text}\n\n"
 
         prompt = f"""{context_text}User message: "{user_message}"
+User role: {user_role}
 
 Analyze this message and respond with ONLY valid JSON (no markdown):
 {{
-  "intent": "greeting|service_inquiry|pricing|booking|payment|availability_check|order_status|complaint|feedback|staff_analytics|general_help|invalid",
+  "intent": "greeting|service_inquiry|pricing|booking|payment|availability_check|my_appointments|complaint|feedback|revenue_inquiry|inventory_inquiry|appointment_analytics|staff_list_inquiry|all_appointments|business_analytics|general_help|invalid",
   "confidence": 0.85,
   "entities": {{
-    "service_name": null or "extracted service name",
+    "service_name": null or "extracted service name (hair, massage, facial, nails, spa, etc.)",
     "date": null or "extracted date",
     "time": null or "extracted time",
-    "customer_name": null or "customer name if mentioned"
+    "customer_name": null or "customer name if mentioned",
+    "days": null or number of days for analytics (7, 30, 90)
   }},
   "requires_db_query": true or false,
-  "query_type": null or "list_services|get_pricing|check_availability|appointment_status|popular_services",
+  "query_type": null or "list_services|get_pricing|check_availability|popular_services|business_hours|my_appointments|revenue_analytics|appointment_analytics|inventory_status|staff_list|all_appointments",
+  "requires_staff_access": false or true,
   "sentiment": "positive|neutral|negative",
   "clarity": "clear|needs_clarification"
-}}"""
+}}
+
+CRITICAL INTENT CLASSIFICATION RULES:
+CUSTOMER intents (accessible to all):
+- Service/pricing questions → "service_inquiry" or "pricing", query_type="list_services" or "get_pricing"
+- Availability check → "availability_check", query_type="check_availability"
+- User's own appointments → "my_appointments", query_type="my_appointments"
+- Popular services → query_type="popular_services"
+- Business hours → query_type="business_hours"
+
+STAFF-ONLY intents (requires_staff_access=true):
+- Revenue questions ("how much money", "total sales", "revenue", "income") → "revenue_inquiry", query_type="revenue_analytics", requires_staff_access=true
+- Inventory ("stock", "inventory", "supplies") → "inventory_inquiry", query_type="inventory_status", requires_staff_access=true
+- Appointment statistics ("how many appointments", "completion rate", "analytics") → "appointment_analytics", query_type="appointment_analytics", requires_staff_access=true
+- Staff information ("who are the staff", "employees", "staff list") → "staff_list_inquiry", query_type="staff_list", requires_staff_access=true
+- All customer appointments (not "my appointments") → "all_appointments", query_type="all_appointments", requires_staff_access=true
+
+Extract days for analytics queries (default to 30 if not specified).
+Extract service names like: hair, hairstyle, haircut, massage, facial, nails, spa, etc."""
 
         try:
-            response = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
                 max_tokens=300
             )
 
-            response_text = response.content[0].text.strip()
+            response_text = response.choices[0].message.content.strip()
             if response_text.startswith("```"):
                 response_text = response_text.split("```")[1]
                 if response_text.startswith("json"):
@@ -135,29 +156,34 @@ Analyze this message and respond with ONLY valid JSON (no markdown):
         if db_data:
             db_context = f"\n📊 Available Data:\n{json.dumps(db_data, indent=2, default=str)}\n"
 
-        system_prompt = """You are an intelligent, friendly chatbot assistant for Dreambook Salon.
-You help customers book appointments, answer service questions, and handle inquiries professionally.
+        system_prompt = """You are a helpful chatbot assistant for Dreambook Salon, a Filipino salon business.
+
+CRITICAL RULES:
+1. NEVER make up prices, services, or information
+2. ONLY use data provided in the database information below
+3. ALL prices MUST use Philippine Peso symbol (₱) - NEVER use $ or other currencies
+4. If no database information is provided, say you need to check and ask them to contact the salon
+5. Be natural and conversational - avoid sounding robotic or overly formal
 
 Personality:
-- Friendly and conversational
-- Professional and knowledgeable
-- Use emojis sparingly (✨, 📅, 💅, etc.)
-- Concise but helpful (2-4 sentences usually)
+- Friendly and helpful (like talking to a real salon staff)
+- Professional but warm
+- Use emojis occasionally (✨, 📅, 💅) but don't overdo it
+- Keep responses concise (2-4 sentences)
 
-When given database information:
-- Use it to provide specific, accurate details
-- Never make up information
-- Always reference what you find in the data
-- Suggest actions based on availability
+When database information IS provided:
+- Use ONLY the exact prices and service names from the data
+- Format all amounts with ₱ symbol (e.g., ₱500, ₱1,200)
+- List actual services available, not generic ones
+- Be specific and accurate
 
-Response Rules:
-- Be clear and actionable
-- Ask clarifying questions if needed
-- Format lists with bullets
-- Always professional but warm"""
+When NO database information provided:
+- Politely say you need to check the current details
+- Suggest they visit the salon or call for specifics
+- Do NOT make up any services or prices"""
 
         try:
-            response = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -167,12 +193,12 @@ Response Rules:
                 max_tokens=500
             )
 
-            return response.content[0].text
+            return response.choices[0].message.content
 
         except Exception as e:
             return f"I apologize, but I'm having difficulty processing your request. Please try again or contact our support team."
 
-    def process_with_tools(self, user_message: str, available_tools: Dict[str, callable], context: Optional[List[Dict]] = None) -> Dict[str, Any]:
+    def process_with_tools(self, user_message: str, available_tools: Dict[str, callable], context: Optional[List[Dict]] = None, user_role: str = 'CUSTOMER') -> Dict[str, Any]:
         """
         Process message with tool/function calling capabilities.
 
@@ -180,11 +206,12 @@ Response Rules:
             user_message: User message
             available_tools: Dict of tool_name -> callable
             context: Conversation history
+            user_role: User's role for access control
 
         Returns:
             Dict with response and any tool calls made
         """
-        intent_data = self.detect_intent(user_message, conversation_context=context)
+        intent_data = self.detect_intent(user_message, user_role=user_role, conversation_context=context)
 
         tools_to_use = []
         if intent_data.get('requires_db_query') and intent_data.get('query_type'):

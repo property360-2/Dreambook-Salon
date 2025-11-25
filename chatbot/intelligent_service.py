@@ -30,8 +30,19 @@ class IntelligentChatbotService:
 
         self.user = user
         self.session_id = session_id or str(uuid.uuid4())
-        self.db_tools = ChatbotDBQueries.get_tools_dict()
-        self.is_staff = user and hasattr(user, 'role') and user.role in ['ADMIN', 'STAFF']
+
+        # Enhanced role detection
+        if user and hasattr(user, 'role'):
+            self.user_role = user.role  # 'ADMIN', 'STAFF', or 'CUSTOMER'
+        else:
+            self.user_role = 'CUSTOMER'  # Default for anonymous users
+
+        # Backward compatibility
+        self.is_staff = self.user_role in ['ADMIN', 'STAFF']
+        self.is_admin = self.user_role == 'ADMIN'
+
+        # Initialize role-aware tools
+        self.db_tools = ChatbotDBQueries.get_tools_dict(user_role=self.user_role)
 
     def get_conversation_context(self, limit: int = 5) -> List[Dict[str, Any]]:
         """Get recent conversation history for context."""
@@ -53,7 +64,7 @@ class IntelligentChatbotService:
 
     def process_message(self, user_message: str, save_history: bool = True) -> Dict[str, Any]:
         """
-        Process user message with full intelligence.
+        Process user message with full intelligence and role-based access control.
 
         Returns:
             {
@@ -61,7 +72,8 @@ class IntelligentChatbotService:
                 'intent': str,
                 'confidence': float,
                 'tools_used': List[str],
-                'error': Optional[str]
+                'error': Optional[str],
+                'access_denied': bool
             }
         """
         try:
@@ -71,21 +83,80 @@ class IntelligentChatbotService:
                     'intent': 'error',
                     'confidence': 0.0,
                     'tools_used': [],
-                    'error': 'GROQ not initialized'
+                    'error': 'GROQ not initialized',
+                    'access_denied': False
                 }
 
             # Get conversation context
             context = self.get_conversation_context(limit=4)
 
-            # Process with GROQ and database tools
+            # Get intent from GROQ with role information
+            from .permissions import ChatbotPermissionValidator
+
+            # First detect intent
+            intent_result = self.groq.detect_intent(
+                user_message=user_message,
+                user_role=self.user_role,
+                conversation_context=context
+            )
+
+            # Validate access permissions
+            intent = intent_result.get('intent', 'unknown')
+            is_allowed, denial_message = ChatbotPermissionValidator.validate_intent_access(
+                intent=intent,
+                user_role=self.user_role
+            )
+
+            if not is_allowed:
+                # Access denied - return friendly denial message
+                if save_history:
+                    try:
+                        ConversationHistory.objects.create(
+                            user=self.user,
+                            session_id=self.session_id,
+                            user_message=user_message,
+                            bot_response=denial_message,
+                            intent_detected=f"{intent}_denied",
+                            confidence_score=1.0,
+                        )
+                    except Exception as e:
+                        print(f"Failed to save conversation history: {str(e)}")
+
+                return {
+                    'response': denial_message,
+                    'intent': intent,
+                    'confidence': intent_result.get('confidence', 0.0),
+                    'tools_used': [],
+                    'error': None,
+                    'access_denied': True
+                }
+
+            # Process with GROQ and database tools (access is allowed)
+            # Add user_id to entities for appointment queries
             result = self.groq.process_with_tools(
                 user_message=user_message,
                 available_tools=self.db_tools,
-                context=context
+                context=context,
+                user_role=self.user_role
             )
 
-            # Enhance response for staff
-            if self.is_staff and result['intent'] == 'staff_analytics':
+            # Inject user_id into entities if user is authenticated
+            if self.user and 'entities' in result:
+                if 'user_id' not in result['entities']:
+                    result['entities']['user_id'] = self.user.id
+
+            # Check if any tool returned permission denied
+            if result.get('tool_results'):
+                for tool_name, tool_data in result['tool_results'].items():
+                    if isinstance(tool_data, dict) and tool_data.get('error') == 'Permission denied':
+                        # Override response with denial message
+                        result['response'] = tool_data.get('message',
+                            'Sorry, you do not have permission to access this information.')
+                        result['access_denied'] = True
+                        break
+
+            # Enhance response for staff/admin on analytics queries
+            if self.user_role in ['ADMIN', 'STAFF'] and result['intent'] in ['revenue_inquiry', 'appointment_analytics', 'inventory_inquiry']:
                 result['response'] = self._enhance_staff_response(result)
 
             # Save to conversation history
@@ -107,7 +178,8 @@ class IntelligentChatbotService:
                 'intent': result.get('intent', 'unknown'),
                 'confidence': result.get('confidence', 0.0),
                 'tools_used': result.get('tools_used', []),
-                'error': None
+                'error': None,
+                'access_denied': result.get('access_denied', False)
             }
 
         except Exception as e:
@@ -117,7 +189,8 @@ class IntelligentChatbotService:
                 'intent': 'error',
                 'confidence': 0.0,
                 'tools_used': [],
-                'error': error_msg
+                'error': error_msg,
+                'access_denied': False
             }
 
     def _enhance_staff_response(self, result: Dict) -> str:

@@ -116,30 +116,33 @@ class PaymentInitiateView(LoginRequiredMixin, View):
             messages.error(request, "Please upload a payment receipt")
             return redirect('payments:initiate', appointment_id=appointment_id)
 
-        # Create payment record - payment pending admin review
+        # Create payment record - AUTO-VERIFY on receipt upload
         with transaction.atomic():
             payment = Payment.objects.create(
                 appointment=appointment,
                 method=Payment.Method.PAY,
                 amount=payment_amount,
                 payment_type=payment_type,
-                status=Payment.Status.PENDING,
+                status=Payment.Status.PAID,  # Auto-verified!
                 receipt_image=receipt_file,
-                is_verified=False,  # Requires admin review and verification
+                is_verified=True,  # Auto-verified on upload
+                auto_verified=True,  # Mark as auto-verified
+                verified_at=timezone.now(),  # Timestamp of verification
+                verified_by=None,  # Auto-verified (not by staff)
                 txn_id=generate_transaction_id(),
             )
 
-            # Set appointment payment state to PENDING (will be updated when admin verifies)
-            appointment.payment_state = Appointment.PaymentState.PENDING
+            # Set appointment payment state to PAID immediately
+            appointment.payment_state = Appointment.PaymentState.PAID
 
             payment.save()
             appointment.save()
 
         messages.success(
             request,
-            f"Payment receipt received! Transaction ID: {payment.txn_id}. Our admin will review and confirm your payment within 24 hours."
+            f"✅ Payment confirmed! Transaction ID: {payment.txn_id}. Your appointment is now fully booked."
         )
-        return redirect('payments:detail', pk=payment.pk)
+        return redirect('payments:confirmation', payment_id=payment.pk)
 
 
 class PaymentDetailView(LoginRequiredMixin, DetailView):

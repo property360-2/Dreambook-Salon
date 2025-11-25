@@ -65,6 +65,23 @@ class Payment(models.Model):
         default=False,
         help_text="Whether payment has been verified by admin"
     )
+    auto_verified = models.BooleanField(
+        default=False,
+        help_text="True if payment was auto-verified on receipt upload"
+    )
+    verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When payment was verified"
+    )
+    verified_by = models.ForeignKey(
+        'core.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_payments',
+        help_text="Staff member who verified (null if auto-verified)"
+    )
     notes = models.TextField(blank=True, help_text="Payment notes or error messages")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

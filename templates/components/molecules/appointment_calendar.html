@@ -1,4 +1,5 @@
 {% load static %}
+{% load appointment_filters %}
 
 <div class="card p-6">
   <!-- Calendar Header -->
@@ -76,20 +77,54 @@
     </div>
   </div>
 
-  <!-- Legend -->
+  <!-- Legend - Role-based -->
   <div class="mt-6 pt-6 border-t border-light-border flex flex-wrap gap-6 text-sm">
     <div class="flex items-center gap-2">
       <div class="w-4 h-4 rounded border-2 border-primary-500"></div>
       <span class="text-light-muted">Today</span>
     </div>
-    <div class="flex items-center gap-2">
-      <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
-      <span class="text-light-muted">Pending/Confirmed</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
-      <span class="text-light-muted">Completed</span>
-    </div>
+
+    {% if user.role == 'CUSTOMER' %}
+      {# Simplified legend for customers #}
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Active</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Completed</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Cancelled</span>
+      </div>
+    {% else %}
+      {# Full legend for staff/admin #}
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Pending</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Confirmed</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">In Progress</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Completed</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">Cancelled</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+        <span class="text-light-muted">No Show</span>
+      </div>
+    {% endif %}
   </div>
 </div>
 

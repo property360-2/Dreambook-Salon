@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 from .utils import get_calendar_data, get_day_appointments, get_available_slots, check_slot_availability
 from services.models import Service
-from core.mixins import CustomerRequiredMixin, StaffOrAdminRequiredMixin
+from core.mixins import StaffOrAdminRequiredMixin
 
 
 def check_availability(service, start_at, exclude_appointment_id=None):
@@ -125,8 +125,8 @@ class CheckSlotAvailabilityView(LoginRequiredMixin, View):
             })
 
 
-class AppointmentBookingView(CustomerRequiredMixin, CreateView):
-    """Customer booking view with availability checking."""
+class AppointmentBookingView(LoginRequiredMixin, CreateView):
+    """Booking view for all authenticated users (customers, staff, admin)."""
 
     model = Appointment
     template_name = 'pages/appointments_booking.html'
@@ -187,8 +187,8 @@ class AppointmentBookingView(CustomerRequiredMixin, CreateView):
         return redirect('payments:initiate', appointment_id=appointment.pk)
 
 
-class MyAppointmentsView(CustomerRequiredMixin, ListView):
-    """Customer's appointment list."""
+class MyAppointmentsView(LoginRequiredMixin, ListView):
+    """User's appointment list (for customers, staff, admin)."""
 
     model = Appointment
     template_name = 'pages/appointments_my_list.html'

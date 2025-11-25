@@ -20,25 +20,52 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
 env = environ.Env(
-    DEBUG=(bool, True),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    DEBUG=(bool, False),  # Default to False for production safety
+    ALLOWED_HOSTS=(list, []),  # Default to empty (must be explicitly set)
 )
 
-# Read .env file if it exists
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+# Read .env file if it exists (override=False for production)
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"), override=False)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env(
-    "SECRET_KEY", default="django-insecure-e$+2ymr2yrnf7*&w16jw08&gt$me#xg__dp^o+b77q97d&q%7o"
-)
+SECRET_KEY = env("SECRET_KEY")  # No default - must be set in environment
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+# Parse ALLOWED_HOSTS from comma-separated string or list
+ALLOWED_HOSTS_RAW = env("ALLOWED_HOSTS", default="")
+if isinstance(ALLOWED_HOSTS_RAW, str):
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_RAW.split(",") if host.strip()]
+else:
+    ALLOWED_HOSTS = ALLOWED_HOSTS_RAW
+
+# ============================================================
+# PRODUCTION SECURITY SETTINGS
+# ============================================================
+
+# Security settings for production
+if not DEBUG:
+    # HTTPS Security
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
+    SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
+
+    # Cookie Security
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Additional Security Headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+
+    # Proxy Headers (Render uses X-Forwarded-Proto)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -63,6 +90,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -97,10 +125,11 @@ WSGI_APPLICATION = "salon_system.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-    )
+    "default": {
+        **env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        "CONN_MAX_AGE": 600,  # Connection pooling (10 minutes)
+        "CONN_HEALTH_CHECKS": True,
+    }
 }
 
 
@@ -141,6 +170,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise configuration for serving static files in production
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # User-uploaded files (service images, etc.) stored in static/images
 # Use /uploads/ URL to avoid conflict with STATIC_URL
