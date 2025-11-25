@@ -49,7 +49,6 @@ def check_availability(service, start_at, exclude_appointment_id=None):
         start_at__lt=end_at,
         end_at__gt=start_at,
         status__in=[
-            Appointment.Status.PENDING,
             Appointment.Status.CONFIRMED,
             Appointment.Status.IN_PROGRESS
         ]
@@ -174,12 +173,18 @@ class AppointmentBookingView(CustomerRequiredMixin, CreateView):
             messages.error(self.request, f"Booking failed: {reason}")
             return self.form_invalid(form)
 
+        # Set status to CONFIRMED immediately (default is now CONFIRMED)
+        appointment.status = Appointment.Status.CONFIRMED
+        appointment.payment_state = Appointment.PaymentState.UNPAID
         appointment.save()
+
         messages.success(
             self.request,
-            f"Appointment booked successfully! {appointment.service.name} at {appointment.start_at.strftime('%Y-%m-%d %I:%M %p')}"
+            f"Appointment confirmed! {appointment.service.name} at {appointment.start_at.strftime('%Y-%m-%d %I:%M %p')}"
         )
-        return redirect(self.success_url)
+
+        # Redirect directly to payment page (skip appointment detail view)
+        return redirect('payments:initiate', appointment_id=appointment.pk)
 
 
 class MyAppointmentsView(CustomerRequiredMixin, ListView):

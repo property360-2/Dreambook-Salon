@@ -289,3 +289,252 @@ class PaymentStatsView(StaffOrAdminRequiredMixin, TemplateView):
         return context
 
 
+class PaymentConfirmationView(LoginRequiredMixin, TemplateView):
+    """Show payment confirmation with receipt after successful payment."""
+
+    template_name = 'pages/payments_confirmation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        payment_id = self.kwargs.get('payment_id')
+        payment = get_object_or_404(Payment, pk=payment_id)
+
+        # Check permissions
+        if self.request.user.role == 'customer' and payment.appointment.customer != self.request.user:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
+        context['payment'] = payment
+        context['appointment'] = payment.appointment
+        context['receipt'] = payment.receipt if hasattr(payment, 'receipt') else None
+
+        return context
+
+
+class GenerateReceiptView(LoginRequiredMixin, View):
+    """Generate and return receipt as downloadable HTML."""
+
+    def get(self, request, payment_id):
+        payment = get_object_or_404(Payment, pk=payment_id)
+
+        # Check permissions
+        if request.user.role == 'customer' and payment.appointment.customer != request.user:
+            messages.error(request, "You can only download your own receipts")
+            return redirect('payments:list')
+
+        appointment = payment.appointment
+
+        # Generate HTML receipt
+        receipt_html = self._generate_receipt_html(payment, appointment)
+
+        from django.http import HttpResponse
+        response = HttpResponse(receipt_html, content_type='text/html')
+        response['Content-Disposition'] = f'attachment; filename="receipt_{payment.txn_id}.html"'
+
+        return response
+
+    def _generate_receipt_html(self, payment, appointment):
+        """Generate professional receipt HTML."""
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt {payment.txn_id}</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .header {{
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }}
+        .receipt-title {{
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }}
+        .receipt-subtitle {{
+            font-size: 12px;
+            color: #999;
+            margin: 5px 0 0 0;
+        }}
+        .section {{
+            margin: 20px 0;
+        }}
+        .section-title {{
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }}
+        .row {{
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }}
+        .label {{
+            color: #666;
+            font-weight: 500;
+        }}
+        .value {{
+            color: #333;
+            text-align: right;
+        }}
+        .total-section {{
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }}
+        .total-row {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }}
+        th {{
+            background-color: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+            font-size: 13px;
+        }}
+        td {{
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }}
+        .footer {{
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }}
+        .company-info {{
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0 5px 0;
+        }}
+        @media print {{
+            body {{
+                background-color: white;
+                padding: 0;
+            }}
+            .container {{
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <p class="receipt-title">Dreambook Salon</p>
+            <p class="receipt-subtitle">Receipt</p>
+        </div>
+
+        <div class="section">
+            <div class="row">
+                <span class="label">Receipt Number</span>
+                <span class="value">{payment.txn_id}</span>
+            </div>
+            <div class="row">
+                <span class="label">Date</span>
+                <span class="value">{payment.created_at.strftime('%B %d, %Y at %I:%M %p')}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Customer Information</div>
+            <div class="row">
+                <span class="label">Name</span>
+                <span class="value">{appointment.customer.get_full_name() or appointment.customer.email}</span>
+            </div>
+            <div class="row">
+                <span class="label">Email</span>
+                <span class="value">{appointment.customer.email}</span>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Date & Time</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{appointment.service.name}</td>
+                    <td>{appointment.start_at.strftime('%B %d, %Y %I:%M %p')} - {appointment.end_at.strftime('%I:%M %p')}</td>
+                    <td style="text-align: right;">₱{payment.amount:,.2f}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-row">
+                <span>Total Paid</span>
+                <span>₱{payment.amount:,.2f}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Payment Information</div>
+            <div class="row">
+                <span class="label">Payment Method</span>
+                <span class="value">{payment.get_method_display()}</span>
+            </div>
+            <div class="row">
+                <span class="label">Payment Type</span>
+                <span class="value">{payment.get_payment_type_display()}</span>
+            </div>
+            <div class="row">
+                <span class="label">Status</span>
+                <span class="value">{payment.get_status_display()}</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="company-info">Dreambook Salon</p>
+            <p>Premium Salon Management</p>
+            <p>Thank you for your business!</p>
+            <p style="margin-top: 20px; color: #ccc;">Generated on {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+    </div>
+</body>
+</html>"""
+
+

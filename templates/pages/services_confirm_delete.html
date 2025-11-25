@@ -72,9 +72,13 @@
 
         <form method="post" class="flex flex-col sm:flex-row gap-4 form-with-loading">
           {% csrf_token %}
-          <button type="submit" class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 flex-1">
+          <button
+            type="submit"
+            class="btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 flex-1 {% if has_appointments %}opacity-50 cursor-not-allowed{% endif %}"
+            {% if has_appointments %}disabled title="Cannot delete service with customer appointments"{% endif %}
+          >
             {% if has_appointments %}
-              Deactivate Service
+              Cannot Delete ({{ appointment_count }} appointment{{ appointment_count|pluralize }})
             {% else %}
               Delete Service
             {% endif %}

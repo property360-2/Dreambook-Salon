@@ -3,11 +3,15 @@ from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormView
 from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
 from datetime import timedelta, datetime
+import json
 
 from .forms import CustomerRegistrationForm, EmailAuthenticationForm, UserManagementForm
 from .mixins import StaffOrAdminRequiredMixin
@@ -179,7 +183,20 @@ class EmailLoginView(LoginView):
 
     def form_valid(self, form):
         messages.success(self.request, "You're signed in. Welcome back!")
-        return super().form_valid(form)
+        # Avoid middleware double-logging; we'll capture a structured LOGIN entry here
+        self.request.audit_log_skip = True
+        response = super().form_valid(form)
+
+        AuditLog.log_action(
+            user=self.request.user,
+            action_type='LOGIN',
+            description="User signed in via email/password",
+            request=self.request,
+            status_code=getattr(response, "status_code", None),
+            source="APPLICATION",
+            metadata={"auth_via": "email_login"},
+        )
+        return response
 
 
 class EmailLogoutView(LogoutView):
@@ -187,7 +204,23 @@ class EmailLogoutView(LogoutView):
 
     def dispatch(self, request, *args, **kwargs):
         messages.info(request, "You've been signed out.")
-        return super().dispatch(request, *args, **kwargs)
+        actor = request.user if getattr(request, "user", None) and request.user.is_authenticated else None
+        request.audit_log_skip = True
+
+        response = super().dispatch(request, *args, **kwargs)
+
+        if actor:
+            AuditLog.log_action(
+                user=actor,
+                action_type='LOGOUT',
+                description="User signed out",
+                request=request,
+                status_code=getattr(response, "status_code", None),
+                source="APPLICATION",
+                metadata={"auth_via": "logout_view"},
+            )
+
+        return response
 
 
 class CustomerRegistrationView(FormView):
@@ -254,6 +287,7 @@ class UserCreateView(StaffOrAdminRequiredMixin, CreateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         # Log the action
+        self.request.audit_log_skip = True
         AuditLog.log_action(
             user=self.request.user,
             action_type='USER_CREATE',
@@ -299,6 +333,7 @@ class UserUpdateView(StaffOrAdminRequiredMixin, UpdateView):
 
         # Log the action
         if changes:
+            self.request.audit_log_skip = True
             AuditLog.log_action(
                 user=self.request.user,
                 action_type='USER_UPDATE',
@@ -351,6 +386,7 @@ class UserDeactivateView(StaffOrAdminRequiredMixin, DetailView):
         user.is_active = False
         user.save()
 
+        request.audit_log_skip = True
         AuditLog.log_action(
             user=request.user,
             action_type='USER_DEACTIVATE',
@@ -378,6 +414,7 @@ class UserReactivateView(StaffOrAdminRequiredMixin, DetailView):
         user.is_active = True
         user.save()
 
+        request.audit_log_skip = True
         AuditLog.log_action(
             user=request.user,
             action_type='USER_REACTIVATE',
@@ -416,6 +453,7 @@ class UserResetPasswordView(StaffOrAdminRequiredMixin, DetailView):
         )
 
         # Log the action
+        request.audit_log_skip = True
         AuditLog.log_action(
             user=request.user,
             action_type='PASSWORD_RESET',
@@ -439,12 +477,98 @@ class UserDeleteView(StaffOrAdminRequiredMixin, DeleteView):
         email = user.email
 
         # Log before deletion
+        request.audit_log_skip = True
         AuditLog.log_action(
             user=request.user,
             action_type='USER_DELETE',
             description=f"Deleted user {email}",
+            obj=user,
             request=request
         )
 
         messages.error(request, f"User {email} has been permanently deleted.")
         return super().delete(request, *args, **kwargs)
+
+
+class ContactSupportView(View):
+    """Handle contact form submissions via email."""
+
+    def post(self, request):
+        """Send contact email to support."""
+        try:
+            name = request.POST.get('name', '').strip()
+            email_address = request.POST.get('email', '').strip()
+            subject_line = request.POST.get('subject', '').strip()
+            message_text = request.POST.get('message', '').strip()
+
+            # Validation
+            if not all([name, email_address, subject_line, message_text]):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'All fields are required'
+                }, status=400)
+
+            if len(message_text) < 10:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Message must be at least 10 characters'
+                }, status=400)
+
+            # Basic email format validation
+            if '@' not in email_address:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Please provide a valid email address'
+                }, status=400)
+
+            # Send email to support address
+            support_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@dreambooksalon.com')
+
+            # Email body to support
+            email_message = f"""New Contact Form Submission
+
+From: {name} ({email_address})
+Subject: {subject_line}
+
+Message:
+{message_text}
+
+---
+This is an automated message from the Dreambook Salon contact form.
+"""
+
+            send_mail(
+                f"Contact Form: {subject_line}",
+                email_message,
+                email_address,
+                [support_email],
+                fail_silently=False,
+            )
+
+            # Send confirmation email to user
+            confirmation_message = f"""Dear {name},
+
+Thank you for contacting Dreambook Salon. We have received your message and will respond within 24 hours.
+
+Best regards,
+Dreambook Salon Team
+"""
+
+            send_mail(
+                "We received your message - Dreambook Salon",
+                confirmation_message,
+                support_email,
+                [email_address],
+                fail_silently=False,
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Thank you for contacting us! We will respond within 24 hours.'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to send message. Please try again later.'
+            }, status=500)

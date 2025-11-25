@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing Plans · Dreambook Salon{% endblock %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <!-- Header -->
+  <div class="text-center mb-16 animate-slide-up">
+    <h1 class="text-4xl md:text-5xl font-bold text-gradient mb-4">Our Pricing Plans</h1>
+    <p class="text-xl text-light-muted max-w-2xl mx-auto">
+      Premium salon services tailored to your needs. Choose from our curated selection of beauty and wellness treatments.
+    </p>
+  </div>
+
+  {% if services %}
+  <!-- Pricing Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    {% for service in services %}
+    <div class="group relative">
+      <!-- Card Background -->
+      <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-accent-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+      <!-- Card Content -->
+      <div class="relative card p-8 h-full flex flex-col border-2 border-light-border group-hover:border-primary-500/50 transition-colors">
+        <!-- Badge -->
+        {% if service.is_active %}
+          <span class="badge badge-success w-fit mb-4">Available</span>
+        {% else %}
+          <span class="badge badge-danger w-fit mb-4">Coming Soon</span>
+        {% endif %}
+
+        <!-- Service Name -->
+        <h3 class="text-2xl font-bold text-light-text mb-2">{{ service.name }}</h3>
+
+        <!-- Duration -->
+        <div class="flex items-center gap-2 text-light-muted mb-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="font-medium">{{ service.duration_minutes }} minutes</span>
+        </div>
+
+        <!-- Description -->
+        <p class="text-light-muted mb-6">{{ service.description|default:"Premium salon service" }}</p>
+
+        <!-- Features Section -->
+        {% if service.features.all %}
+        <div class="mb-8 pb-8 border-b border-light-border">
+          <h4 class="font-semibold text-light-text mb-4">What's Included:</h4>
+          <ul class="space-y-3">
+            {% for feature in service.features.all %}
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="text-light-text">{{ feature.name }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- Flex Spacer -->
+        <div class="flex-grow"></div>
+
+        <!-- Price & CTA -->
+        <div class="space-y-4">
+          <div class="bg-gradient-to-r from-primary-50/50 to-accent-50/50 rounded-xl p-6">
+            <p class="text-light-muted text-sm mb-2">Price</p>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-bold text-gradient">₱{{ service.price|floatformat:0 }}</span>
+              <span class="text-light-muted">per session</span>
+            </div>
+          </div>
+
+          {% if service.requires_downpayment %}
+          <div class="text-sm text-light-muted bg-yellow-50/50 border border-yellow-200/50 rounded-lg p-3">
+            <svg class="w-4 h-4 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            Down payment required: ₱{{ service.downpayment_amount|floatformat:0 }}
+          </div>
+          {% endif %}
+
+          {% if service.is_active %}
+          {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
+          <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary w-full text-center group/btn">
+            <svg class="w-5 h-5 inline mr-2 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Book Now
+          </a>
+          {% else %}
+          <a href="{% url 'appointments:book' %}?service={{ service.id }}" class="btn btn-primary w-full text-center group/btn">
+            <svg class="w-5 h-5 inline mr-2 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            Reserve Service
+          </a>
+          {% endif %}
+          {% else %}
+          <button disabled class="btn btn-ghost w-full opacity-50 cursor-not-allowed text-center">
+            Coming Soon
+          </button>
+          {% endif %}
+
+          <a href="{% url 'services:detail' service.id %}" class="btn btn-outline w-full text-center">
+            Learn More →
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CTA Section -->
+  <div class="bg-gradient-to-r from-primary-600 to-accent-600 rounded-2xl p-12 text-center text-white">
+    <h2 class="text-3xl font-bold mb-4">Ready to Schedule?</h2>
+    <p class="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+      Our expert stylists are ready to provide you with the best salon experience. Book your appointment today!
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{% url 'appointments:book' %}" class="btn bg-white text-primary-600 hover:bg-primary-50 font-semibold">
+        📅 Book an Appointment
+      </a>
+      <button onclick="document.getElementById('contactModal')?.classList.remove('hidden')" class="btn border-white text-white hover:bg-white/10 font-semibold">
+        💬 Contact Us
+      </button>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="card p-16 text-center max-w-2xl mx-auto">
+    <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-primary-500/20 rounded-3xl flex items-center justify-center animate-pulse-slow">
+      <svg class="w-12 h-12 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+      </svg>
+    </div>
+    <h3 class="text-3xl font-bold text-gradient mb-3">No Services Available</h3>
+    <p class="text-lg text-light-muted mb-6 max-w-md mx-auto">
+      We're currently updating our service offerings. Check back soon for our premium salon services!
+    </p>
+    <a href="{% url 'core:home' %}" class="btn btn-ghost inline-flex">
+      <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+      </svg>
+      Back to Home
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -14,6 +14,7 @@ from .views import (
     UserReactivateView,
     UserResetPasswordView,
     UserDeleteView,
+    ContactSupportView,
 )
 
 app_name = "core"
@@ -34,4 +35,7 @@ urlpatterns = [
     path("users/<int:pk>/reactivate/", UserReactivateView.as_view(), name="user_reactivate"),
     path("users/<int:pk>/reset-password/", UserResetPasswordView.as_view(), name="user_reset_password"),
     path("users/<int:pk>/delete/", UserDeleteView.as_view(), name="user_delete"),
+
+    # Contact Support
+    path("contact/", ContactSupportView.as_view(), name="contact"),
 ]

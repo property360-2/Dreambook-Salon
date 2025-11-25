@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Confirmed · Dreambook Salon{% endblock %}
+
+{% block content %}
+<div class="container-custom py-12">
+  <div class="max-w-2xl mx-auto">
+    <!-- Success Message -->
+    <div class="card border-l-4 border-l-green-500 bg-green-50 p-6 mb-8">
+      <div class="flex items-start gap-4">
+        <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <div>
+          <h2 class="text-xl font-bold text-green-900">Payment Successful!</h2>
+          <p class="text-green-700 mt-1">Your appointment is confirmed and payment has been received.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment Summary -->
+    <div class="card p-6 mb-6">
+      <h3 class="text-lg font-bold mb-4">Appointment Details</h3>
+      <div class="space-y-3 border-b border-light-border pb-4 mb-4">
+        <div class="flex justify-between">
+          <span class="text-light-muted">Service</span>
+          <span class="font-medium">{{ appointment.service.name }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Date & Time</span>
+          <span class="font-medium">{{ appointment.start_at|date:"F d, Y \a\t g:i A" }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Duration</span>
+          <span class="font-medium">{{ appointment.service.duration_minutes }} minutes</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Status</span>
+          <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+        </div>
+      </div>
+
+      <!-- Payment Summary -->
+      <h3 class="text-lg font-bold mb-4">Payment Details</h3>
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-light-muted">Transaction ID</span>
+          <span class="font-mono text-sm">{{ payment.txn_id }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Amount Paid</span>
+          <span class="text-xl font-bold text-gradient">₱{{ payment.amount|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Payment Method</span>
+          <span class="font-medium">{{ payment.get_method_display }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-light-muted">Date</span>
+          <span class="font-medium">{{ payment.created_at|date:"F d, Y \a\t g:i A" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-3">
+      <a href="{% url 'appointments:my_appointments' %}" class="btn btn-outline flex-1 text-center">View My Appointments</a>
+      <a href="{% url 'payments:generate_receipt' payment.id %}" class="btn btn-primary flex-1 text-center" download>Download Receipt</a>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="card bg-blue-50 border border-blue-200 p-4 mt-6 text-sm text-blue-900">
+      <p class="font-medium mb-2">What happens next?</p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>A confirmation email will be sent to {{ request.user.email }}</li>
+        <li>You can view and manage your appointment in your dashboard</li>
+        <li>If you need to reschedule, visit your appointment details page</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -103,17 +103,41 @@ class AuditLogExportView(StaffOrAdminRequiredMixin, View):
         response['Content-Disposition'] = f'attachment; filename="audit_log_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(['Timestamp', 'User', 'Action', 'Target', 'IP Address', 'Description', 'Changes'])
+        writer.writerow([
+            'Timestamp',
+            'Action',
+            'Actor Email',
+            'Actor Name',
+            'Actor Role',
+            'Source',
+            'Target',
+            'Target Type',
+            'Request Method',
+            'Request Path',
+            'Status Code',
+            'IP Address',
+            'Description',
+            'Changes',
+            'Metadata',
+        ])
 
         for log in queryset:
             writer.writerow([
                 log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                log.user.email,
                 log.get_action_type_display(),
-                f"{log.content_type.name} #{log.object_id}" if log.content_type else "-",
+                log.actor_email or log.user.email,
+                log.actor_name or log.user.get_full_name() or "",
+                log.actor_role or getattr(log.user, 'role', ''),
+                log.source or "-",
+                log.target_repr or (f"{log.content_type.name} #{log.object_id}" if log.content_type else "-"),
+                log.target_type or (log.content_type.model if log.content_type else ""),
+                log.request_method or "-",
+                log.request_path or "-",
+                log.status_code or "-",
                 log.ip_address or "-",
                 log.description,
                 log.get_changes_display(),
+                json.dumps(log.metadata or {}, ensure_ascii=False),
             ])
 
         return response

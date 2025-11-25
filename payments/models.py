@@ -115,3 +115,24 @@ class GCashQRCode(models.Model):
     def get_active_qr(cls):
         """Get the currently active QR code."""
         return cls.objects.filter(is_active=True).first()
+
+
+class Receipt(models.Model):
+    """Receipt generated after successful payment."""
+
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='receipt',
+        help_text="Associated payment"
+    )
+    html_content = models.TextField(help_text="HTML content of receipt")
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Receipt"
+        verbose_name_plural = "Receipts"
+        ordering = ["-generated_at"]
+
+    def __str__(self):
+        return f"Receipt for {self.payment.txn_id}"

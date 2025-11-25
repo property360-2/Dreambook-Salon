@@ -2,6 +2,24 @@ from django.db import models
 from django.core.validators import MinValueValidator
 
 
+class ServiceFeature(models.Model):
+    """Features associated with services (API, Hosting, etc.)."""
+
+    name = models.CharField(max_length=100, help_text="Feature name (e.g., API, Hosting)")
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, help_text="CSS class for icon")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Service Feature"
+        verbose_name_plural = "Service Features"
+
+    def __str__(self):
+        return self.name
+
+
 class Service(models.Model):
     """Service model representing salon services."""
 
@@ -32,6 +50,12 @@ class Service(models.Model):
         validators=[MinValueValidator(0)],
         default=0,
         help_text="Downpayment amount required for this service"
+    )
+    features = models.ManyToManyField(
+        ServiceFeature,
+        blank=True,
+        related_name='services',
+        help_text="Features included in this service"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

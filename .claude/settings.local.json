@@ -12,7 +12,8 @@
       "Bash(curl:*)",
       "Bash(dir:*)",
       "Bash(timeout 5 curl:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,8 +8,7 @@ from django.contrib.auth.decorators import login_required
 import json
 import uuid
 from .models import Rule, ConversationHistory
-from .enhanced_bot import EnhancedChatbot
-from .intelligent_bot import IntelligentChatbot
+from .intelligent_service import IntelligentChatbotService
 from .analytics import ChatbotAnalytics
 
 
@@ -55,12 +54,12 @@ def chatbot_respond_api(request):
             if not session_id:
                 session_id = str(uuid.uuid4())
 
-        # Use enhanced chatbot with Claude NLU
+        # Use intelligent chatbot with GROQ + database queries
         user = request.user if request.user.is_authenticated else None
-        bot = EnhancedChatbot(user=user, session_id=session_id)
+        bot = IntelligentChatbotService(user=user, session_id=session_id)
 
-        # Process message through enhanced system
-        result = bot.process_message(user_message, save_to_history=True)
+        # Process message through intelligent system
+        result = bot.process_message(user_message, save_history=True)
 
         # Get the latest conversation record (just saved)
         conversation_record = ConversationHistory.objects.filter(
@@ -72,6 +71,7 @@ def chatbot_respond_api(request):
             'intent': result['intent'],
             'confidence': result['confidence'],
             'error': result['error'],
+            'tools_used': result.get('tools_used', []),
             'is_staff': bot.is_staff,
             'session_id': session_id,
             'conversation_id': conversation_record.id if conversation_record else None,

@@ -4,16 +4,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
+from django.db.models import Q
+from django.template.loader import render_to_string
 from .models import Service, ServiceItem
 from .forms import ServiceForm, ServiceItemFormSet
 from core.mixins import StaffOrAdminRequiredMixin
 
 
 class ServiceListView(ListView):
-    """Public view listing all active services."""
+    """Public view listing all active services with search functionality."""
 
     model = Service
     template_name = 'pages/services_list.html'
@@ -23,8 +26,52 @@ class ServiceListView(ListView):
     def get_queryset(self):
         """Only show active services for non-staff, all services for staff."""
         if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
-            return Service.objects.all().prefetch_related('service_items__item')
-        return Service.objects.filter(is_active=True).prefetch_related('service_items__item')
+            qs = Service.objects.all().prefetch_related('service_items__item', 'features')
+        else:
+            qs = Service.objects.filter(is_active=True).prefetch_related('service_items__item', 'features')
+
+        # Add search filter (case-insensitive, partial match)
+        search_query = self.request.GET.get('q', '').strip()
+        if search_query:
+            qs = qs.filter(
+                Q(name__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+
+        return qs.order_by('name')
+
+    def get_context_data(self, **kwargs):
+        """Add search query to context."""
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON with rendered HTML when requested asynchronously."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/services_results.html',
+                context,
+                request=self.request
+            )
+            count = context.get('paginator').count if context.get('paginator') else len(context.get('services', []))
+            return JsonResponse({'html': html, 'count': count})
+        return super().render_to_response(context, **response_kwargs)
+
+
+class PricingPlansView(ListView):
+    """Public view showing services in a pricing/plans layout."""
+
+    model = Service
+    template_name = 'pages/pricing_plans.html'
+    context_object_name = 'services'
+    paginate_by = None
+
+    def get_queryset(self):
+        """Only show active services for non-staff, all services for staff."""
+        if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
+            return Service.objects.all().prefetch_related('features').order_by('price')
+        return Service.objects.filter(is_active=True).prefetch_related('features').order_by('price')
 
 
 class ServiceDetailView(DetailView):
@@ -134,30 +181,46 @@ class ServiceDeleteView(StaffOrAdminRequiredMixin, DeleteView):
     template_name = 'pages/services_confirm_delete.html'
     success_url = reverse_lazy('services:list')
 
+    def _appointments_qs(self):
+        """Return all appointments linked to this service."""
+        from appointments.models import Appointment
+
+        return Appointment.objects.filter(service=self.object)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Check if service has any appointments
-        context['has_appointments'] = self.object.appointment_set.exists()
-        context['appointment_count'] = self.object.appointment_set.count()
+        appointments_qs = self._appointments_qs()
+        context['has_appointments'] = appointments_qs.exists()
+        context['appointment_count'] = appointments_qs.count()
         return context
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         service_name = self.object.name
+        appointments_qs = self._appointments_qs()
+        has_appointments = appointments_qs.exists()
 
-        # Instead of hard delete, we can soft delete by setting is_active=False
-        if self.object.appointment_set.exists():
-            self.object.is_active = False
-            self.object.save()
-            messages.warning(
+        # Prevent deletion if service has appointments
+        if has_appointments:
+            appointment_count = appointments_qs.count()
+            messages.error(
                 request,
-                f'Service "{service_name}" has been deactivated (has existing appointments).'
+                f'❌ Cannot delete "{service_name}" - it has {appointment_count} customer appointment(s). Please cancel or complete all appointments first.'
             )
-        else:
-            self.object.delete()
-            messages.success(request, f'Service "{service_name}" deleted successfully!')
+            return redirect(self.get_object().get_absolute_url())
 
-        return redirect(self.success_url)
+        # Only delete if no appointments exist
+        try:
+            self.object.delete()
+            messages.success(request, f'✓ Service "{service_name}" deleted successfully!')
+            return redirect(self.success_url)
+        except ProtectedError:
+            messages.error(
+                request,
+                f'❌ Cannot delete "{service_name}" - it is referenced by customer appointments.'
+            )
+            return redirect(self.get_object().get_absolute_url())
 
 
 class ServiceDownpaymentConfigView(StaffOrAdminRequiredMixin, TemplateView):
