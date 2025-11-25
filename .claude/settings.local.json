@@ -1,23 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(npm run build:css:*)",
-      "Bash(npx tailwindcss:*)",
-      "Bash(nul)",
-      "Bash(python manage.py migrate:*)",
-      "Bash(pip install:*)",
-      "Bash(python manage.py makemigrations:*)",
-      "Bash(python manage.py shell:*)",
-      "Bash(curl:*)",
-      "Bash(dir:*)",
-      "Bash(timeout 5 curl:*)",
-      "Bash(python:*)",
-      "Bash(tree:*)",
-      "Bash(export:*)",
-      "Bash(unset:*)",
-      "Bash(env)",
-      "Bash(ls -la \"c:\\Users\\Administrator\\Desktop\\projects\\Dreambook-Salon\\static\"\" 2>/dev/null || echo \"static dir not accessible \")"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
