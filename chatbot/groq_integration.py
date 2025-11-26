@@ -39,9 +39,23 @@ class GroqChatbot:
                 "GROQ_API_KEY environment variable not set"
             )
 
-        self.client = Groq(api_key=api_key)
-        self.model = "llama-3.1-8b-instant"  # Fast and capable model (updated from deprecated mixtral)
-        self.available = True
+        # Fix for Render deployment: Remove proxy env vars that cause initialization errors
+        # Save current proxy settings
+        proxy_vars = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'NO_PROXY', 'no_proxy']
+        saved_proxies = {}
+        for var in proxy_vars:
+            if var in os.environ:
+                saved_proxies[var] = os.environ.pop(var)
+
+        try:
+            # Initialize Groq client without proxy interference
+            self.client = Groq(api_key=api_key)
+            self.model = "llama-3.1-8b-instant"  # Fast and capable model (updated from deprecated mixtral)
+            self.available = True
+        finally:
+            # Restore proxy settings if needed by other services
+            for var, value in saved_proxies.items():
+                os.environ[var] = value
 
     def detect_intent(self, user_message: str, user_role: str = "customer", conversation_context: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """
