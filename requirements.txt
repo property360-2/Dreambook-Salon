@@ -48,5 +48,5 @@ whitenoise==6.11.0
 gunicorn==23.0.0
 
 # LLM Integrations (for chatbot features)
-groq==0.9.0
+groq==0.13.0
 anthropic==0.39.0
