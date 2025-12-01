@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Revenue Report · Dreambook Salon{% endblock %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Revenue Report</h1>
+        <p class="text-light-muted">Detailed financial metrics and income tracking</p>
+      </div>
+      <a href="{% url 'reports:dashboard' %}" class="btn btn-ghost text-sm">← Back to Dashboard</a>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card p-6 mb-8">
+      <form method="get" class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Start Date</label>
+          <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="input w-full">
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">End Date</label>
+          <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="input w-full">
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="btn btn-primary w-full">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div class="stat-card">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value text-emerald-600">₱{{ report.total_revenue|floatformat:2 }}</div>
+        <div class="text-sm text-light-muted mt-2">{{ report.total_bookings }} transactions</div>
+      </div>
+      <div class="stat-card bg-red-500/10 border-red-500/20">
+        <div class="stat-label text-red-600">Total Refunds</div>
+        <div class="stat-value text-red-600">-₱{{ report.total_refunds|floatformat:2 }}</div>
+        <div class="text-sm text-red-400 mt-2">{{ report.cancelled_bookings }} cancellations</div>
+      </div>
+      <div class="stat-card bg-blue-500/10 border-blue-500/20">
+        <div class="stat-label text-blue-600">Net Revenue</div>
+        <div class="stat-value text-blue-600">₱{{ report.net_revenue|floatformat:2 }}</div>
+        <div class="text-sm text-blue-400 mt-2">Revenue after refunds</div>
+      </div>
+      <div class="stat-card bg-primary-500/10 border-primary-500/20">
+        <div class="stat-label text-primary-600">Avg. Transaction</div>
+        <div class="stat-value text-primary-600">₱{{ report.average_booking_value|floatformat:2 }}</div>
+        <div class="text-sm text-primary-400 mt-2">Per completed booking</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Chart: Revenue by Service -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Revenue by Service</h2>
+          {% if top_services %}
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-light-border">
+                    <th class="text-left py-3 px-4 font-semibold text-light-text">Service</th>
+                    <th class="text-right py-3 px-4 font-semibold text-light-muted">Bookings</th>
+                    <th class="text-right py-3 px-4 font-semibold text-light-muted">Revenue</th>
+                    <th class="text-right py-3 px-4 font-semibold text-light-muted">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for service in top_services %}
+                    <tr class="border-b border-light-border hover:bg-light-elevated transition-colors">
+                      <td class="py-4 px-4 text-light-text">{{ service.service__name }}</td>
+                      <td class="text-right py-4 px-4 text-light-muted">{{ service.count }}</td>
+                      <td class="text-right py-4 px-4 font-semibold text-emerald-600">₱{{ service.revenue|floatformat:2|default:'0.00' }}</td>
+                      <td class="text-right py-4 px-4 text-light-muted">
+                        {% if report.total_revenue > 0 %}
+                          {% widthratio service.revenue report.total_revenue 100 %}%
+                        {% else %}
+                          0%
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-light-muted text-center py-8">No service revenue data available for this period</p>
+          {% endif %}
+        </div>
+
+        <!-- Chart: Payment Methods -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Revenue by Payment Method</h2>
+          {% if payment_methods %}
+            <div class="space-y-4">
+              {% for method in payment_methods %}
+                <div>
+                  <div class="flex justify-between mb-2">
+                    <span class="text-sm font-semibold text-light-text">
+                      {% if method.method == 'gcash' %}
+                        GCash
+                      {% elif method.method == 'pay' %}
+                        Pay with Receipt
+                      {% elif method.method == 'onsite' %}
+                        Onsite/Cash
+                      {% else %}
+                        {{ method.method|title }}
+                      {% endif %}
+                    </span>
+                    <span class="text-sm font-bold text-primary-600">₱{{ method.total|floatformat:2 }} ({{ method.count }} txns)</span>
+                  </div>
+                  <div class="w-full bg-light-border rounded-full h-2">
+                    <div class="bg-primary-500 h-2 rounded-full" style="width: {% if report.total_revenue > 0 %}{% widthratio method.total report.total_revenue 100 %}{% else %}0{% endif %}%"></div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-light-muted text-center py-8">No payment data available</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-8">
+        <!-- Outstanding Payments -->
+        <div class="card p-6 bg-amber-500/10 border-amber-500/20">
+          <h3 class="text-lg font-bold text-amber-600 mb-2">Outstanding Payments</h3>
+          <div class="text-3xl font-bold text-amber-600 mb-2">₱{{ outstanding_payments|floatformat:2 }}</div>
+          <p class="text-sm text-amber-400">Pending and failed payments require attention</p>
+        </div>
+
+        <!-- Refund Summary -->
+        <div class="card p-6">
+          <h3 class="text-xl font-bold text-light-text mb-4">Refund Summary</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-light-elevated rounded-lg">
+              <span class="text-sm text-light-muted">Total Refunded</span>
+              <span class="font-bold text-red-600">₱{{ report.total_refunds|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-light-elevated rounded-lg">
+              <span class="text-sm text-light-muted">Cancellation Rate</span>
+              <span class="font-bold text-light-text">{% if report.total_bookings > 0 %}{% widthratio report.cancelled_bookings report.total_bookings 100 %}{% else %}0{% endif %}%</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-light-elevated rounded-lg">
+              <span class="text-sm text-light-muted">Refund Rate</span>
+              <span class="font-bold text-red-600">
+                {% if report.total_bookings > 0 %}
+                  {% widthratio report.cancelled_bookings report.total_bookings 100 %}%
+                {% else %}
+                  0%
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="card p-6 bg-light-elevated">
+          <h3 class="font-semibold text-light-text mb-3">Revenue Insights</h3>
+          <ul class="text-sm text-light-muted space-y-2">
+            <li>✓ Track top-performing services</li>
+            <li>✓ Monitor payment methods</li>
+            <li>✓ Manage outstanding payments</li>
+            <li>✓ Analyze refund patterns</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

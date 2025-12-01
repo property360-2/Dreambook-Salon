@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Performance Report · Dreambook Salon{% endblock %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Service Performance</h1>
+        <p class="text-light-muted">Analyze service bookings, revenue, and completion rates</p>
+      </div>
+      <a href="{% url 'reports:dashboard' %}" class="btn btn-ghost text-sm">← Back to Dashboard</a>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card p-6 mb-8">
+      <form method="get" class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Start Date</label>
+          <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="input w-full">
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">End Date</label>
+          <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="input w-full">
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="btn btn-primary w-full">Filter</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div class="stat-card">
+        <div class="stat-label">Total Bookings</div>
+        <div class="stat-value">{{ report.total_bookings }}</div>
+        <div class="text-sm text-light-muted mt-2">All services combined</div>
+      </div>
+      <div class="stat-card bg-emerald-500/10 border-emerald-500/20">
+        <div class="stat-label text-emerald-600">Completion Rate</div>
+        <div class="stat-value text-emerald-600">{{ report.completion_rate|floatformat:1 }}%</div>
+        <div class="text-sm text-emerald-400 mt-2">{{ report.completed_bookings }} completed</div>
+      </div>
+      <div class="stat-card bg-blue-500/10 border-blue-500/20">
+        <div class="stat-label text-blue-600">Total Revenue</div>
+        <div class="stat-value text-blue-600">₱{{ report.total_revenue|floatformat:2 }}</div>
+        <div class="text-sm text-blue-400 mt-2">From completed bookings</div>
+      </div>
+      <div class="stat-card bg-red-500/10 border-red-500/20">
+        <div class="stat-label text-red-600">Cancellation Rate</div>
+        <div class="stat-value text-red-600">{% if report.total_bookings > 0 %}{% widthratio report.cancelled_bookings report.total_bookings 100 %}{% else %}0{% endif %}%</div>
+        <div class="text-sm text-red-400 mt-2">{{ report.cancelled_bookings }} cancelled</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-3">
+        <!-- Services Performance Table -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Services Breakdown</h2>
+          {% if service_metrics %}
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-light-border">
+                    <th class="text-left py-3 px-4 font-semibold text-light-text">Service</th>
+                    <th class="text-center py-3 px-4 font-semibold text-light-muted">Bookings</th>
+                    <th class="text-center py-3 px-4 font-semibold text-light-muted">Completed</th>
+                    <th class="text-center py-3 px-4 font-semibold text-light-muted">Completion</th>
+                    <th class="text-right py-3 px-4 font-semibold text-light-muted">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for metric in service_metrics %}
+                    <tr class="border-b border-light-border hover:bg-light-elevated transition-colors">
+                      <td class="py-4 px-4">
+                        <div class="flex items-center gap-3">
+                          {% if metric.service.image %}
+                            <img src="{{ metric.service.image.url }}" alt="{{ metric.service.name }}" class="w-8 h-8 rounded object-cover">
+                          {% else %}
+                            <div class="w-8 h-8 rounded bg-light-border flex items-center justify-center text-xs text-light-muted">IMG</div>
+                          {% endif %}
+                          <div>
+                            <div class="font-semibold text-light-text">{{ metric.service.name }}</div>
+                            <div class="text-xs text-light-muted">{{ metric.avg_duration }} min</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-center py-4 px-4 text-light-text">{{ metric.total_bookings }}</td>
+                      <td class="text-center py-4 px-4 text-emerald-600 font-semibold">{{ metric.completed }}</td>
+                      <td class="text-center py-4 px-4">
+                        <div class="flex items-center justify-center gap-2">
+                          <div class="w-16 bg-light-border rounded-full h-2">
+                            <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ metric.completion_rate }}%"></div>
+                          </div>
+                          <span class="text-xs font-semibold text-light-text w-10 text-right">{{ metric.completion_rate|floatformat:0 }}%</span>
+                        </div>
+                      </td>
+                      <td class="text-right py-4 px-4 font-bold text-primary-600">₱{{ metric.revenue|floatformat:2 }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-light-muted text-center py-8">No service data available for this period</p>
+          {% endif %}
+        </div>
+
+        <!-- Booking Status Distribution -->
+        <div class="card p-6 mt-8">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Overall Booking Status</h2>
+          {% if status_distribution %}
+            <div class="space-y-4">
+              {% for status in status_distribution %}
+                <div>
+                  <div class="flex justify-between mb-2">
+                    <span class="text-sm font-semibold text-light-text">
+                      {% if status.status == 'completed' %}
+                        ✓ Completed
+                      {% elif status.status == 'cancelled' %}
+                        ✕ Cancelled
+                      {% elif status.status == 'no_show' %}
+                        ⊘ No Show
+                      {% elif status.status == 'confirmed' %}
+                        ◐ Confirmed
+                      {% elif status.status == 'pending' %}
+                        ⧗ Pending
+                      {% elif status.status == 'in_progress' %}
+                        ▶ In Progress
+                      {% else %}
+                        {{ status.status|title }}
+                      {% endif %}
+                    </span>
+                    <span class="text-sm font-bold text-light-text">
+                      {{ status.count }} ({% if report.total_bookings > 0 %}{% widthratio status.count report.total_bookings 100 %}{% else %}0{% endif %}%)
+                    </span>
+                  </div>
+                  <div class="w-full bg-light-border rounded-full h-3">
+                    <div class="h-3 rounded-full {% if status.status == 'completed' %}bg-emerald-500{% elif status.status == 'cancelled' %}bg-red-500{% elif status.status == 'no_show' %}bg-orange-500{% else %}bg-blue-500{% endif %}" style="width: {% if report.total_bookings > 0 %}{% widthratio status.count report.total_bookings 100 %}{% else %}0{% endif %}%"></div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-light-muted text-center py-8">No booking status data</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-8">
+        <!-- Performance Alerts -->
+        <div class="card p-6 bg-light-elevated">
+          <h3 class="text-lg font-bold text-light-text mb-4">Performance Alerts</h3>
+          <div class="space-y-3 text-sm">
+            {% if report.completion_rate < 75 %}
+              <div class="p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                <div class="font-semibold text-orange-600">⚠ Low Completion Rate</div>
+                <div class="text-xs text-orange-500 mt-1">{{ report.completion_rate|floatformat:1 }}% completion rate detected</div>
+              </div>
+            {% endif %}
+
+            {% if report.cancelled_bookings > 5 %}
+              <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <div class="font-semibold text-red-600">⚠ High Cancellation</div>
+                <div class="text-xs text-red-500 mt-1">{{ report.cancelled_bookings }} cancellations in period</div>
+              </div>
+            {% endif %}
+
+            {% if report.no_show_bookings > 3 %}
+              <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <div class="font-semibold text-amber-600">⚠ No-Shows Detected</div>
+                <div class="text-xs text-amber-500 mt-1">{{ report.no_show_bookings }} customers didn't show up</div>
+              </div>
+            {% endif %}
+
+            {% if report.completion_rate >= 75 and report.cancelled_bookings <= 5 %}
+              <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                <div class="font-semibold text-emerald-600">✓ Strong Performance</div>
+                <div class="text-xs text-emerald-500 mt-1">Excellent completion and low cancellation rates</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Service Recommendations -->
+        <div class="card p-6">
+          <h3 class="text-lg font-bold text-light-text mb-4">Insights</h3>
+          <ul class="text-sm text-light-muted space-y-2">
+            <li>• Most booked: {% if service_metrics %}{{ service_metrics.0.service.name }}{% else %}N/A{% endif %}</li>
+            <li>• Highest revenue: {% if service_metrics %}{% for m in service_metrics %}{% if forloop.first %}{{ m.service.name }}{% endif %}{% endfor %}{% endif %}</li>
+            <li>• Overall completion: {{ report.completion_rate|floatformat:1 }}%</li>
+            <li>• Review and improve low-performing services</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
