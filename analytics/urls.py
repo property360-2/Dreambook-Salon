@@ -10,6 +10,9 @@ from .views import (
     MonthlyServiceDemandChartDataView,
     RevenueVsCancellationsChartDataView,
     StylistUtilizationChartDataView,
+    DemandForecastDashboardView,
+    GenerateForecastAPIView,
+    ForecastChartDataView,
 )
 
 app_name = 'analytics'
@@ -27,4 +30,9 @@ urlpatterns = [
     path('api/monthly-service-demand/', MonthlyServiceDemandChartDataView.as_view(), name='api_monthly_demand'),
     path('api/revenue-cancellations/', RevenueVsCancellationsChartDataView.as_view(), name='api_revenue_cancellations'),
     path('api/stylist-utilization/', StylistUtilizationChartDataView.as_view(), name='api_stylist_utilization'),
+
+    # Demand Forecasting
+    path('forecast/', DemandForecastDashboardView.as_view(), name='forecast'),
+    path('api/forecast/generate/', GenerateForecastAPIView.as_view(), name='api_forecast_generate'),
+    path('api/forecast/<int:forecast_id>/chart/', ForecastChartDataView.as_view(), name='api_forecast_chart'),
 ]

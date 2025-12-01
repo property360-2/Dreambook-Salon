@@ -18,12 +18,14 @@
             <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
             <a href="{% url 'services:downpayment_config' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Payments</a>
             <a href="{% url 'inventory:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Inventory</a>
-            <a href="{% url 'appointments:staff_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Appointments</a>
+            <a href="{% url 'appointments:staff_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Bookings</a>
 
             <!-- Divider -->
             <div class="h-6 w-px bg-light-border mx-2"></div>
 
             <a href="{% url 'analytics:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
+            <a href="{% url 'reports:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Reports</a>
+            <a href="{% url 'analytics:forecast' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Forecast</a>
 
             {% if request.user.role == 'ADMIN' %}
               <!-- Divider -->
@@ -45,7 +47,7 @@
             <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
             {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
               <div class="h-6 w-px bg-light-border mx-2"></div>
-              <a href="{% url 'appointments:my_appointments' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">My Appointments</a>
+              <a href="{% url 'appointments:my_appointments' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">My Bookings</a>
               <a href="{% url 'chatbot:interface' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Chat</a>
             {% endif %}
           </div>
@@ -58,6 +60,8 @@
           <span class="hidden lg:block text-sm text-light-muted">
             Hi, <span class="text-primary-600 font-semibold">{{ request.user.first_name|default:request.user.email }}</span>
           </span>
+          <!-- Notification Bell -->
+          {% include 'components/organisms/notification_bell.html' %}
           {% if request.user.role == 'CUSTOMER' %}
             <a href="{% url 'appointments:book' %}" class="btn btn-primary text-sm px-4 py-2">
               Book Now
@@ -101,6 +105,8 @@
           <div class="h-px bg-light-border my-2"></div>
 
           <a href="{% url 'analytics:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
+          <a href="{% url 'reports:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Reports</a>
+          <a href="{% url 'analytics:forecast' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Forecast</a>
 
           {% if request.user.role == 'ADMIN' %}
             <div class="h-px bg-light-border my-2"></div>

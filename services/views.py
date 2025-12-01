@@ -24,11 +24,11 @@ class ServiceListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        """Only show active services for non-staff, all services for staff."""
+        """Only show active, non-archived services for customers. Show all for staff."""
         if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
             qs = Service.objects.all().prefetch_related('service_items__item', 'features')
         else:
-            qs = Service.objects.filter(is_active=True).prefetch_related('service_items__item', 'features')
+            qs = Service.objects.filter(is_active=True, is_archived=False).prefetch_related('service_items__item', 'features')
 
         # Add search filter (case-insensitive, partial match)
         search_query = self.request.GET.get('q', '').strip()
@@ -38,12 +38,26 @@ class ServiceListView(ListView):
                 Q(description__icontains=search_query)
             )
 
-        return qs.order_by('name')
+        # Add sort functionality
+        sort_by = self.request.GET.get('sort', 'name')
+        if sort_by == 'price_asc':
+            qs = qs.order_by('price')
+        elif sort_by == 'price_desc':
+            qs = qs.order_by('-price')
+        elif sort_by == 'duration_asc':
+            qs = qs.order_by('duration_minutes')
+        elif sort_by == 'duration_desc':
+            qs = qs.order_by('-duration_minutes')
+        else:
+            qs = qs.order_by('name')
+
+        return qs
 
     def get_context_data(self, **kwargs):
-        """Add search query to context."""
+        """Add search query and sort options to context."""
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
+        context['sort_by'] = self.request.GET.get('sort', 'name')
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -68,10 +82,10 @@ class PricingPlansView(ListView):
     paginate_by = None
 
     def get_queryset(self):
-        """Only show active services for non-staff, all services for staff."""
+        """Only show active, non-archived services for non-staff, all services for staff."""
         if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
             return Service.objects.all().prefetch_related('features').order_by('price')
-        return Service.objects.filter(is_active=True).prefetch_related('features').order_by('price')
+        return Service.objects.filter(is_active=True, is_archived=False).prefetch_related('features').order_by('price')
 
 
 class ServiceDetailView(DetailView):
@@ -82,10 +96,10 @@ class ServiceDetailView(DetailView):
     context_object_name = 'service'
 
     def get_queryset(self):
-        """Only show active services for non-staff, all for staff."""
+        """Only show active, non-archived services for non-staff, all for staff."""
         if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
             return Service.objects.all().prefetch_related('service_items__item')
-        return Service.objects.filter(is_active=True).prefetch_related('service_items__item')
+        return Service.objects.filter(is_active=True, is_archived=False).prefetch_related('service_items__item')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -221,6 +235,54 @@ class ServiceDeleteView(StaffOrAdminRequiredMixin, DeleteView):
                 f'❌ Cannot delete "{service_name}" - it is referenced by customer appointments.'
             )
             return redirect(self.get_object().get_absolute_url())
+
+
+class ServiceArchiveView(StaffOrAdminRequiredMixin, UpdateView):
+    """Staff/Admin view for archiving a service (soft delete)."""
+
+    model = Service
+    fields = []
+    template_name = 'pages/services_confirm_archive.html'
+    success_url = reverse_lazy('services:list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action'] = 'archive'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.is_archived = True
+        self.object.save()
+        messages.success(
+            request,
+            f'✓ Service "{self.object.name}" has been archived and hidden from customers.'
+        )
+        return redirect(self.success_url)
+
+
+class ServiceUnarchiveView(StaffOrAdminRequiredMixin, UpdateView):
+    """Staff/Admin view for unarchiving a service (restore from soft delete)."""
+
+    model = Service
+    fields = []
+    template_name = 'pages/services_confirm_archive.html'
+    success_url = reverse_lazy('services:list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['action'] = 'restore'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.is_archived = False
+        self.object.save()
+        messages.success(
+            request,
+            f'✓ Service "{self.object.name}" has been restored and is now visible to customers.'
+        )
+        return redirect(self.success_url)
 
 
 class ServiceDownpaymentConfigView(StaffOrAdminRequiredMixin, TemplateView):

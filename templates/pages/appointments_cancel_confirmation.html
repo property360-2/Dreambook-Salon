@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Booking · Dreambook Salon{% endblock %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">Cancel Booking</h1>
+        <p class="text-light-muted">Please review the cancellation details below</p>
+      </div>
+
+      <!-- Warning Card -->
+      <div class="card p-8 mb-8 border-l-4 border-orange-500">
+        <div class="flex gap-4">
+          <div class="text-4xl">⚠️</div>
+          <div>
+            <h3 class="text-xl font-semibold text-light-text mb-2">Are you sure?</h3>
+            <p class="text-light-muted">
+              This action will cancel your booking for <strong>{{ appointment.service.name }}</strong>.
+              Please review the refund details below before confirming.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Details -->
+      <div class="card p-8 mb-8">
+        <h2 class="text-2xl font-bold text-light-text mb-6">Booking Details</h2>
+
+        <div class="space-y-4 mb-6">
+          <div class="flex justify-between items-center pb-4 border-b border-light-border">
+            <span class="text-light-muted">Service</span>
+            <span class="font-semibold text-light-text">{{ appointment.service.name }}</span>
+          </div>
+
+          <div class="flex justify-between items-center pb-4 border-b border-light-border">
+            <span class="text-light-muted">Booking Date & Time</span>
+            <span class="font-semibold text-light-text">{{ appointment.start_at|date:"M d, Y @ I:i A" }}</span>
+          </div>
+
+          <div class="flex justify-between items-center pb-4 border-b border-light-border">
+            <span class="text-light-muted">Duration</span>
+            <span class="font-semibold text-light-text">{{ appointment.service.duration_minutes }} minutes</span>
+          </div>
+
+          <div class="flex justify-between items-center pb-4 border-b border-light-border">
+            <span class="text-light-muted">Booking Status</span>
+            <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refund Information -->
+      <div class="card p-8 mb-8">
+        <h2 class="text-2xl font-bold text-light-text mb-6">Refund Policy</h2>
+
+        <div class="mb-6 p-4 rounded-lg {% if refund_percentage == 100 %}bg-primary-50 border border-primary-300{% elif refund_percentage == 50 %}bg-yellow-50 border border-yellow-300{% else %}bg-red-50 border border-red-300{% endif %}">
+          <div class="text-center">
+            <p class="text-light-muted text-sm mb-2">Refund Percentage</p>
+            <p class="text-4xl font-bold {% if refund_percentage == 100 %}text-primary-600{% elif refund_percentage == 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
+              {{ refund_percentage }}%
+            </p>
+            <p class="text-light-muted text-sm mt-2">
+              {% if refund_percentage == 100 %}
+                Full refund (cancelled 48+ hours before)
+              {% elif refund_percentage == 50 %}
+                Half refund (cancelled 24-48 hours before)
+              {% else %}
+                No refund (cancelled within 24 hours)
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-light-elevated rounded-lg">
+            <p class="text-light-muted text-sm mb-1">Original Payment</p>
+            <p class="text-2xl font-bold text-light-text">₱---</p>
+          </div>
+          <div class="p-4 bg-light-elevated rounded-lg">
+            <p class="text-light-muted text-sm mb-1">Refund Amount</p>
+            <p class="text-2xl font-bold text-primary-600">₱{{ refund_amount|floatformat:2 }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-light-surface border border-light-border rounded-lg">
+          <p class="text-sm text-light-muted">
+            <strong>Note:</strong> Refunds are typically processed within 5-7 business days to your original payment method.
+          </p>
+        </div>
+      </div>
+
+      <!-- Cancellation Reason Form -->
+      <div class="card p-8 mb-8">
+        <h2 class="text-2xl font-bold text-light-text mb-6">Cancellation Reason (Optional)</h2>
+
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+
+          <div>
+            <label for="reason" class="block text-sm font-semibold text-light-text mb-2">
+              Please tell us why you're cancelling (optional)
+            </label>
+            <textarea
+              id="reason"
+              name="reason"
+              rows="4"
+              class="input"
+              placeholder="Your feedback helps us improve..."
+            ></textarea>
+          </div>
+
+          <!-- Confirmation Checkbox -->
+          <div class="p-4 bg-light-elevated border border-light-border rounded-lg">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                id="confirm-cancel"
+                name="confirm"
+                required
+                class="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              >
+              <span class="text-sm text-light-text">
+                I understand that this booking will be cancelled and a <strong>{{ refund_percentage }}% refund (₱{{ refund_amount|floatformat:2 }})</strong> will be processed.
+              </span>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <button type="submit" class="btn btn-accent flex-1" id="cancel-submit-btn" disabled>
+              Confirm Cancellation
+            </button>
+            <a href="{% url 'appointments:detail' appointment.id %}" class="btn btn-ghost flex-1 text-center">
+              Keep Booking
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Help Section -->
+      <div class="card p-6 bg-light-elevated">
+        <h3 class="font-semibold text-light-text mb-2 flex items-center gap-2">
+          <span>❓</span> Need Help?
+        </h3>
+        <p class="text-light-muted text-sm mb-3">
+          If you have questions about our cancellation policy or refunds, please contact our support team.
+        </p>
+        <a href="#contact" class="text-primary-600 hover:text-primary-700 text-sm font-semibold">
+          Contact Support →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const confirmCheckbox = document.getElementById('confirm-cancel');
+      const submitBtn = document.getElementById('cancel-submit-btn');
+
+      confirmCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+        if (this.checked) {
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      });
+    });
+  </script>
+{% endblock %}

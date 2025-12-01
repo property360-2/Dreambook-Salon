@@ -10,6 +10,7 @@ import random
 import string
 from appointments.models import Appointment
 from core.mixins import StaffOrAdminRequiredMixin
+from notifications.models import Notification
 from .models import Payment, GCashQRCode
 from .forms import GCashQRCodeForm
 
@@ -137,6 +138,15 @@ class PaymentInitiateView(LoginRequiredMixin, View):
 
             payment.save()
             appointment.save()
+
+            # Create notification for payment received
+            Notification.create_notification(
+                user=appointment.customer,
+                notification_type='payment_received',
+                title='Payment Received',
+                message=f"Payment of ₱{payment.amount} for {appointment.service.name} has been received. Your booking is confirmed!",
+                link=reverse_lazy('payments:detail', kwargs={'pk': payment.pk})
+            )
 
         messages.success(
             request,

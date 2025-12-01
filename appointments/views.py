@@ -11,6 +11,7 @@ from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 from .utils import get_calendar_data, get_day_appointments, get_available_slots, check_slot_availability
 from services.models import Service
 from core.mixins import StaffOrAdminRequiredMixin
+from notifications.models import Notification
 
 
 def check_availability(service, start_at, exclude_appointment_id=None):
@@ -178,9 +179,18 @@ class AppointmentBookingView(LoginRequiredMixin, CreateView):
         appointment.payment_state = Appointment.PaymentState.UNPAID
         appointment.save()
 
+        # Create notification for booking confirmation
+        Notification.create_notification(
+            user=self.request.user,
+            notification_type='booking_confirmed',
+            title='Booking Confirmed!',
+            message=f"Your booking for {appointment.service.name} on {appointment.start_at.strftime('%B %d, %Y at %I:%M %p')} has been confirmed.",
+            link=reverse_lazy('appointments:detail', kwargs={'pk': appointment.pk})
+        )
+
         messages.success(
             self.request,
-            f"Appointment confirmed! {appointment.service.name} at {appointment.start_at.strftime('%Y-%m-%d %I:%M %p')}"
+            f"Booking confirmed! {appointment.service.name} at {appointment.start_at.strftime('%Y-%m-%d %I:%M %p')}"
         )
 
         # Redirect directly to payment page (skip appointment detail view)
@@ -552,3 +562,67 @@ class SlotLimitDetailView(StaffOrAdminRequiredMixin, DetailView):
             ]
         ).count()
         return context
+
+
+class AppointmentCancelView(LoginRequiredMixin, View):
+    """View for cancelling an appointment with refund calculation."""
+
+    def get(self, request, pk):
+        """Show cancellation confirmation page."""
+        appointment = get_object_or_404(Appointment, pk=pk)
+
+        # Check permissions - only customer or staff can cancel
+        if request.user != appointment.customer and not request.user.role in ['ADMIN', 'STAFF']:
+            messages.error(request, "You don't have permission to cancel this appointment")
+            return redirect('appointments:detail', pk=pk)
+
+        # Can't cancel past appointments
+        if appointment.is_past:
+            messages.error(request, "Cannot cancel past appointments")
+            return redirect('appointments:detail', pk=pk)
+
+        # Calculate refund
+        percentage, refund_amt = appointment.calculate_refund()
+
+        context = {
+            'appointment': appointment,
+            'refund_percentage': percentage,
+            'refund_amount': refund_amt,
+        }
+
+        return render(request, 'pages/appointments_cancel_confirmation.html', context)
+
+    def post(self, request, pk):
+        """Process appointment cancellation."""
+        appointment = get_object_or_404(Appointment, pk=pk)
+
+        # Check permissions
+        if request.user != appointment.customer and not request.user.role in ['ADMIN', 'STAFF']:
+            messages.error(request, "You don't have permission to cancel this appointment")
+            return redirect('appointments:detail', pk=pk)
+
+        # Can't cancel if already cancelled or completed
+        if appointment.status in [Appointment.Status.CANCELLED, Appointment.Status.COMPLETED]:
+            messages.error(request, f"Cannot cancel a {appointment.status} appointment")
+            return redirect('appointments:detail', pk=pk)
+
+        # Get cancellation reason
+        reason = request.POST.get('reason', '')
+
+        # Cancel and calculate refund
+        percentage, refund_amt = appointment.cancel(cancelled_by=request.user, reason=reason)
+
+        # Create notification
+        Notification.create_notification(
+            user=appointment.customer,
+            notification_type='booking_cancelled',
+            title='Booking Cancelled',
+            message=f"Your booking for {appointment.service.name} on {appointment.start_at.strftime('%B %d, %Y at %I:%M %p')} has been cancelled. Refund: {percentage}% (₱{refund_amt})",
+            link=reverse_lazy('appointments:detail', kwargs={'pk': appointment.pk})
+        )
+
+        messages.success(
+            request,
+            f"✅ Booking cancelled successfully! {percentage}% refund (₱{refund_amt}) will be processed."
+        )
+        return redirect('appointments:my_appointments')

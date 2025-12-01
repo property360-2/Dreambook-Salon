@@ -9,7 +9,7 @@ class ServiceForm(forms.ModelForm):
 
     class Meta:
         model = Service
-        fields = ['name', 'description', 'price', 'duration_minutes', 'image', 'is_active', 'requires_downpayment', 'downpayment_amount']
+        fields = ['name', 'description', 'price', 'duration_minutes', 'image', 'is_active', 'is_archived', 'requires_downpayment', 'downpayment_amount']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'input',
@@ -38,6 +38,9 @@ class ServiceForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-primary-600 bg-light-elevated border-light-border rounded focus:ring-primary-500'
             }),
+            'is_archived': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-red-600 bg-light-elevated border-light-border rounded focus:ring-red-500'
+            }),
             'requires_downpayment': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-primary-600 bg-light-elevated border-light-border rounded focus:ring-primary-500'
             }),
@@ -55,6 +58,7 @@ class ServiceForm(forms.ModelForm):
             'duration_minutes': 'Duration (minutes)',
             'image': 'Service Image',
             'is_active': 'Active (available for booking)',
+            'is_archived': 'Archived (hidden from customers)',
             'requires_downpayment': 'Requires Downpayment',
             'downpayment_amount': 'Downpayment Amount (₱)',
         }

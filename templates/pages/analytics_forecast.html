@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Demand Forecasting · Dreambook Salon{% endblock %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-gradient mb-2">Demand Forecasting</h1>
+        <p class="text-light-muted">ML-powered booking demand predictions and trends</p>
+      </div>
+      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost text-sm">← Back to Analytics</a>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card p-6 mb-8">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Select Service</label>
+          <select id="service-select" class="input w-full">
+            <option value="">-- Choose a service --</option>
+            {% for service in services %}
+              <option value="{{ service.id }}">{{ service.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Forecast Type</label>
+          <select id="forecast-type-select" class="input w-full">
+            <option value="daily">Daily (7 days)</option>
+            <option value="weekly">Weekly (4 weeks)</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Method</label>
+          <select id="method-select" class="input w-full">
+            <option value="seasonal">Seasonal (Recommended)</option>
+            <option value="trend">Trend</option>
+            <option value="simple">Simple</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button onclick="generateForecast()" class="btn btn-primary w-full">Generate Forecast</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-3 space-y-8">
+        <!-- Forecast Chart -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Forecast Chart</h2>
+          <div id="forecast-chart-container" class="w-full h-96 flex items-center justify-center bg-light-elevated rounded-lg border border-light-border">
+            <p class="text-light-muted">Select a service and generate a forecast to see the chart</p>
+          </div>
+        </div>
+
+        <!-- Forecast Details -->
+        <div id="forecast-details" class="hidden card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Forecast Details</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-light-elevated rounded-lg">
+              <div class="text-sm text-light-muted mb-1">Trend Direction</div>
+              <div id="trend-direction" class="text-xl font-bold text-light-text">-</div>
+            </div>
+            <div class="p-4 bg-light-elevated rounded-lg">
+              <div class="text-sm text-light-muted mb-1">Forecast Accuracy</div>
+              <div id="forecast-accuracy" class="text-xl font-bold text-primary-600">-</div>
+            </div>
+            <div class="p-4 bg-light-elevated rounded-lg">
+              <div class="text-sm text-light-muted mb-1">Confidence</div>
+              <div class="text-xl font-bold text-primary-600">85%</div>
+            </div>
+          </div>
+
+          <!-- Forecast Values Table -->
+          <div class="mt-6 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-light-border">
+                  <th class="text-left py-3 px-4 font-semibold text-light-text">Period</th>
+                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Forecast</th>
+                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Lower Bound</th>
+                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Upper Bound</th>
+                </tr>
+              </thead>
+              <tbody id="forecast-table-body">
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-light-muted">Generate a forecast to see data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-8">
+        <!-- Recent Forecasts -->
+        <div class="card p-6">
+          <h3 class="text-xl font-bold text-light-text mb-4">Recent Forecasts</h3>
+          {% if recent_forecasts %}
+            <div class="space-y-3">
+              {% for forecast in recent_forecasts %}
+                <button onclick="loadForecastData({{ forecast.id }})" class="w-full p-3 text-left bg-light-elevated rounded-lg hover:border-primary-500/50 border border-light-border transition-all">
+                  <div class="text-sm font-semibold text-light-text">{{ forecast.service.name }}</div>
+                  <div class="text-xs text-light-muted mt-1">{{ forecast.get_forecast_period_display }}</div>
+                  <div class="text-xs font-bold text-primary-600 mt-2">
+                    {% if forecast.trend_direction == 'increasing' %}
+                      📈 Increasing
+                    {% elif forecast.trend_direction == 'decreasing' %}
+                      📉 Decreasing
+                    {% else %}
+                      ➡️ Stable
+                    {% endif %}
+                  </div>
+                </button>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-light-muted text-sm text-center py-4">No forecasts generated yet</p>
+          {% endif %}
+        </div>
+
+        <!-- Insights -->
+        <div class="card p-6 bg-light-elevated">
+          <h3 class="text-lg font-bold text-light-text mb-4">How It Works</h3>
+          <ul class="text-sm text-light-muted space-y-3">
+            <li class="flex gap-2">
+              <span class="text-primary-600 font-bold">1</span>
+              <span>Select a service to forecast</span>
+            </li>
+            <li class="flex gap-2">
+              <span class="text-primary-600 font-bold">2</span>
+              <span>Choose daily or weekly predictions</span>
+            </li>
+            <li class="flex gap-2">
+              <span class="text-primary-600 font-bold">3</span>
+              <span>Pick forecasting method (seasonal recommended)</span>
+            </li>
+            <li class="flex gap-2">
+              <span class="text-primary-600 font-bold">4</span>
+              <span>Review trend and confidence levels</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tips -->
+        <div class="card p-6">
+          <h3 class="font-semibold text-light-text mb-3">Forecast Tips</h3>
+          <ul class="text-xs text-light-muted space-y-2">
+            <li>✓ Seasonal method works best with history</li>
+            <li>✓ Use weekly forecasts for better accuracy</li>
+            <li>✓ Confidence bounds show uncertainty range</li>
+            <li>✓ Higher accuracy = 85%+ confidence</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let currentChart = null;
+
+    async function generateForecast() {
+      const serviceId = document.getElementById('service-select').value;
+      const forecastType = document.getElementById('forecast-type-select').value;
+      const method = document.getElementById('method-select').value;
+
+      if (!serviceId) {
+        alert('Please select a service');
+        return;
+      }
+
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      try {
+        const response = await fetch('{% url "analytics:api_forecast_generate" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `service_id=${serviceId}&forecast_type=${forecastType}&method=${method}`
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await loadForecastData(data.forecast_id);
+          alert('Forecast generated successfully!');
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate forecast');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Forecast';
+      }
+    }
+
+    async function loadForecastData(forecastId) {
+      try {
+        const response = await fetch(`/analytics/api/forecast/${forecastId}/chart/`);
+        const data = await response.json();
+
+        // Update details
+        document.getElementById('forecast-details').classList.remove('hidden');
+        document.getElementById('trend-direction').textContent = data.trend.charAt(0).toUpperCase() + data.trend.slice(1);
+        document.getElementById('forecast-accuracy').textContent = data.accuracy.toFixed(1) + '%';
+
+        // Update chart
+        if (currentChart) {
+          currentChart.destroy();
+        }
+
+        const ctx = document.getElementById('forecast-chart-container');
+        ctx.innerHTML = '<canvas id="forecast-canvas"></canvas>';
+        const canvas = document.getElementById('forecast-canvas');
+
+        currentChart = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: data.dates,
+            datasets: [
+              {
+                label: 'Forecast',
+                data: data.forecast,
+                borderColor: '#d4af37',
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+              },
+              {
+                label: 'Upper Bound',
+                data: data.upper_bound,
+                borderColor: 'rgba(212, 175, 55, 0.3)',
+                borderDash: [5, 5],
+                borderWidth: 1,
+                fill: false,
+              },
+              {
+                label: 'Lower Bound',
+                data: data.lower_bound,
+                borderColor: 'rgba(212, 175, 55, 0.3)',
+                borderDash: [5, 5],
+                borderWidth: 1,
+                fill: false,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#9ca3af',
+                  font: { size: 12 }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(107, 114, 128, 0.1)' },
+                ticks: { color: '#9ca3af' }
+              },
+              x: {
+                grid: { color: 'rgba(107, 114, 128, 0.1)' },
+                ticks: { color: '#9ca3af' }
+              }
+            }
+          }
+        });
+
+        // Update table
+        const tableBody = document.getElementById('forecast-table-body');
+        tableBody.innerHTML = data.forecast.map((value, idx) => `
+          <tr class="border-b border-light-border hover:bg-light-elevated">
+            <td class="py-3 px-4 text-light-text">${data.dates[idx]}</td>
+            <td class="text-center py-3 px-4 font-semibold text-primary-600">${Math.round(value)}</td>
+            <td class="text-center py-3 px-4 text-light-muted">${Math.round(data.lower_bound[idx])}</td>
+            <td class="text-center py-3 px-4 text-light-muted">${Math.round(data.upper_bound[idx])}</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading forecast:', error);
+        alert('Failed to load forecast data');
+      }
+    }
+  </script>
+{% endblock %}

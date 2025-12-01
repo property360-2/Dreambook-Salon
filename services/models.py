@@ -40,6 +40,9 @@ class Service(models.Model):
     is_active = models.BooleanField(
         default=True, help_text="Whether this service is available for booking"
     )
+    is_archived = models.BooleanField(
+        default=False, help_text="Whether this service is archived (soft delete)"
+    )
     requires_downpayment = models.BooleanField(
         default=True,
         help_text="Whether a downpayment is required for this service"

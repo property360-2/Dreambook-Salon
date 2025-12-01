@@ -140,6 +140,24 @@ class Appointment(models.Model):
         help_text="Payment status",
     )
     notes = models.TextField(blank=True, help_text="Additional notes")
+    cancelled_at = models.DateTimeField(
+        blank=True, null=True, help_text="Timestamp of cancellation"
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="cancelled_appointments",
+        help_text="User who cancelled the appointment"
+    )
+    cancellation_reason = models.TextField(
+        blank=True, help_text="Reason for cancellation"
+    )
+    refund_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Amount refunded to customer"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -172,3 +190,60 @@ class Appointment(models.Model):
 
             self.end_at = self.start_at + timedelta(minutes=self.service.duration_minutes)
         super().save(*args, **kwargs)
+
+    def calculate_refund(self):
+        """
+        Calculate refund amount based on cancellation timing.
+
+        Returns:
+            tuple: (refund_percentage: float, refund_amount: Decimal)
+        """
+        from datetime import timedelta
+
+        now = timezone.now()
+        hours_until = (self.start_at - now).total_seconds() / 3600
+
+        # Get payment amount
+        from payments.models import Payment
+        payment = Payment.objects.filter(
+            appointment=self,
+            status=Payment.Status.PAID
+        ).first()
+
+        if not payment:
+            return 0, 0
+
+        # Refund logic
+        if hours_until > 48:
+            # More than 48 hours before: 100% refund
+            percentage = 100
+        elif hours_until > 24:
+            # 24-48 hours before: 50% refund
+            percentage = 50
+        else:
+            # Less than 24 hours: No refund
+            percentage = 0
+
+        refund_amt = payment.amount * (percentage / 100)
+        return percentage, refund_amt
+
+    def cancel(self, cancelled_by, reason=""):
+        """
+        Cancel the appointment and calculate refund.
+
+        Args:
+            cancelled_by: User who cancelled the appointment
+            reason: Reason for cancellation
+        """
+        # Calculate refund
+        percentage, refund_amt = self.calculate_refund()
+
+        # Update appointment
+        self.status = self.Status.CANCELLED
+        self.cancelled_at = timezone.now()
+        self.cancelled_by = cancelled_by
+        self.cancellation_reason = reason
+        self.refund_amount = refund_amt
+        self.save()
+
+        return percentage, refund_amt

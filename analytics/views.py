@@ -804,3 +804,105 @@ class StylistUtilizationChartDataView(StaffOrAdminRequiredMixin, View):
             'stylists': stylists[:10],
             'utilization': utilization[:10]
         })
+
+
+class DemandForecastDashboardView(StaffOrAdminRequiredMixin, TemplateView):
+    """Dashboard for demand forecasting and predictions."""
+
+    template_name = 'pages/analytics_forecast.html'
+
+    def get_context_data(self, **kwargs):
+        from .models import DemandForecast
+        from .forecast_service import DemandForecastingService
+        
+        context = super().get_context_data(**kwargs)
+
+        # Get forecasts for all services
+        daily_forecasts = DemandForecastingService.get_all_service_forecasts(period="daily")
+        weekly_forecasts = DemandForecastingService.get_all_service_forecasts(period="weekly")
+
+        # Get recent forecasts
+        recent_forecasts = DemandForecast.objects.all().order_by('-generated_at')[:5]
+
+        context.update({
+            'daily_forecasts': daily_forecasts,
+            'weekly_forecasts': weekly_forecasts,
+            'recent_forecasts': recent_forecasts,
+            'services': Service.objects.filter(is_archived=False, is_active=True),
+        })
+
+        return context
+
+
+class GenerateForecastAPIView(StaffOrAdminRequiredMixin, View):
+    """API endpoint to generate forecasts for services."""
+
+    def post(self, request):
+        from .forecast_service import DemandForecastingService
+        
+        service_id = request.POST.get('service_id')
+        forecast_type = request.POST.get('forecast_type', 'daily')  # daily or weekly
+        method = request.POST.get('method', 'seasonal')  # simple, trend, seasonal
+
+        try:
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return JsonResponse({'error': 'Service not found'}, status=404)
+
+        try:
+            if forecast_type == 'daily':
+                forecast = DemandForecastingService.forecast_daily_demand(
+                    service, periods=7, method=method
+                )
+            else:  # weekly
+                forecast = DemandForecastingService.forecast_weekly_demand(
+                    service, periods=4, method=method
+                )
+
+            return JsonResponse({
+                'success': True,
+                'forecast_id': forecast.id,
+                'service_name': service.name,
+                'forecast_type': forecast_type,
+                'trend': forecast.trend_direction,
+                'accuracy': forecast.accuracy_score,
+                'values': forecast.get_forecast_values(),
+            })
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+
+class ForecastChartDataView(StaffOrAdminRequiredMixin, View):
+    """API endpoint for forecast chart data."""
+
+    def get(self, request, forecast_id):
+        from .models import DemandForecast
+        
+        try:
+            forecast = DemandForecast.objects.get(id=forecast_id)
+        except DemandForecast.DoesNotExist:
+            return JsonResponse({'error': 'Forecast not found'}, status=404)
+
+        # Generate date labels based on forecast period
+        if forecast.forecast_period == 'daily':
+            from datetime import timedelta as td
+            dates = [
+                (forecast.forecast_start_date + td(days=i)).strftime('%m-%d')
+                for i in range(forecast.periods_ahead)
+            ]
+        else:  # weekly
+            from datetime import timedelta as td
+            dates = [
+                (forecast.forecast_start_date + td(weeks=i)).strftime('%b %d')
+                for i in range(forecast.periods_ahead)
+            ]
+
+        return JsonResponse({
+            'dates': dates,
+            'forecast': forecast.get_forecast_values(),
+            'lower_bound': forecast.get_confidence_lower(),
+            'upper_bound': forecast.get_confidence_upper(),
+            'service_name': forecast.service.name,
+            'trend': forecast.trend_direction,
+            'accuracy': forecast.accuracy_score,
+        })

@@ -31,6 +31,8 @@ urlpatterns = [
     path("chatbot/", include("chatbot.urls")),
     path("analytics/", include("analytics.urls")),
     path("audit/", include("audit_log.urls")),
+    path("notifications/", include("notifications.urls")),
+    path("reports/", include("reports.urls")),
     # API endpoints
     path("api/", include(chatbot_api_urls)),
 ]

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'archive' %}Archive{% else %}Restore{% endif %} Service · Dreambook Salon{% endblock %}
+
+{% block content %}
+  <div class="container-custom py-12">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gradient mb-2">
+          {% if action == 'archive' %}Archive Service{% else %}Restore Service{% endif %}
+        </h1>
+        <p class="text-light-muted">
+          {% if action == 'archive' %}
+            Archive "{{ object.name }}" to hide it from customers
+          {% else %}
+            Restore "{{ object.name }}" to make it visible to customers again
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Confirmation Card -->
+      <div class="card p-8 mb-8">
+        <div class="flex gap-4 mb-6 p-4 rounded-lg {% if action == 'archive' %}bg-orange-50 border border-orange-200{% else %}bg-primary-50 border border-primary-200{% endif %}">
+          <div class="text-4xl flex-shrink-0">
+            {% if action == 'archive' %}📦{% else %}✓{% endif %}
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-light-text mb-2">
+              {% if action == 'archive' %}
+                Archive "{{ object.name }}"?
+              {% else %}
+                Restore "{{ object.name }}"?
+              {% endif %}
+            </h3>
+            <p class="text-light-muted">
+              {% if action == 'archive' %}
+                This service will be hidden from customers and will not appear in the booking interface. You can restore it anytime.
+              {% else %}
+                This service will be visible to customers again and can be booked.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <!-- Service Details -->
+        <div class="grid grid-cols-2 gap-4 mb-6 p-4 bg-light-elevated rounded-lg">
+          <div>
+            <span class="text-sm text-light-muted">Service Name</span>
+            <p class="font-semibold text-light-text">{{ object.name }}</p>
+          </div>
+          <div>
+            <span class="text-sm text-light-muted">Price</span>
+            <p class="font-semibold text-primary-600">₱{{ object.price|floatformat:0 }}</p>
+          </div>
+          <div>
+            <span class="text-sm text-light-muted">Duration</span>
+            <p class="font-semibold text-light-text">{{ object.duration_minutes }} minutes</p>
+          </div>
+          <div>
+            <span class="text-sm text-light-muted">Current Status</span>
+            <p class="font-semibold">
+              {% if object.is_archived %}
+                <span class="badge badge-warning">Archived</span>
+              {% else %}
+                <span class="badge badge-success">Active</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        {% if action == 'archive' and object.service_items.exists %}
+          <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-sm text-blue-700">
+              ℹ️ <strong>Note:</strong> This service uses {{ object.service_items.count }} inventory item(s). Archiving the service will not affect inventory records.
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <form method="post" class="flex-1">
+          {% csrf_token %}
+          <button type="submit" class="btn {% if action == 'archive' %}btn-accent{% else %}btn-primary{% endif %} w-full">
+            {% if action == 'archive' %}
+              Archive Service
+            {% else %}
+              Restore Service
+            {% endif %}
+          </button>
+        </form>
+        <a href="{% url 'services:list' %}" class="btn btn-ghost flex-1 text-center">
+          Cancel
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

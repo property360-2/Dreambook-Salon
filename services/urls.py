@@ -5,6 +5,8 @@ from .views import (
     ServiceCreateView,
     ServiceUpdateView,
     ServiceDeleteView,
+    ServiceArchiveView,
+    ServiceUnarchiveView,
     ServiceDownpaymentConfigView,
     PricingPlansView,
 )
@@ -19,4 +21,6 @@ urlpatterns = [
     path('<int:pk>/', ServiceDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', ServiceUpdateView.as_view(), name='edit'),
     path('<int:pk>/delete/', ServiceDeleteView.as_view(), name='delete'),
+    path('<int:pk>/archive/', ServiceArchiveView.as_view(), name='archive'),
+    path('<int:pk>/unarchive/', ServiceUnarchiveView.as_view(), name='unarchive'),
 ]

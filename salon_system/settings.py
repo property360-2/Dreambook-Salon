@@ -86,6 +86,8 @@ INSTALLED_APPS = [
     "chatbot",
     "analytics",
     "audit_log",
+    "notifications",
+    "reports",
 ]
 
 MIDDLEWARE = [
@@ -219,3 +221,17 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@dreambooksalon.com")
+
+# Cloudinary Configuration for Image Storage & CDN
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": env("CLOUDINARY_CLOUD_NAME", default=""),
+    "API_KEY": env("CLOUDINARY_API_KEY", default=""),
+    "API_SECRET": env("CLOUDINARY_API_SECRET", default=""),
+}
+
+# Use Cloudinary for media file storage in production, local storage in development
+if not DEBUG:
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = "https://res.cloudinary.com/{}/image/upload/".format(
+        CLOUDINARY_STORAGE.get("CLOUD_NAME")
+    )
