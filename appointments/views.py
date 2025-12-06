@@ -324,18 +324,29 @@ class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
         if status:
             qs = qs.filter(status=status)
 
-        # Filter by date range
-        date_filter = self.request.GET.get('date_filter', 'upcoming')
-        now = timezone.now()
+        # Filter by custom date range OR date_filter preset (not both)
+        from_date = self.request.GET.get('from_date', '').strip()
+        to_date = self.request.GET.get('to_date', '').strip()
+        date_filter = self.request.GET.get('date_filter', '')
 
-        if date_filter == 'upcoming':
-            qs = qs.filter(start_at__gte=now)
-        elif date_filter == 'past':
-            qs = qs.filter(start_at__lt=now)
-        elif date_filter == 'today':
-            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            today_end = today_start + timedelta(days=1)
-            qs = qs.filter(start_at__gte=today_start, start_at__lt=today_end)
+        # If custom date range is provided, use it
+        if from_date or to_date:
+            if from_date:
+                qs = qs.filter(start_at__date__gte=from_date)
+            if to_date:
+                qs = qs.filter(start_at__date__lte=to_date)
+        # If date_filter preset is explicitly provided, use it
+        elif date_filter:
+            now = timezone.now()
+            if date_filter == 'upcoming':
+                qs = qs.filter(start_at__gte=now)
+            elif date_filter == 'past':
+                qs = qs.filter(start_at__lt=now)
+            elif date_filter == 'today':
+                today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                today_end = today_start + timedelta(days=1)
+                qs = qs.filter(start_at__gte=today_start, start_at__lt=today_end)
+        # Otherwise show all appointments (no date filtering)
 
         return qs
 
@@ -343,7 +354,9 @@ class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = Appointment.Status.choices
         context['current_status'] = self.request.GET.get('status', '')
-        context['date_filter'] = self.request.GET.get('date_filter', 'upcoming')
+        context['date_filter'] = self.request.GET.get('date_filter', '')
+        context['from_date'] = self.request.GET.get('from_date', '')
+        context['to_date'] = self.request.GET.get('to_date', '')
 
         # Add calendar data
         now = timezone.now()

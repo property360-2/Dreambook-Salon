@@ -7,6 +7,7 @@ from .views import (
     ServiceDeleteView,
     ServiceArchiveView,
     ServiceUnarchiveView,
+    ArchivedServicesListView,
     ServiceDownpaymentConfigView,
     PricingPlansView,
 )
@@ -16,6 +17,7 @@ app_name = 'services'
 urlpatterns = [
     path('', ServiceListView.as_view(), name='list'),
     path('pricing/', PricingPlansView.as_view(), name='pricing'),
+    path('archived/', ArchivedServicesListView.as_view(), name='archived'),
     path('create/', ServiceCreateView.as_view(), name='create'),
     path('downpayment-config/', ServiceDownpaymentConfigView.as_view(), name='downpayment_config'),
     path('<int:pk>/', ServiceDetailView.as_view(), name='detail'),

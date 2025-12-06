@@ -24,9 +24,9 @@
           <label class="block text-sm font-semibold text-light-text mb-2">Status:</label>
           <select name="status" class="input">
             <option value="">All</option>
-            <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
-            <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
-            <option value="FAILED" {% if request.GET.status == 'FAILED' %}selected{% endif %}>Failed</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
         </div>
 
@@ -34,10 +34,20 @@
           <label class="block text-sm font-semibold text-light-text mb-2">Method:</label>
           <select name="method" class="input">
             <option value="">All</option>
-            <option value="GCASH" {% if request.GET.method == 'GCASH' %}selected{% endif %}>GCash</option>
-            <option value="PAYMAYA" {% if request.GET.method == 'PAYMAYA' %}selected{% endif %}>PayMaya</option>
-            <option value="ONSITE" {% if request.GET.method == 'ONSITE' %}selected{% endif %}>Onsite</option>
+            {% for value, label in method_choices %}
+              <option value="{{ value }}" {% if value == current_method %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
+        </div>
+
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">From Date:</label>
+          <input type="date" name="from_date" value="{{ from_date }}" class="input">
+        </div>
+
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">To Date:</label>
+          <input type="date" name="to_date" value="{{ to_date }}" class="input">
         </div>
 
         <div class="flex gap-2 w-full sm:w-auto">

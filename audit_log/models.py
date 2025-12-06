@@ -39,6 +39,8 @@ class AuditLog(models.Model):
         ('USER_REACTIVATE', 'User Reactivated'),
         ('LOGIN', 'Logged In'),
         ('LOGOUT', 'Logged Out'),
+        ('SERVICE_ARCHIVE', 'Service Archived'),
+        ('SERVICE_UNARCHIVE', 'Service Unarchived'),
     ]
 
     # Who performed the action

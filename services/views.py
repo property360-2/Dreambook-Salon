@@ -251,9 +251,22 @@ class ServiceArchiveView(StaffOrAdminRequiredMixin, UpdateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        from audit_log.models import AuditLog
+
         self.object = self.get_object()
         self.object.is_archived = True
         self.object.save()
+
+        # Log archive action to audit trail
+        AuditLog.log_action(
+            user=request.user,
+            action_type='SERVICE_ARCHIVE',
+            description=f'Archived service "{self.object.name}"',
+            obj=self.object,
+            changes={'is_archived': {'before': False, 'after': True}},
+            request=request
+        )
+
         messages.success(
             request,
             f'✓ Service "{self.object.name}" has been archived and hidden from customers.'
@@ -275,14 +288,40 @@ class ServiceUnarchiveView(StaffOrAdminRequiredMixin, UpdateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        from audit_log.models import AuditLog
+
         self.object = self.get_object()
         self.object.is_archived = False
         self.object.save()
+
+        # Log unarchive action to audit trail
+        AuditLog.log_action(
+            user=request.user,
+            action_type='SERVICE_UNARCHIVE',
+            description=f'Restored service "{self.object.name}"',
+            obj=self.object,
+            changes={'is_archived': {'before': True, 'after': False}},
+            request=request
+        )
+
         messages.success(
             request,
             f'✓ Service "{self.object.name}" has been restored and is now visible to customers.'
         )
         return redirect(self.success_url)
+
+
+class ArchivedServicesListView(StaffOrAdminRequiredMixin, ListView):
+    """Staff/Admin view to see all archived services."""
+
+    model = Service
+    template_name = 'pages/services_archived.html'
+    context_object_name = 'services'
+    paginate_by = 20
+
+    def get_queryset(self):
+        """Show only archived services."""
+        return Service.objects.filter(is_archived=True).order_by('-updated_at')
 
 
 class ServiceDownpaymentConfigView(StaffOrAdminRequiredMixin, TemplateView):

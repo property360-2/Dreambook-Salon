@@ -13,6 +13,7 @@ from .views import (
     DemandForecastDashboardView,
     GenerateForecastAPIView,
     ForecastChartDataView,
+    AllServicesForecastAPIView,
 )
 
 app_name = 'analytics'
@@ -35,4 +36,5 @@ urlpatterns = [
     path('forecast/', DemandForecastDashboardView.as_view(), name='forecast'),
     path('api/forecast/generate/', GenerateForecastAPIView.as_view(), name='api_forecast_generate'),
     path('api/forecast/<int:forecast_id>/chart/', ForecastChartDataView.as_view(), name='api_forecast_chart'),
+    path('api/forecast/all-services/', AllServicesForecastAPIView.as_view(), name='api_all_services_forecast'),
 ]

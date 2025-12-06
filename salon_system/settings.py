@@ -44,17 +44,17 @@ else:
     ALLOWED_HOSTS = ALLOWED_HOSTS_RAW
 
 # ============================================================
-# PRODUCTION SECURITY SETTINGS
+# SECURITY SETTINGS
 # ============================================================
 
-# Security settings for production
-if not DEBUG:
-    # HTTPS Security
-    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
-    SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000)
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
-    SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
+# HTTPS Security (can be overridden via environment variables)
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000 if not DEBUG else 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
 
+# Production-only security settings
+if not DEBUG:
     # Cookie Security
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -66,6 +66,10 @@ if not DEBUG:
 
     # Proxy Headers (Render uses X-Forwarded-Proto)
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+else:
+    # Development mode - disable HTTPS enforcement
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 
 # Application definition

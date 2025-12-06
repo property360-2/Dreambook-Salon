@@ -202,14 +202,25 @@ class PaymentListView(LoginRequiredMixin, ListView):
         if method:
             qs = qs.filter(method=method)
 
+        # Filter by custom date range
+        from_date = self.request.GET.get('from_date')
+        to_date = self.request.GET.get('to_date')
+
+        if from_date:
+            qs = qs.filter(created_at__date__gte=from_date)
+        if to_date:
+            qs = qs.filter(created_at__date__lte=to_date)
+
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['status_filter'] = self.request.GET.get('status', '')
-        context['method_filter'] = self.request.GET.get('method', '')
         context['status_choices'] = Payment.Status.choices
         context['method_choices'] = Payment.Method.choices
+        context['current_status'] = self.request.GET.get('status', '')
+        context['current_method'] = self.request.GET.get('method', '')
+        context['from_date'] = self.request.GET.get('from_date', '')
+        context['to_date'] = self.request.GET.get('to_date', '')
         return context
 
 

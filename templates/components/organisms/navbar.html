@@ -1,5 +1,8 @@
 {% load static %}
 
+{# Capture current URL info for active navigation highlighting #}
+{% with url_name=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
+
 <nav class="navbar border-b-2 border-primary-500">
   <div class="container-custom">
     <div class="flex items-center justify-between h-16 gap-4">
@@ -13,42 +16,43 @@
       <div class="hidden md:flex flex-1 justify-center">
         {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
           <!-- Staff/Admin Navigation -->
-          <div class="flex items-center gap-2">
-            <a href="{% url 'core:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Dashboard</a>
-            <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
-            <a href="{% url 'services:downpayment_config' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Payments</a>
-            <a href="{% url 'inventory:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Inventory</a>
-            <a href="{% url 'appointments:staff_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Bookings</a>
+          <div class="flex items-center gap-1">
+            <a href="{% url 'core:dashboard' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Dashboard</a>
+            <a href="{% url 'services:list' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Services</a>
+            <a href="{% url 'services:archived' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'archived' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Archive</a>
+            <a href="{% url 'services:downpayment_config' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'downpayment_config' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Payments</a>
+            <a href="{% url 'inventory:list' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'inventory' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Inventory</a>
+            <a href="{% url 'appointments:staff_list' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'appointments' and url_name == 'staff_list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Bookings</a>
 
             <!-- Divider -->
-            <div class="h-6 w-px bg-light-border mx-2"></div>
+            <div class="h-5 w-px bg-light-border mx-1"></div>
 
-            <a href="{% url 'analytics:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
-            <a href="{% url 'reports:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Reports</a>
-            <a href="{% url 'analytics:forecast' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Forecast</a>
+            <a href="{% url 'analytics:dashboard' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'analytics' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Analytics</a>
+            <a href="{% url 'reports:dashboard' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'reports' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Reports</a>
+            <a href="{% url 'analytics:forecast' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'analytics' and url_name == 'forecast' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Forecast</a>
 
             {% if request.user.role == 'ADMIN' %}
               <!-- Divider -->
-              <div class="h-6 w-px bg-light-border mx-2"></div>
+              <div class="h-5 w-px bg-light-border mx-1"></div>
 
-              <a href="{% url 'core:user_list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Staff</a>
-              <a href="{% url 'audit_log:dashboard' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Audit</a>
+              <a href="{% url 'core:user_list' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'user_list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Staff</a>
+              <a href="{% url 'audit_log:dashboard' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'audit_log' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Audit</a>
             {% endif %}
 
             <!-- Divider -->
-            <div class="h-6 w-px bg-light-border mx-2"></div>
+            <div class="h-5 w-px bg-light-border mx-1"></div>
 
-            <a href="{% url 'chatbot:interface' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">AI Chat</a>
+            <a href="{% url 'chatbot:interface' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'chatbot' and url_name == 'interface' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">AI Chat</a>
           </div>
         {% else %}
           <!-- Customer/Guest Navigation -->
-          <div class="flex items-center gap-2">
-            <a href="{% url 'core:home' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Home</a>
-            <a href="{% url 'services:list' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Services</a>
+          <div class="flex items-center gap-1">
+            <a href="{% url 'core:home' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'home' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Home</a>
+            <a href="{% url 'services:list' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Services</a>
             {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
-              <div class="h-6 w-px bg-light-border mx-2"></div>
-              <a href="{% url 'appointments:my_appointments' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">My Bookings</a>
-              <a href="{% url 'chatbot:interface' %}" class="navbar-link px-3 py-2 rounded-lg hover:bg-light-hover transition-colors">Chat</a>
+              <div class="h-5 w-px bg-light-border mx-1"></div>
+              <a href="{% url 'appointments:my_appointments' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'appointments' and url_name == 'my_appointments' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">My Bookings</a>
+              <a href="{% url 'chatbot:interface' %}" class="navbar-link text-sm px-2 py-1.5 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'chatbot' and url_name == 'interface' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Chat</a>
             {% endif %}
           </div>
         {% endif %}
@@ -96,36 +100,37 @@
       <div class="mt-4 space-y-1 px-2">
         {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
           <!-- Staff/Admin Mobile Navigation -->
-          <a href="{% url 'core:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Dashboard</a>
-          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Services</a>
-          <a href="{% url 'services:downpayment_config' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Payments</a>
-          <a href="{% url 'inventory:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Inventory</a>
-          <a href="{% url 'appointments:staff_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Appointments</a>
+          <a href="{% url 'core:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Dashboard</a>
+          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Services</a>
+          <a href="{% url 'services:archived' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'archived' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Archive</a>
+          <a href="{% url 'services:downpayment_config' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'downpayment_config' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Payments</a>
+          <a href="{% url 'inventory:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'inventory' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Inventory</a>
+          <a href="{% url 'appointments:staff_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'appointments' and url_name == 'staff_list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Appointments</a>
 
           <div class="h-px bg-light-border my-2"></div>
 
-          <a href="{% url 'analytics:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Analytics</a>
-          <a href="{% url 'reports:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Reports</a>
-          <a href="{% url 'analytics:forecast' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Forecast</a>
+          <a href="{% url 'analytics:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'analytics' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Analytics</a>
+          <a href="{% url 'reports:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'reports' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Reports</a>
+          <a href="{% url 'analytics:forecast' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'analytics' and url_name == 'forecast' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Forecast</a>
 
           {% if request.user.role == 'ADMIN' %}
             <div class="h-px bg-light-border my-2"></div>
 
-            <a href="{% url 'core:user_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Staff Management</a>
-            <a href="{% url 'audit_log:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Audit Log</a>
+            <a href="{% url 'core:user_list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'user_list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Staff Management</a>
+            <a href="{% url 'audit_log:dashboard' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'audit_log' and url_name == 'dashboard' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Audit Log</a>
           {% endif %}
 
           <div class="h-px bg-light-border my-2"></div>
 
-          <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">AI Chat</a>
+          <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'chatbot' and url_name == 'interface' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">AI Chat</a>
         {% else %}
           <!-- Customer/Guest Mobile Navigation -->
-          <a href="{% url 'core:home' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Home</a>
-          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Services</a>
+          <a href="{% url 'core:home' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'core' and url_name == 'home' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Home</a>
+          <a href="{% url 'services:list' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'services' and url_name == 'list' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Services</a>
           {% if request.user.is_authenticated and request.user.role == 'CUSTOMER' %}
             <div class="h-px bg-light-border my-2"></div>
-            <a href="{% url 'appointments:my_appointments' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">My Appointments</a>
-            <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors">Chat</a>
+            <a href="{% url 'appointments:my_appointments' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'appointments' and url_name == 'my_appointments' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">My Appointments</a>
+            <a href="{% url 'chatbot:interface' %}" class="block navbar-link px-4 py-3 rounded-lg hover:bg-light-hover transition-colors {% if namespace == 'chatbot' and url_name == 'interface' %}bg-primary-500/10 font-bold text-primary-600{% endif %}">Chat</a>
           {% endif %}
         {% endif %}
       </div>
@@ -159,6 +164,8 @@
     </div>
   </div>
 </nav>
+
+{% endwith %}
 
 <script>
 // Mobile menu toggle

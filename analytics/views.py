@@ -877,7 +877,7 @@ class ForecastChartDataView(StaffOrAdminRequiredMixin, View):
 
     def get(self, request, forecast_id):
         from .models import DemandForecast
-        
+
         try:
             forecast = DemandForecast.objects.get(id=forecast_id)
         except DemandForecast.DoesNotExist:
@@ -906,3 +906,146 @@ class ForecastChartDataView(StaffOrAdminRequiredMixin, View):
             'trend': forecast.trend_direction,
             'accuracy': forecast.accuracy_score,
         })
+
+
+class AllServicesForecastAPIView(StaffOrAdminRequiredMixin, View):
+    """API endpoint to get forecasts for all services at once."""
+
+    def get(self, request):
+        from django.core.cache import cache
+        from .forecast_service import DemandForecastingService
+        from datetime import timedelta as td, datetime
+        from appointments.models import Appointment
+
+        forecast_type = request.GET.get('type', 'daily')  # daily or weekly
+        cache_key = f'all_services_forecast_{forecast_type}'
+
+        # Try to get cached data
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return JsonResponse(cached_data)
+
+        # Get all active services
+        services = Service.objects.filter(is_archived=False, is_active=True)
+
+        # Calculate service popularity (total completed bookings)
+        service_popularity = {}
+        for service in services:
+            count = Appointment.objects.filter(
+                service=service,
+                status__in=['completed', 'confirmed']
+            ).count()
+            service_popularity[service.id] = count
+
+        # Sort services by popularity
+        sorted_services = sorted(services, key=lambda s: service_popularity.get(s.id, 0), reverse=True)
+        top_5_ids = [s.id for s in sorted_services[:5]]
+
+        all_forecasts = {}
+        dates = []
+        total_demand = 0
+        peak_day = None
+        overall_trend = 'stable'
+        trend_percentage = 0
+
+        # Weekly demand pattern (aggregate across all services)
+        weekly_pattern = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}  # Mon-Sun
+
+        for service in services:
+            try:
+                # Generate forecast using SEASONAL method
+                if forecast_type == 'daily':
+                    forecast = DemandForecastingService.forecast_daily_demand(
+                        service, periods=7, method='seasonal'
+                    )
+                    if not dates:
+                        # Generate date labels for daily (MM-DD format)
+                        dates = [
+                            (forecast.forecast_start_date + td(days=i)).strftime('%m-%d')
+                            for i in range(7)
+                        ]
+                else:  # weekly
+                    forecast = DemandForecastingService.forecast_weekly_demand(
+                        service, periods=4, method='seasonal'
+                    )
+                    if not dates:
+                        # Generate date labels for weekly (Mon DD format)
+                        dates = [
+                            (forecast.forecast_start_date + td(weeks=i)).strftime('%b %d')
+                            for i in range(4)
+                        ]
+
+                forecast_values = forecast.get_forecast_values()
+                service_total = sum(forecast_values)
+                total_demand += service_total
+
+                # Aggregate weekly pattern
+                if forecast_type == 'daily' and forecast.peak_day_of_week is not None:
+                    weekly_pattern[forecast.peak_day_of_week] += service_total / 7
+
+                # Determine peak day name
+                day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                peak_day_name = day_names[forecast.peak_day_of_week] if forecast.peak_day_of_week is not None else 'Unknown'
+
+                all_forecasts[service.id] = {
+                    'id': service.id,
+                    'name': service.name,
+                    'forecast_values': forecast_values,
+                    'lower_bound': forecast.get_confidence_lower(),
+                    'upper_bound': forecast.get_confidence_upper(),
+                    'trend_direction': forecast.trend_direction,
+                    'trend_strength': forecast.trend_strength,
+                    'peak_day': peak_day_name,
+                    'accuracy': forecast.accuracy_score,
+                    'total_demand': round(service_total, 1),
+                    'is_top_5': service.id in top_5_ids,
+                }
+
+            except Exception as e:
+                # If forecast fails for a service, skip it
+                continue
+
+        # Find overall peak day
+        if weekly_pattern:
+            peak_day_index = max(weekly_pattern, key=weekly_pattern.get)
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            peak_day = day_names[peak_day_index]
+
+        # Calculate overall trend (average of all trends)
+        trends = [f['trend_direction'] for f in all_forecasts.values()]
+        if trends:
+            increasing_count = trends.count('increasing')
+            decreasing_count = trends.count('decreasing')
+            if increasing_count > decreasing_count:
+                overall_trend = 'increasing'
+                trend_percentage = round((increasing_count / len(trends)) * 100)
+            elif decreasing_count > increasing_count:
+                overall_trend = 'decreasing'
+                trend_percentage = round((decreasing_count / len(trends)) * 100)
+            else:
+                overall_trend = 'stable'
+                trend_percentage = 0
+
+        # Prepare weekly pattern for chart
+        weekly_pattern_data = [
+            {'day': day_names[i], 'demand': round(weekly_pattern[i], 1)}
+            for i in range(7)
+        ]
+
+        response_data = {
+            'forecast_type': forecast_type,
+            'dates': dates,
+            'services': all_forecasts,
+            'total_demand': round(total_demand, 1),
+            'peak_day': peak_day,
+            'overall_trend': overall_trend,
+            'trend_percentage': trend_percentage,
+            'weekly_pattern': weekly_pattern_data,
+            'top_5_service_ids': top_5_ids,
+            'timestamp': datetime.now().isoformat(),
+        }
+
+        # Cache for 1 hour
+        cache.set(cache_key, response_data, 3600)
+
+        return JsonResponse(response_data)
