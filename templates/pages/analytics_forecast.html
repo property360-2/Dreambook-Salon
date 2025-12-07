@@ -5,296 +5,656 @@
 {% block content %}
   <div class="container-custom py-12">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
       <div>
         <h1 class="text-4xl font-bold text-gradient mb-2">Demand Forecasting</h1>
-        <p class="text-light-muted">ML-powered booking demand predictions and trends</p>
+        <p class="text-light-muted">AI-powered booking predictions across all services</p>
       </div>
-      <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost text-sm">← Back to Analytics</a>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card p-6 mb-8">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-light-text mb-2">Select Service</label>
-          <select id="service-select" class="input w-full">
-            <option value="">-- Choose a service --</option>
-            {% for service in services %}
-              <option value="{{ service.id }}">{{ service.name }}</option>
-            {% endfor %}
-          </select>
+      <div class="flex gap-2 items-center">
+        <!-- Forecast Type Toggle -->
+        <div class="inline-flex rounded-lg border border-light-border p-1 bg-light-elevated">
+          <button id="daily-toggle" class="forecast-toggle px-4 py-2 rounded-md text-sm font-semibold transition-all active">
+            Daily (7 Days)
+          </button>
+          <button id="weekly-toggle" class="forecast-toggle px-4 py-2 rounded-md text-sm font-semibold transition-all">
+            Weekly (4 Weeks)
+          </button>
         </div>
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-light-text mb-2">Forecast Type</label>
-          <select id="forecast-type-select" class="input w-full">
-            <option value="daily">Daily (7 days)</option>
-            <option value="weekly">Weekly (4 weeks)</option>
-          </select>
-        </div>
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-light-text mb-2">Method</label>
-          <select id="method-select" class="input w-full">
-            <option value="seasonal">Seasonal (Recommended)</option>
-            <option value="trend">Trend</option>
-            <option value="simple">Simple</option>
-          </select>
-        </div>
-        <div class="flex items-end">
-          <button onclick="generateForecast()" class="btn btn-primary w-full">Generate Forecast</button>
-        </div>
+        <a href="{% url 'analytics:dashboard' %}" class="btn btn-ghost text-sm whitespace-nowrap">← Back</a>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-8">
-        <!-- Forecast Chart -->
+    <!-- Loading State -->
+    <div id="loading-state" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+      <p class="text-light-muted">Loading forecasts...</p>
+    </div>
+
+    <!-- Main Content (hidden until loaded) -->
+    <div id="main-content" class="hidden">
+      <!-- Key Metrics Row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Demand -->
         <div class="card p-6">
-          <h2 class="text-2xl font-bold text-light-text mb-6">Forecast Chart</h2>
-          <div id="forecast-chart-container" class="w-full h-96 flex items-center justify-center bg-light-elevated rounded-lg border border-light-border">
-            <p class="text-light-muted">Select a service and generate a forecast to see the chart</p>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-light-muted">Total Forecasted Demand</div>
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+          </div>
+          <div id="total-demand" class="text-3xl font-bold text-light-text">-</div>
+          <div class="text-xs text-light-muted mt-1">Total bookings expected</div>
+        </div>
+
+        <!-- Peak Period -->
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-light-muted">Peak Period</div>
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div id="peak-period" class="text-3xl font-bold text-light-text">-</div>
+          <div class="text-xs text-light-muted mt-1">Highest demand day</div>
+        </div>
+
+        <!-- Growth Trend -->
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-light-muted">Overall Trend</div>
+            <span id="trend-icon" class="text-2xl">📈</span>
+          </div>
+          <div id="growth-trend" class="text-3xl font-bold text-light-text">-</div>
+          <div class="text-xs text-light-muted mt-1">Trend direction</div>
+        </div>
+      </div>
+
+      <!-- Main Overview Chart -->
+      <div class="card p-6 mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-light-text">All Services Forecast</h2>
+          <div class="flex gap-2">
+            <button onclick="exportToCSV()" class="btn btn-ghost btn-sm">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </button>
+            <button onclick="exportToPDF()" class="btn btn-ghost btn-sm">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              Export PDF
+            </button>
+          </div>
+        </div>
+        <div id="overview-chart-container" class="w-full" style="height: 400px;">
+          <canvas id="overview-chart"></canvas>
+        </div>
+        <div class="text-xs text-light-muted mt-4 text-center">
+          <span class="inline-block px-2 py-1 bg-primary-500/10 rounded">Tip:</span>
+          Top 5 most popular services are emphasized with thicker lines and brighter colors
+        </div>
+      </div>
+
+      <!-- Service Cards Grid + Sidebar -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Service Cards (2 columns on the left) -->
+        <div class="lg:col-span-2">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Service Breakdown</h2>
+          <div id="service-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Service cards will be inserted here by JavaScript -->
           </div>
         </div>
 
-        <!-- Forecast Details -->
-        <div id="forecast-details" class="hidden card p-6">
-          <h2 class="text-2xl font-bold text-light-text mb-6">Forecast Details</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="p-4 bg-light-elevated rounded-lg">
-              <div class="text-sm text-light-muted mb-1">Trend Direction</div>
-              <div id="trend-direction" class="text-xl font-bold text-light-text">-</div>
+        <!-- Insights Sidebar (1 column, sticky) -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-24 space-y-6">
+            <!-- Top Services -->
+            <div class="card p-6">
+              <h3 class="text-lg font-bold text-light-text mb-4">📊 Top Performing Services</h3>
+              <div id="top-services-list" class="space-y-3">
+                <!-- Top services will be inserted here -->
+              </div>
             </div>
-            <div class="p-4 bg-light-elevated rounded-lg">
-              <div class="text-sm text-light-muted mb-1">Forecast Accuracy</div>
-              <div id="forecast-accuracy" class="text-xl font-bold text-primary-600">-</div>
-            </div>
-            <div class="p-4 bg-light-elevated rounded-lg">
-              <div class="text-sm text-light-muted mb-1">Confidence</div>
-              <div class="text-xl font-bold text-primary-600">85%</div>
-            </div>
-          </div>
 
-          <!-- Forecast Values Table -->
-          <div class="mt-6 overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-light-border">
-                  <th class="text-left py-3 px-4 font-semibold text-light-text">Period</th>
-                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Forecast</th>
-                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Lower Bound</th>
-                  <th class="text-center py-3 px-4 font-semibold text-light-muted">Upper Bound</th>
-                </tr>
-              </thead>
-              <tbody id="forecast-table-body">
-                <tr>
-                  <td colspan="4" class="text-center py-4 text-light-muted">Generate a forecast to see data</td>
-                </tr>
-              </tbody>
-            </table>
+            <!-- Weekly Pattern Chart -->
+            <div class="card p-6">
+              <h3 class="text-lg font-bold text-light-text mb-4">📈 Weekly Demand Pattern</h3>
+              <div style="height: 250px;">
+                <canvas id="weekly-pattern-chart"></canvas>
+              </div>
+            </div>
+
+            <!-- AI Insights -->
+            <div class="card p-6 bg-primary-500/5 border border-primary-500/20">
+              <h3 class="text-lg font-bold text-light-text mb-4">💡 AI Insights</h3>
+              <div id="ai-insights" class="space-y-3 text-sm text-light-text">
+                <!-- Insights will be generated here -->
+              </div>
+            </div>
+
+            <!-- Last Updated -->
+            <div class="text-xs text-light-muted text-center">
+              <span id="last-updated">Loading...</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Sidebar -->
-      <div class="lg:col-span-1 sticky top-24 space-y-8 self-start">
-        <!-- Recent Forecasts -->
-        <div class="card p-6">
-          <h3 class="text-xl font-bold text-light-text mb-4">Recent Forecasts</h3>
-          {% if recent_forecasts %}
-            <div class="space-y-3">
-              {% for forecast in recent_forecasts %}
-                <button onclick="loadForecastData({{ forecast.id }})" class="w-full p-3 text-left bg-light-elevated rounded-lg hover:border-primary-500/50 border border-light-border transition-all">
-                  <div class="text-sm font-semibold text-light-text">{{ forecast.service.name }}</div>
-                  <div class="text-xs text-light-muted mt-1">{{ forecast.get_forecast_period_display }}</div>
-                  <div class="text-xs font-bold text-primary-600 mt-2">
-                    {% if forecast.trend_direction == 'increasing' %}
-                      📈 Increasing
-                    {% elif forecast.trend_direction == 'decreasing' %}
-                      📉 Decreasing
-                    {% else %}
-                      ➡️ Stable
-                    {% endif %}
-                  </div>
-                </button>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="text-light-muted text-sm text-center py-4">No forecasts generated yet</p>
-          {% endif %}
+      <!-- Comparison Table -->
+      <div class="card overflow-hidden">
+        <div class="p-6 border-b border-light-border">
+          <h2 class="text-2xl font-bold text-light-text">Detailed Comparison</h2>
         </div>
-
-        <!-- Insights -->
-        <div class="card p-6 bg-light-elevated">
-          <h3 class="text-lg font-bold text-light-text mb-4">How It Works</h3>
-          <ul class="text-sm text-light-muted space-y-3">
-            <li class="flex gap-2">
-              <span class="text-primary-600 font-bold">1</span>
-              <span>Select a service to forecast</span>
-            </li>
-            <li class="flex gap-2">
-              <span class="text-primary-600 font-bold">2</span>
-              <span>Choose daily or weekly predictions</span>
-            </li>
-            <li class="flex gap-2">
-              <span class="text-primary-600 font-bold">3</span>
-              <span>Pick forecasting method (seasonal recommended)</span>
-            </li>
-            <li class="flex gap-2">
-              <span class="text-primary-600 font-bold">4</span>
-              <span>Review trend and confidence levels</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Tips -->
-        <div class="card p-6">
-          <h3 class="font-semibold text-light-text mb-3">Forecast Tips</h3>
-          <ul class="text-xs text-light-muted space-y-2">
-            <li>✓ Seasonal method works best with history</li>
-            <li>✓ Use weekly forecasts for better accuracy</li>
-            <li>✓ Confidence bounds show uncertainty range</li>
-            <li>✓ Higher accuracy = 85%+ confidence</li>
-          </ul>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-light-elevated">
+              <tr class="border-b border-light-border">
+                <th class="text-left py-3 px-4 font-semibold text-light-text cursor-pointer hover:bg-light-hover" onclick="sortTable('name')">
+                  Service <span class="text-light-muted">▼</span>
+                </th>
+                <th class="text-center py-3 px-4 font-semibold text-light-muted cursor-pointer hover:bg-light-hover" onclick="sortTable('forecast')">
+                  Forecast <span class="text-light-muted">▼</span>
+                </th>
+                <th class="text-center py-3 px-4 font-semibold text-light-muted cursor-pointer hover:bg-light-hover" onclick="sortTable('trend')">
+                  Trend <span class="text-light-muted">▼</span>
+                </th>
+                <th class="text-center py-3 px-4 font-semibold text-light-muted">Peak Day</th>
+                <th class="text-center py-3 px-4 font-semibold text-light-muted cursor-pointer hover:bg-light-hover" onclick="sortTable('accuracy')">
+                  Accuracy <span class="text-light-muted">▼</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="comparison-table-body">
+              <!-- Table rows will be inserted here -->
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    .forecast-toggle {
+      color: var(--light-muted);
+    }
+    .forecast-toggle.active {
+      background: var(--primary-600);
+      color: white;
+    }
+    .forecast-toggle:hover:not(.active) {
+      background: var(--light-hover);
+    }
+  </style>
+
   <script>
-    let currentChart = null;
+    // Global state
+    let currentForecastType = 'daily';
+    let currentData = null;
+    let overviewChart = null;
+    let weeklyPatternChart = null;
+    let sortColumn = null;
+    let sortDirection = 'asc';
 
-    async function generateForecast() {
-      const serviceId = document.getElementById('service-select').value;
-      const forecastType = document.getElementById('forecast-type-select').value;
-      const method = document.getElementById('method-select').value;
+    // Load forecasts on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAllForecasts('daily');
 
-      if (!serviceId) {
-        alert('Please select a service');
-        return;
-      }
+      // Toggle button handlers
+      document.getElementById('daily-toggle').addEventListener('click', function() {
+        if (currentForecastType !== 'daily') {
+          switchForecastType('daily');
+        }
+      });
 
-      const btn = event.target;
-      btn.disabled = true;
-      btn.textContent = 'Generating...';
+      document.getElementById('weekly-toggle').addEventListener('click', function() {
+        if (currentForecastType !== 'weekly') {
+          switchForecastType('weekly');
+        }
+      });
+    });
+
+    async function loadAllForecasts(type) {
+      document.getElementById('loading-state').classList.remove('hidden');
+      document.getElementById('main-content').classList.add('hidden');
 
       try {
-        const response = await fetch('{% url "analytics:api_forecast_generate" %}', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `service_id=${serviceId}&forecast_type=${forecastType}&method=${method}`
-        });
-
+        const response = await fetch(`{% url 'analytics:api_all_services_forecast' %}?type=${type}`);
         const data = await response.json();
-        if (data.success) {
-          await loadForecastData(data.forecast_id);
-          alert('Forecast generated successfully!');
-        } else {
-          alert('Error: ' + data.error);
-        }
+
+        currentData = data;
+        currentForecastType = type;
+
+        // Update UI
+        updateKeyMetrics(data);
+        renderOverviewChart(data);
+        renderServiceCards(data);
+        renderWeeklyPattern(data);
+        generateInsights(data);
+        renderComparisonTable(data);
+
+        // Show content
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+
+        // Update last updated timestamp
+        const timestamp = new Date(data.timestamp);
+        document.getElementById('last-updated').textContent =
+          `Last updated: ${timestamp.toLocaleTimeString()}`;
+
       } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to generate forecast');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Generate Forecast';
+        console.error('Error loading forecasts:', error);
+        alert('Failed to load forecasts. Please try again.');
       }
     }
 
-    async function loadForecastData(forecastId) {
-      try {
-        const response = await fetch(`/analytics/api/forecast/${forecastId}/chart/`);
-        const data = await response.json();
+    function switchForecastType(type) {
+      // Update toggle buttons
+      document.getElementById('daily-toggle').classList.toggle('active', type === 'daily');
+      document.getElementById('weekly-toggle').classList.toggle('active', type === 'weekly');
 
-        // Update details
-        document.getElementById('forecast-details').classList.remove('hidden');
-        document.getElementById('trend-direction').textContent = data.trend.charAt(0).toUpperCase() + data.trend.slice(1);
-        document.getElementById('forecast-accuracy').textContent = data.accuracy.toFixed(1) + '%';
+      // Load new data
+      loadAllForecasts(type);
+    }
 
-        // Update chart
-        if (currentChart) {
-          currentChart.destroy();
-        }
+    function updateKeyMetrics(data) {
+      document.getElementById('total-demand').textContent = Math.round(data.total_demand);
+      document.getElementById('peak-period').textContent = data.peak_day || 'N/A';
 
-        const ctx = document.getElementById('forecast-chart-container');
-        ctx.innerHTML = '<canvas id="forecast-canvas"></canvas>';
-        const canvas = document.getElementById('forecast-canvas');
+      const trendText = data.overall_trend.charAt(0).toUpperCase() + data.overall_trend.slice(1);
+      const trendPercentage = data.trend_percentage > 0 ? `+${data.trend_percentage}%` : '';
+      document.getElementById('growth-trend').textContent = `${trendText} ${trendPercentage}`;
 
-        currentChart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: data.dates,
-            datasets: [
-              {
-                label: 'Forecast',
-                data: data.forecast,
-                borderColor: '#d4af37',
-                backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-              },
-              {
-                label: 'Upper Bound',
-                data: data.upper_bound,
-                borderColor: 'rgba(212, 175, 55, 0.3)',
-                borderDash: [5, 5],
-                borderWidth: 1,
-                fill: false,
-              },
-              {
-                label: 'Lower Bound',
-                data: data.lower_bound,
-                borderColor: 'rgba(212, 175, 55, 0.3)',
-                borderDash: [5, 5],
-                borderWidth: 1,
-                fill: false,
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#9ca3af',
-                  font: { size: 12 }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(107, 114, 128, 0.1)' },
-                ticks: { color: '#9ca3af' }
-              },
-              x: {
-                grid: { color: 'rgba(107, 114, 128, 0.1)' },
-                ticks: { color: '#9ca3af' }
-              }
-            }
-          }
+      // Update trend icon
+      const trendIcon = document.getElementById('trend-icon');
+      if (data.overall_trend === 'increasing') {
+        trendIcon.textContent = '📈';
+      } else if (data.overall_trend === 'decreasing') {
+        trendIcon.textContent = '📉';
+      } else {
+        trendIcon.textContent = '➡️';
+      }
+    }
+
+    function renderOverviewChart(data) {
+      if (overviewChart) {
+        overviewChart.destroy();
+      }
+
+      const ctx = document.getElementById('overview-chart');
+      const datasets = [];
+
+      // Get service color palette
+      const colors = [
+        '#d4af37', '#b8964a', '#9c7e3d', '#806630', '#644e23',
+        '#8b7355', '#6b5d4f', '#4a4745', '#2e2e2e', '#1a1a1a'
+      ];
+
+      let colorIndex = 0;
+      for (const serviceId in data.services) {
+        const service = data.services[serviceId];
+        const isTop5 = service.is_top_5;
+
+        datasets.push({
+          label: service.name,
+          data: service.forecast_values,
+          borderColor: colors[colorIndex % colors.length],
+          backgroundColor: `${colors[colorIndex % colors.length]}20`,
+          borderWidth: isTop5 ? 3 : 1.5,
+          opacity: isTop5 ? 1 : 0.4,
+          tension: 0.4,
+          fill: false,
+          pointRadius: isTop5 ? 6 : 3,
+          pointHoverRadius: isTop5 ? 8 : 5,
         });
 
-        // Update table
-        const tableBody = document.getElementById('forecast-table-body');
-        tableBody.innerHTML = data.forecast.map((value, idx) => `
-          <tr class="border-b border-light-border hover:bg-light-elevated">
-            <td class="py-3 px-4 text-light-text">${data.dates[idx]}</td>
-            <td class="text-center py-3 px-4 font-semibold text-primary-600">${Math.round(value)}</td>
-            <td class="text-center py-3 px-4 text-light-muted">${Math.round(data.lower_bound[idx])}</td>
-            <td class="text-center py-3 px-4 text-light-muted">${Math.round(data.upper_bound[idx])}</td>
-          </tr>
-        `).join('');
-      } catch (error) {
-        console.error('Error loading forecast:', error);
-        alert('Failed to load forecast data');
+        // Add confidence bounds for top 5
+        if (isTop5) {
+          datasets.push({
+            label: `${service.name} (Upper)`,
+            data: service.upper_bound,
+            borderColor: `${colors[colorIndex % colors.length]}50`,
+            borderDash: [5, 5],
+            borderWidth: 1,
+            fill: false,
+            pointRadius: 0,
+          });
+          datasets.push({
+            label: `${service.name} (Lower)`,
+            data: service.lower_bound,
+            borderColor: `${colors[colorIndex % colors.length]}50`,
+            borderDash: [5, 5],
+            borderWidth: 1,
+            fill: false,
+            pointRadius: 0,
+          });
+        }
+
+        colorIndex++;
       }
+
+      overviewChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.dates,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                filter: (item) => !item.text.includes('Upper') && !item.text.includes('Lower'),
+                color: '#9ca3af',
+                font: { size: 11 },
+                boxWidth: 20,
+                padding: 10
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(26, 26, 26, 0.9)',
+              titleColor: '#d4af37',
+              bodyColor: '#f3f4f6',
+              borderColor: '#d4af37',
+              borderWidth: 1,
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(107, 114, 128, 0.1)' },
+              ticks: { color: '#9ca3af' }
+            },
+            x: {
+              grid: { color: 'rgba(107, 114, 128, 0.1)' },
+              ticks: { color: '#9ca3af' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderServiceCards(data) {
+      const container = document.getElementById('service-cards-grid');
+      container.innerHTML = '';
+
+      for (const serviceId in data.services) {
+        const service = data.services[serviceId];
+
+        const trendIcon = service.trend_direction === 'increasing' ? '↗️' :
+                         service.trend_direction === 'decreasing' ? '↘️' : '➡️';
+        const trendColor = service.trend_direction === 'increasing' ? 'text-green-600' :
+                          service.trend_direction === 'decreasing' ? 'text-red-600' : 'text-light-muted';
+
+        const card = `
+          <div class="card p-4 hover:shadow-lg transition-shadow ${service.is_top_5 ? 'border-2 border-primary-500/30' : ''}">
+            ${service.is_top_5 ? '<div class="text-xs font-bold text-primary-600 mb-2">⭐ TOP 5</div>' : ''}
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-bold text-light-text">${service.name}</h3>
+              <canvas id="sparkline-${serviceId}" width="60" height="30"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div class="text-xs text-light-muted">Forecast</div>
+                <div class="font-bold text-primary-600">${Math.round(service.total_demand)}</div>
+              </div>
+              <div>
+                <div class="text-xs text-light-muted">Trend</div>
+                <div class="font-semibold ${trendColor}">${trendIcon} ${Math.round(service.trend_strength * 100)}%</div>
+              </div>
+              <div>
+                <div class="text-xs text-light-muted">Peak Day</div>
+                <div class="font-semibold text-light-text text-xs">${service.peak_day}</div>
+              </div>
+              <div>
+                <div class="text-xs text-light-muted">Accuracy</div>
+                <div class="font-semibold text-light-text">${service.accuracy.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.innerHTML += card;
+      }
+
+      // Render sparklines after DOM update
+      setTimeout(() => {
+        for (const serviceId in data.services) {
+          renderSparkline(serviceId, data.services[serviceId].forecast_values);
+        }
+      }, 100);
+    }
+
+    function renderSparkline(serviceId, values) {
+      const canvas = document.getElementById(`sparkline-${serviceId}`);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: values.map((_, i) => i),
+          datasets: [{
+            data: values,
+            borderColor: '#d4af37',
+            borderWidth: 2,
+            fill: false,
+            pointRadius: 0,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: false },
+            y: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderWeeklyPattern(data) {
+      if (weeklyPatternChart) {
+        weeklyPatternChart.destroy();
+      }
+
+      const ctx = document.getElementById('weekly-pattern-chart');
+      weeklyPatternChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.weekly_pattern.map(d => d.day.substring(0, 3)),
+          datasets: [{
+            label: 'Avg Demand',
+            data: data.weekly_pattern.map(d => d.demand),
+            backgroundColor: '#d4af37',
+            borderColor: '#b8964a',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(107, 114, 128, 0.1)' },
+              ticks: { color: '#9ca3af', font: { size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9ca3af', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    function generateInsights(data) {
+      const container = document.getElementById('ai-insights');
+      const insights = [];
+
+      // Top service insight
+      const topServices = Object.values(data.services)
+        .sort((a, b) => b.total_demand - a.total_demand)
+        .slice(0, 3);
+      if (topServices.length > 0) {
+        insights.push(`<div>🎯 <strong>${topServices[0].name}</strong> has the highest forecasted demand with ${Math.round(topServices[0].total_demand)} bookings expected.</div>`);
+      }
+
+      // Peak day insight
+      if (data.peak_day) {
+        insights.push(`<div>⏰ Peak booking day is <strong>${data.peak_day}</strong>. Consider adding extra capacity.</div>`);
+      }
+
+      // Trend insight
+      if (data.overall_trend === 'increasing') {
+        insights.push(`<div>📈 Overall demand is <strong>growing by ${data.trend_percentage}%</strong>. Great time to promote services!</div>`);
+      } else if (data.overall_trend === 'decreasing') {
+        insights.push(`<div>📉 Demand is declining. Consider running promotions to boost bookings.</div>`);
+      }
+
+      // Service-specific insight
+      const growingServices = Object.values(data.services)
+        .filter(s => s.trend_direction === 'increasing' && s.trend_strength > 0.3);
+      if (growingServices.length > 0) {
+        insights.push(`<div>🚀 ${growingServices.length} service(s) showing strong growth trends.</div>`);
+      }
+
+      container.innerHTML = insights.join('');
+
+      // Top services list
+      const topList = document.getElementById('top-services-list');
+      topList.innerHTML = topServices.map((service, idx) => `
+        <div class="flex items-center justify-between p-2 rounded ${idx === 0 ? 'bg-primary-500/10' : 'bg-light-elevated'}">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-primary-600">${idx + 1}</span>
+            <span class="text-sm font-semibold text-light-text">${service.name}</span>
+          </div>
+          <span class="text-sm font-bold text-primary-600">${Math.round(service.total_demand)}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderComparisonTable(data) {
+      const tbody = document.getElementById('comparison-table-body');
+      const services = Object.values(data.services);
+
+      tbody.innerHTML = services.map(service => {
+        const trendIcon = service.trend_direction === 'increasing' ? '↗️' :
+                         service.trend_direction === 'decreasing' ? '↘️' : '➡️';
+        const trendColor = service.trend_direction === 'increasing' ? 'text-green-600' :
+                          service.trend_direction === 'decreasing' ? 'text-red-600' : 'text-light-muted';
+
+        return `
+          <tr class="border-b border-light-border hover:bg-light-elevated">
+            <td class="py-3 px-4 text-light-text font-semibold">${service.name}</td>
+            <td class="text-center py-3 px-4 font-bold text-primary-600">${Math.round(service.total_demand)}</td>
+            <td class="text-center py-3 px-4 font-semibold ${trendColor}">${trendIcon} ${service.trend_direction}</td>
+            <td class="text-center py-3 px-4 text-light-muted">${service.peak_day}</td>
+            <td class="text-center py-3 px-4 text-light-text">${service.accuracy.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function sortTable(column) {
+      if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+      }
+
+      const services = Object.values(currentData.services);
+
+      services.sort((a, b) => {
+        let aVal, bVal;
+
+        switch(column) {
+          case 'name':
+            aVal = a.name;
+            bVal = b.name;
+            break;
+          case 'forecast':
+            aVal = a.total_demand;
+            bVal = b.total_demand;
+            break;
+          case 'trend':
+            aVal = a.trend_direction;
+            bVal = b.trend_direction;
+            break;
+          case 'accuracy':
+            aVal = a.accuracy;
+            bVal = b.accuracy;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      // Re-render table
+      const tbody = document.getElementById('comparison-table-body');
+      tbody.innerHTML = services.map(service => {
+        const trendIcon = service.trend_direction === 'increasing' ? '↗️' :
+                         service.trend_direction === 'decreasing' ? '↘️' : '➡️';
+        const trendColor = service.trend_direction === 'increasing' ? 'text-green-600' :
+                          service.trend_direction === 'decreasing' ? 'text-red-600' : 'text-light-muted';
+
+        return `
+          <tr class="border-b border-light-border hover:bg-light-elevated">
+            <td class="py-3 px-4 text-light-text font-semibold">${service.name}</td>
+            <td class="text-center py-3 px-4 font-bold text-primary-600">${Math.round(service.total_demand)}</td>
+            <td class="text-center py-3 px-4 font-semibold ${trendColor}">${trendIcon} ${service.trend_direction}</td>
+            <td class="text-center py-3 px-4 text-light-muted">${service.peak_day}</td>
+            <td class="text-center py-3 px-4 text-light-text">${service.accuracy.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportToCSV() {
+      if (!currentData) return;
+
+      let csv = 'Service,Period,Forecast,Lower Bound,Upper Bound,Trend,Peak Day,Accuracy\n';
+
+      for (const serviceId in currentData.services) {
+        const service = currentData.services[serviceId];
+        service.forecast_values.forEach((value, idx) => {
+          csv += `"${service.name}",${currentData.dates[idx]},${value.toFixed(2)},${service.lower_bound[idx].toFixed(2)},${service.upper_bound[idx].toFixed(2)},${service.trend_direction},${service.peak_day},${service.accuracy.toFixed(1)}\n`;
+        });
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `forecasts_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    function exportToPDF() {
+      alert('PDF export feature coming soon! Use CSV export for now.');
+      // TODO: Implement PDF export with jsPDF
     }
   </script>
 {% endblock %}
