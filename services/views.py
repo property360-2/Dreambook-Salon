@@ -188,53 +188,43 @@ class ServiceUpdateView(StaffOrAdminRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class ServiceDeleteView(StaffOrAdminRequiredMixin, DeleteView):
-    """Staff/Admin view for deleting services."""
+class ServiceDeleteView(StaffOrAdminRequiredMixin, UpdateView):
+    """Staff/Admin view for deleting services (archives instead of hard delete)."""
 
     model = Service
+    fields = []
     template_name = 'pages/services_confirm_delete.html'
     success_url = reverse_lazy('services:list')
 
-    def _appointments_qs(self):
-        """Return all appointments linked to this service."""
-        from appointments.models import Appointment
-
-        return Appointment.objects.filter(service=self.object)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Check if service has any appointments
-        appointments_qs = self._appointments_qs()
-        context['has_appointments'] = appointments_qs.exists()
-        context['appointment_count'] = appointments_qs.count()
         return context
 
-    def delete(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        from audit_log.models import AuditLog
+
         self.object = self.get_object()
         service_name = self.object.name
-        appointments_qs = self._appointments_qs()
-        has_appointments = appointments_qs.exists()
 
-        # Prevent deletion if service has appointments
-        if has_appointments:
-            appointment_count = appointments_qs.count()
-            messages.error(
-                request,
-                f'❌ Cannot delete "{service_name}" - it has {appointment_count} customer appointment(s). Please cancel or complete all appointments first.'
-            )
-            return redirect(self.get_object().get_absolute_url())
+        # Archive the service instead of deleting
+        self.object.is_archived = True
+        self.object.save()
 
-        # Only delete if no appointments exist
-        try:
-            self.object.delete()
-            messages.success(request, f'✓ Service "{service_name}" deleted successfully!')
-            return redirect(self.success_url)
-        except ProtectedError:
-            messages.error(
-                request,
-                f'❌ Cannot delete "{service_name}" - it is referenced by customer appointments.'
-            )
-            return redirect(self.get_object().get_absolute_url())
+        # Log archive action to audit trail
+        AuditLog.log_action(
+            user=request.user,
+            action_type='SERVICE_ARCHIVE',
+            description=f'Archived service "{service_name}" (via delete action)',
+            obj=self.object,
+            changes={'is_archived': {'before': False, 'after': True}},
+            request=request
+        )
+
+        messages.success(
+            request,
+            f'✓ Service "{service_name}" has been archived. You can restore it from the Archived Services page.'
+        )
+        return redirect(self.success_url)
 
 
 class ServiceArchiveView(StaffOrAdminRequiredMixin, UpdateView):
