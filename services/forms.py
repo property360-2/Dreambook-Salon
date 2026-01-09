@@ -9,11 +9,14 @@ class ServiceForm(forms.ModelForm):
 
     class Meta:
         model = Service
-        fields = ['name', 'description', 'price', 'duration_minutes', 'image', 'is_active', 'is_archived', 'requires_downpayment', 'downpayment_amount']
+        fields = ['name', 'category', 'description', 'price', 'duration_minutes', 'image', 'is_active', 'is_archived', 'requires_downpayment', 'downpayment_amount']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'input',
                 'placeholder': 'e.g., Hair Rebond'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'input'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'input',
@@ -53,14 +56,15 @@ class ServiceForm(forms.ModelForm):
         }
         labels = {
             'name': 'Service Name',
+            'category': 'Category',
             'description': 'Description',
-            'price': 'Price (₱)',
+            'price': 'Price (P)',
             'duration_minutes': 'Duration (minutes)',
             'image': 'Service Image',
             'is_active': 'Active (available for booking)',
             'is_archived': 'Archived (hidden from customers)',
             'requires_downpayment': 'Requires Downpayment',
-            'downpayment_amount': 'Downpayment Amount (₱)',
+            'downpayment_amount': 'Downpayment Amount (P)',
         }
 
 

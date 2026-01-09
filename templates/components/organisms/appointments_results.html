@@ -1,0 +1,94 @@
+{% if appointments %}
+  <!-- Appointments Table -->
+  <div class="card overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appointment in appointments %}
+            <tr>
+              <td>
+                <div class="font-semibold text-light-text">{{ appointment.start_at|date:"M d, Y" }}</div>
+                <div class="text-sm text-primary-600">{{ appointment.start_at|date:"g:i A" }}</div>
+              </td>
+              <td class="text-light-text">{{ appointment.customer.get_full_name|default:appointment.customer.email }}</td>
+              <td class="text-light-text font-semibold">{{ appointment.service.name }}</td>
+              <td>
+                {% if appointment.status == 'CONFIRMED' %}
+                  <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                {% elif appointment.status == 'PENDING' %}
+                  <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                {% elif appointment.status == 'IN_PROGRESS' %}
+                  <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+                {% elif appointment.status == 'COMPLETED' %}
+                  <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                {% elif appointment.status == 'NO_SHOW' %}
+                  <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if appointment.payment_state == 'PAID' %}
+                  <span class="badge badge-success">{{ appointment.get_payment_state_display }}</span>
+                {% else %}
+                  <span class="badge badge-warning">{{ appointment.get_payment_state_display }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'appointments:detail' appointment.id %}" class="text-primary-600 hover:text-primary-300 font-semibold text-sm">
+                  View Details
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+    <nav class="flex items-center justify-center gap-4">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost">
+          Previous
+        </a>
+      {% else %}
+        <span class="btn btn-ghost opacity-50 cursor-not-allowed">Previous</span>
+      {% endif %}
+
+      <span class="text-light-muted">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost">
+          Next
+        </a>
+      {% else %}
+        <span class="btn btn-ghost opacity-50 cursor-not-allowed">Next</span>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <!-- Empty State -->
+  <div class="card p-12 text-center">
+    <div class="text-6xl mb-4">📅</div>
+    <h3 class="text-2xl font-bold text-light-text mb-2">No appointments found</h3>
+    <p class="text-light-muted">No appointments match your current filters</p>
+  </div>
+{% endif %}

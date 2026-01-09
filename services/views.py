@@ -40,6 +40,11 @@ class ServiceListView(ListView):
                 Q(description__icontains=search_query)
             )
 
+        # Add category filter
+        category = self.request.GET.get('category', '').strip()
+        if category:
+            qs = qs.filter(category=category)
+
         # Add sort functionality
         sort_by = self.request.GET.get('sort', 'name')
         if sort_by == 'price_asc':
@@ -50,16 +55,20 @@ class ServiceListView(ListView):
             qs = qs.order_by('duration_minutes')
         elif sort_by == 'duration_desc':
             qs = qs.order_by('-duration_minutes')
+        elif sort_by == 'newest':
+            qs = qs.order_by('-created_at')
         else:
             qs = qs.order_by('name')
 
         return qs
 
     def get_context_data(self, **kwargs):
-        """Add search query and sort options to context."""
+        """Add search query, sort options, and categories to context."""
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['sort_by'] = self.request.GET.get('sort', 'name')
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['categories'] = Service.Category.choices
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -312,8 +321,33 @@ class ArchivedServicesListView(StaffOrAdminRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        """Show only archived services."""
-        return Service.objects.filter(is_archived=True).order_by('-updated_at')
+        """Show only archived services with optional search."""
+        qs = Service.objects.filter(is_archived=True).order_by('-updated_at')
+
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            qs = qs.filter(Q(name__icontains=search) | Q(description__icontains=search))
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON for AJAX requests."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/archived_services_results.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({
+                'html': html,
+                'count': context['paginator'].count if context.get('paginator') else len(context['services'])
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class ServiceDownpaymentConfigView(StaffOrAdminRequiredMixin, TemplateView):

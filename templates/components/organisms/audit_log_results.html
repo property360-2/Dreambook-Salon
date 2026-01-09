@@ -1,0 +1,103 @@
+{% if audit_logs %}
+  <div class="space-y-3">
+    {% for log in audit_logs %}
+      <div class="card p-5 border-l-4 {% if log.action_type == 'USER_CREATE' or log.action_type|slice:':6' == 'CREATE' %}border-l-emerald-500 bg-emerald-500/5{% elif log.action_type == 'USER_UPDATE' or log.action_type|slice:':6' == 'UPDATE' %}border-l-blue-500 bg-blue-500/5{% elif log.action_type == 'USER_DELETE' or log.action_type|slice:':6' == 'DELETE' %}border-l-red-500 bg-red-500/5{% elif log.action_type|slice:':7' == 'STATUS_' %}border-l-purple-500 bg-purple-500/5{% else %}border-l-primary-500 bg-primary-500/5{% endif %}">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-2">
+          <div class="flex items-start gap-3 flex-1">
+            <div class="flex-shrink-0 w-24 text-sm font-semibold text-primary-700 bg-white border border-light-border rounded-lg px-3 py-2 text-center">
+              {{ log.get_action_type_display|default:"Action" }}
+            </div>
+            <div class="flex-1 space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                {% with actor_name=log.actor_name|default:log.user.get_full_name|default:log.user.email %}
+                  <span class="text-sm font-semibold text-light-text">By {{ actor_name }}</span>
+                {% endwith %}
+                <span class="text-xs text-light-muted">{{ log.actor_email|default:log.user.email }}</span>
+                {% if log.actor_role %}
+                  <span class="badge badge-ghost text-[0.65rem]">{{ log.actor_role }}</span>
+                {% endif %}
+                {% if log.source %}
+                  <span class="badge badge-ghost text-[0.65rem]">{{ log.source|title }}</span>
+                {% endif %}
+              </div>
+              <p class="text-sm text-light-text">{{ log.description|default:"Action recorded" }}</p>
+              <div class="flex flex-wrap items-center gap-2 text-xs font-mono text-light-muted">
+                {% if log.request_method %}
+                  <span class="badge badge-ghost uppercase">{{ log.request_method }}</span>
+                {% endif %}
+                {% if log.request_path %}
+                  <span class="text-light-muted break-all">{{ log.request_path }}</span>
+                {% endif %}
+                {% if log.status_code %}
+                  <span class="badge badge-info">HTTP {{ log.status_code }}</span>
+                {% endif %}
+                {% if log.route_name %}
+                  <span class="text-light-muted">Route: {{ log.route_name }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-1 md:text-right">
+            <span class="text-xs font-mono text-light-muted">{{ log.timestamp|date:"M d, Y h:i A" }}</span>
+            {% if log.target_repr or log.content_type %}
+              <span class="text-xs text-light-muted">
+                Target: {{ log.target_repr|default:log.content_type.name }}{% if log.object_id %} #{{ log.object_id }}{% endif %}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4 text-xs border-t border-light-border pt-3 mt-3">
+          {% if log.ip_address %}
+            <div class="flex items-center gap-2">
+              <span class="text-light-muted">IP:</span>
+              <span class="font-mono text-light-text">{{ log.ip_address }}</span>
+            </div>
+          {% endif %}
+          {% if log.metadata and log.metadata.request_id %}
+            <div class="flex items-center gap-2">
+              <span class="text-light-muted">Request ID:</span>
+              <span class="font-mono text-light-text">{{ log.metadata.request_id }}</span>
+            </div>
+          {% endif %}
+          {% if log.changes %}
+            <div class="flex items-center gap-2">
+              <span class="text-light-muted">Changes:</span>
+              <span class="text-light-text">{{ log.changes|length }} field{{ log.changes|pluralize }} updated</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if is_paginated %}
+    <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_user_id %}&user_id={{ selected_user_id }}{% endif %}{% if selected_date_from %}&date_from={{ selected_date_from }}{% endif %}{% if selected_date_to %}&date_to={{ selected_date_to }}{% endif %}{% for action_type in selected_action_types %}&action_types={{ action_type }}{% endfor %}"
+             data-async-pagination="true" class="btn btn-ghost text-sm">First</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_user_id %}&user_id={{ selected_user_id }}{% endif %}{% if selected_date_from %}&date_from={{ selected_date_from }}{% endif %}{% if selected_date_to %}&date_to={{ selected_date_to }}{% endif %}{% for action_type in selected_action_types %}&action_types={{ action_type }}{% endfor %}"
+             data-async-pagination="true" class="btn btn-ghost text-sm">Previous</a>
+        {% endif %}
+      </div>
+
+      <span class="badge badge-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+      <div class="flex gap-2">
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_user_id %}&user_id={{ selected_user_id }}{% endif %}{% if selected_date_from %}&date_from={{ selected_date_from }}{% endif %}{% if selected_date_to %}&date_to={{ selected_date_to }}{% endif %}{% for action_type in selected_action_types %}&action_types={{ action_type }}{% endfor %}"
+             data-async-pagination="true" class="btn btn-ghost text-sm">Next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_user_id %}&user_id={{ selected_user_id }}{% endif %}{% if selected_date_from %}&date_from={{ selected_date_from }}{% endif %}{% if selected_date_to %}&date_to={{ selected_date_to }}{% endif %}{% for action_type in selected_action_types %}&action_types={{ action_type }}{% endfor %}"
+             data-async-pagination="true" class="btn btn-ghost text-sm">Last</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="card p-12 text-center border-2 border-dashed border-light-border">
+    <div class="text-4xl mb-4">🙂</div>
+    <h3 class="text-2xl font-bold text-light-text mb-2">No activity found</h3>
+    <p class="text-light-muted mb-6">No audit logs match your current filters. Try adjusting your search criteria.</p>
+  </div>
+{% endif %}

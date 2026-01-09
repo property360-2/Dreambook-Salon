@@ -8,6 +8,7 @@ from django.views.generic.edit import FormView
 from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from datetime import timedelta, datetime
@@ -275,6 +276,20 @@ class UserManagementListView(StaffOrAdminRequiredMixin, ListView):
         context['search'] = self.request.GET.get('search', '')
         context['selected_role'] = self.request.GET.get('role', '')
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON for AJAX requests."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/user_management_results.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({
+                'html': html,
+                'count': context['paginator'].count if context.get('paginator') else len(context['users'])
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class UserCreateView(StaffOrAdminRequiredMixin, CreateView):

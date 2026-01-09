@@ -13,7 +13,9 @@
       "Bash(python -m py_compile:*)",
       "Bash(python debug_filter.py:*)",
       "Bash(python test_fixed_filter.py:*)",
-      "Bash(del debug_filter.py test_fixed_filter.py)"
+      "Bash(del debug_filter.py test_fixed_filter.py)",
+      "Bash(grep:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

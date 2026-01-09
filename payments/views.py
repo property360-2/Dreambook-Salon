@@ -6,6 +6,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 import random
 import string
 from appointments.models import Appointment
@@ -222,6 +224,20 @@ class PaymentListView(LoginRequiredMixin, ListView):
         context['from_date'] = self.request.GET.get('from_date', '')
         context['to_date'] = self.request.GET.get('to_date', '')
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON for AJAX requests."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/payments_results.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({
+                'html': html,
+                'count': context['paginator'].count if context.get('paginator') else len(context['payments'])
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class PaymentRetryView(LoginRequiredMixin, View):

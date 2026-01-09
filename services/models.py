@@ -23,7 +23,21 @@ class ServiceFeature(models.Model):
 class Service(models.Model):
     """Service model representing salon services."""
 
+    class Category(models.TextChoices):
+        HAIR = 'HAIR', 'Hair Services'
+        NAILS = 'NAILS', 'Nail Services'
+        SKIN = 'SKIN', 'Skin Care'
+        MAKEUP = 'MAKEUP', 'Makeup'
+        SPA = 'SPA', 'Spa & Massage'
+        OTHER = 'OTHER', 'Other Services'
+
     name = models.CharField(max_length=200, help_text="Service name (e.g., Hair Rebond)")
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        default=Category.OTHER,
+        help_text="Service category"
+    )
     description = models.TextField(blank=True, help_text="Detailed service description")
     price = models.DecimalField(
         max_digits=10,

@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 from datetime import timedelta, datetime
 from .models import Appointment, AppointmentSettings, BlockedRange, SlotLimit
 from .utils import get_calendar_data, get_day_appointments, get_available_slots, check_slot_availability
@@ -386,6 +387,20 @@ class StaffAppointmentListView(StaffOrAdminRequiredMixin, ListView):
             context['next_year'] = year
 
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON for AJAX requests."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/appointments_results.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({
+                'html': html,
+                'count': context['paginator'].count if context.get('paginator') else len(context['appointments'])
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class AppointmentCompleteView(StaffOrAdminRequiredMixin, View):

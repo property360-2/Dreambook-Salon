@@ -1,0 +1,138 @@
+{% if users %}
+  <div class="overflow-x-auto">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          <tr class="hover:bg-light-hover transition-colors">
+            <td>
+              <span class="font-mono text-sm text-light-text">{{ user.email }}</span>
+            </td>
+            <td>
+              <span class="text-light-text">{{ user.get_full_name|default:"(No name)" }}</span>
+            </td>
+            <td>
+              {% if user.role == 'ADMIN' %}
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                  {{ user.get_role_display }}
+                </span>
+              {% elif user.role == 'STAFF' %}
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
+                  {{ user.get_role_display }}
+                </span>
+              {% else %}
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                  {{ user.get_role_display }}
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.is_active %}
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                  Active
+                </span>
+              {% else %}
+                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                  Inactive
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="text-sm text-light-muted">{{ user.date_joined|date:"M d, Y" }}</span>
+            </td>
+            <td>
+              <span class="text-sm text-light-muted">
+                {% if user.last_login %}
+                  {{ user.last_login|date:"M d, H:i" }}
+                {% else %}
+                  Never
+                {% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <a href="{% url 'core:user_detail' user.id %}"
+                   class="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
+                   title="View user details">
+                  View
+                </a>
+                <a href="{% url 'core:user_edit' user.id %}"
+                   class="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors"
+                   title="Edit user">
+                  Edit
+                </a>
+                {% if user.is_active %}
+                  <form method="post" action="{% url 'core:user_deactivate' user.id %}" class="inline"
+                        onclick="return confirm('Deactivate this user?')">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="text-red-600 hover:text-red-700 font-semibold text-sm transition-colors"
+                            title="Deactivate user">
+                      Deactivate
+                    </button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{% url 'core:user_reactivate' user.id %}" class="inline"
+                        onclick="return confirm('Reactivate this user?')">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="text-green-600 hover:text-green-700 font-semibold text-sm transition-colors"
+                            title="Reactivate user">
+                      Activate
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+    <div class="mt-8 flex justify-center items-center gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if selected_role %}&role={{ selected_role }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost text-sm">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_role %}&role={{ selected_role }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost text-sm">Previous</a>
+      {% endif %}
+
+      <span class="text-light-muted text-sm px-4">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_role %}&role={{ selected_role }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost text-sm">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if selected_role %}&role={{ selected_role }}{% endif %}"
+           data-async-pagination="true"
+           class="btn btn-ghost text-sm">Last</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="text-center py-16">
+    <svg class="w-20 h-20 mx-auto mb-4 text-light-muted opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zM6 20a6 6 0 1112 0v-2a6 6 0 00-12 0v2z"></path>
+    </svg>
+    <p class="text-light-text font-semibold text-lg mb-2">No users found</p>
+    <p class="text-light-muted mb-6">Try adjusting your search or filters</p>
+  </div>
+{% endif %}

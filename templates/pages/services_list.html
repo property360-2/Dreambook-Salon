@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Our Services A� Dreambook Salon{% endblock title %}
+{% block title %}Our Services - Dreambook Salon{% endblock title %}
 
 {% block content %}
   <div class="container-custom py-12">
@@ -10,130 +11,85 @@
         <h1 class="text-4xl font-bold text-gradient mb-2">Our Services</h1>
         <p class="text-light-muted">Browse our complete range of premium salon services</p>
       </div>
-      {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
-        <a href="{% url 'services:create' %}" class="btn btn-primary whitespace-nowrap">
-          <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Add New Service
-        </a>
-      {% endif %}
-    </div>
-
-    <!-- Search Bar -->
-    <div class="mb-8 animate-slide-up">
-      <form id="servicesSearchForm" method="get" class="flex gap-2" action="{% url 'services:list' %}">
-        <input
-          id="servicesSearchInput"
-          type="text"
-          name="q"
-          placeholder="Search services by name..."
-          value="{{ search_query }}"
-          class="flex-1 px-4 py-2 border border-light-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-        <button type="submit" class="btn btn-primary">Search</button>
-      </form>
-      <p id="servicesSearchStatus" class="text-light-muted mt-2" aria-live="polite">
-        {% if search_query %}
-          Found {{ services|length }} service(s) matching "{{ search_query }}"
-        {% else %}
-          Showing all services
+      <div class="flex items-center gap-4">
+        <span id="statusText" class="text-sm text-light-muted"></span>
+        {% if request.user.is_authenticated and request.user.role in 'ADMIN,STAFF' %}
+          <a href="{% url 'services:create' %}" class="btn btn-primary whitespace-nowrap">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add New Service
+          </a>
         {% endif %}
-      </p>
+      </div>
     </div>
 
-    <div id="servicesResults" class="animate-slide-up">
+    <!-- Filters & Search -->
+    <div class="card p-6 mb-8 animate-slide-up">
+      <form id="filterForm" method="get" action="{% url 'services:list' %}" class="space-y-4">
+        <!-- Search Row -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block text-sm font-semibold text-light-text mb-2">Search:</label>
+            <input
+              type="search"
+              name="q"
+              placeholder="Search services by name..."
+              value="{{ search_query }}"
+              class="input w-full"
+            >
+          </div>
+        </div>
+
+        <!-- Filter Row -->
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
+          <div class="flex-1">
+            <label class="block text-sm font-semibold text-light-text mb-2">Category:</label>
+            <select name="category" class="input w-full">
+              <option value="">All Categories</option>
+              {% for value, label in categories %}
+                <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="flex-1">
+            <label class="block text-sm font-semibold text-light-text mb-2">Sort By:</label>
+            <select name="sort" class="input w-full">
+              <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+              <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price (Low to High)</option>
+              <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price (High to Low)</option>
+              <option value="duration_asc" {% if sort_by == 'duration_asc' %}selected{% endif %}>Duration (Shortest)</option>
+              <option value="duration_desc" {% if sort_by == 'duration_desc' %}selected{% endif %}>Duration (Longest)</option>
+              <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Apply</button>
+            <button type="button" data-async-clear class="btn btn-ghost flex-1 sm:flex-initial">Clear</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="animate-slide-up">
       {% include 'components/organisms/services_results.html' %}
     </div>
   </div>
 {% endblock content %}
 
 {% block extra_scripts %}
-  <script>
-    (function() {
-      const searchForm = document.getElementById('servicesSearchForm');
-      const searchInput = document.getElementById('servicesSearchInput');
-      const clearBtn = document.getElementById('servicesSearchClear');
-      const resultsContainer = document.getElementById('servicesResults');
-      const statusText = document.getElementById('servicesSearchStatus');
-
-      if (!searchForm || !searchInput || !resultsContainer) return;
-
-      let debounceTimer;
-
-      function setStatus(text) {
-        if (statusText) statusText.textContent = text;
-      }
-
-      function setLoading(loading) {
-        searchForm.classList.toggle('opacity-60', loading);
-        searchForm.classList.toggle('pointer-events-none', loading);
-      }
-
-      function buildUrl(targetUrl) {
-        const url = new URL(targetUrl || searchForm.action, window.location.origin);
-        const query = searchInput.value.trim();
-        if (query) {
-          url.searchParams.set('q', query);
-        } else {
-          url.searchParams.delete('q');
-        }
-        return url.toString();
-      }
-
-      function renderResults(html) {
-        resultsContainer.innerHTML = html;
-      }
-
-      function performSearch(targetUrl) {
-        const url = buildUrl(targetUrl);
-        setLoading(true);
-        setStatus('Searching services...');
-
-        fetch(url, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        })
-          .then(response => response.json())
-          .then(data => {
-            renderResults(data.html);
-            const query = searchInput.value.trim();
-            clearBtn.disabled = !query;
-            setStatus(query ? `Found ${data.count} service(s) matching "${query}"` : `Showing ${data.count} service(s)`);
-          })
-          .catch(() => {
-            setStatus('Failed to load services. Please try again.');
-          })
-          .finally(() => setLoading(false));
-      }
-
-      function debounceSearch() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => performSearch(), 250);
-      }
-
-      searchForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        performSearch();
-      });
-
-      searchInput.addEventListener('input', debounceSearch);
-
-      clearBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        this.disabled = true;
-        performSearch();
-      });
-
-      // Delegate pagination clicks to stay async
-      resultsContainer.addEventListener('click', function(e) {
-        const link = e.target.closest('a[data-async-pagination="true"]');
-        if (link) {
-          e.preventDefault();
-          performSearch(link.href);
-        }
-      });
-    })();
-  </script>
+<script src="{% static 'js/async-list.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    new AsyncList({
+      formSelector: '#filterForm',
+      resultsSelector: '#resultsContainer',
+      statusSelector: '#statusText',
+      debounceDelay: 250
+    });
+  });
+</script>
 {% endblock extra_scripts %}

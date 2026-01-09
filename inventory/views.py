@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q, F
 from django.http import JsonResponse
+from django.template.loader import render_to_string
 from core.mixins import StaffOrAdminRequiredMixin
 from .models import Item
 from .forms import ItemForm, RestockForm, AdjustStockForm
@@ -56,6 +57,20 @@ class InventoryListView(StaffOrAdminRequiredMixin, ListView):
         ).count()
 
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        """Return JSON for AJAX requests."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            html = render_to_string(
+                'components/organisms/inventory_results.html',
+                context,
+                request=self.request
+            )
+            return JsonResponse({
+                'html': html,
+                'count': context['paginator'].count if context.get('paginator') else len(context['items'])
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class InventoryDetailView(StaffOrAdminRequiredMixin, DetailView):
