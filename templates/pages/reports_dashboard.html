@@ -165,5 +165,93 @@
         </div>
       </div>
     </div>
+
+    <!-- Sales History Section -->
+    <div class="mt-12">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-light-text">Sales History</h2>
+        <a href="{% url 'payments:list' %}" class="btn btn-ghost text-sm">
+          View All Payments →
+        </a>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-light-elevated">
+              <tr class="border-b border-light-border">
+                <th class="text-left py-3 px-4 font-semibold text-light-text">Date</th>
+                <th class="text-left py-3 px-4 font-semibold text-light-text">Customer</th>
+                <th class="text-left py-3 px-4 font-semibold text-light-text">Service</th>
+                <th class="text-left py-3 px-4 font-semibold text-light-muted">Payment Method</th>
+                <th class="text-right py-3 px-4 font-semibold text-light-text">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if sales_history %}
+                {% for payment in sales_history %}
+                  <tr class="border-b border-light-border hover:bg-light-elevated transition-colors">
+                    <td class="py-3 px-4 text-light-muted">
+                      <div class="text-light-text">{{ payment.created_at|date:"M d, Y" }}</div>
+                      <div class="text-xs">{{ payment.created_at|time:"g:i A" }}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                      {% if payment.appointment and payment.appointment.customer %}
+                        <span class="text-light-text">{{ payment.appointment.customer.get_full_name }}</span>
+                      {% else %}
+                        <span class="text-light-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-4">
+                      {% if payment.appointment and payment.appointment.service %}
+                        <span class="text-light-text">{{ payment.appointment.service.name }}</span>
+                      {% else %}
+                        <span class="text-light-muted">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-4">
+                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                        {% if payment.method == 'gcash' %}
+                          bg-blue-500/10 text-blue-400
+                        {% elif payment.method == 'pay' %}
+                          bg-purple-500/10 text-purple-400
+                        {% else %}
+                          bg-emerald-500/10 text-emerald-400
+                        {% endif %}
+                      ">
+                        {{ payment.get_method_display }}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                      <span class="font-bold text-primary-600">₱{{ payment.amount|floatformat:2 }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-light-muted">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-light-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p>No sales recorded in this period</p>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if sales_history %}
+          <div class="p-4 border-t border-light-border bg-light-elevated">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-light-muted">Showing {{ sales_history|length }} most recent transactions</span>
+              <a href="{% url 'payments:list' %}" class="text-primary-600 hover:text-primary-400 font-semibold">
+                View Complete History →
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 {% endblock %}

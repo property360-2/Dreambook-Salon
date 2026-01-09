@@ -54,11 +54,19 @@ class ReportDashboardView(StaffOnlyMixin, TemplateView):
             status=Payment.Status.PENDING
         ).aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
 
+        # Get recent sales history (completed payments)
+        sales_history = Payment.objects.filter(
+            status=Payment.Status.PAID,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).select_related('appointment__service', 'appointment__customer').order_by('-created_at')[:15]
+
         context.update({
             'report': report,
             'recent_reports': recent_reports,
             'upcoming_bookings': upcoming_bookings,
             'pending_payments': pending_payments,
+            'sales_history': sales_history,
             'start_date': start_date,
             'end_date': end_date,
         })

@@ -24,10 +24,12 @@ class ServiceListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        """Only show active, non-archived services for customers. Show all for staff."""
+        """Only show active, non-archived services. Archived services are in a separate page."""
         if self.request.user.is_authenticated and self.request.user.role in ['ADMIN', 'STAFF']:
-            qs = Service.objects.all().prefetch_related('service_items__item', 'features')
+            # Staff/Admin can see inactive services, but NOT archived ones
+            qs = Service.objects.filter(is_archived=False).prefetch_related('service_items__item', 'features')
         else:
+            # Customers only see active AND non-archived services
             qs = Service.objects.filter(is_active=True, is_archived=False).prefetch_related('service_items__item', 'features')
 
         # Add search filter (case-insensitive, partial match)
