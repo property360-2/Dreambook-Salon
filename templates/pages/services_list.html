@@ -44,16 +44,6 @@
         <!-- Filter Row -->
         <div class="flex flex-col sm:flex-row gap-4 items-end">
           <div class="flex-1">
-            <label class="block text-sm font-semibold text-light-text mb-2">Category:</label>
-            <select name="category" class="input w-full">
-              <option value="">All Categories</option>
-              {% for value, label in categories %}
-                <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="flex-1">
             <label class="block text-sm font-semibold text-light-text mb-2">Sort By:</label>
             <select name="sort" class="input w-full">
               <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>

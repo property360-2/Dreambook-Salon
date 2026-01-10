@@ -92,6 +92,8 @@ INSTALLED_APPS = [
     "audit_log",
     "notifications",
     "reports",
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -177,8 +179,7 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise configuration for serving static files in production
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# WhiteNoise configuration is now in STORAGES dict below
 
 # User-uploaded files (service images, etc.) stored in static/images
 # Use /uploads/ URL to avoid conflict with STATIC_URL
@@ -233,9 +234,20 @@ CLOUDINARY_STORAGE = {
     "API_SECRET": env("CLOUDINARY_API_SECRET", default=""),
 }
 
-# Use Cloudinary for media file storage in production, local storage in development
-if not DEBUG:
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    MEDIA_URL = "https://res.cloudinary.com/{}/image/upload/".format(
-        CLOUDINARY_STORAGE.get("CLOUD_NAME")
-    )
+# Storage configuration (Django 4.2+ uses STORAGES instead of DEFAULT_FILE_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Use Cloudinary for media storage when credentials are configured
+if CLOUDINARY_STORAGE.get("CLOUD_NAME"):
+    STORAGES["default"] = {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    }
+    # Cloudinary storage handles URL generation - set MEDIA_URL to empty
+    MEDIA_URL = ""

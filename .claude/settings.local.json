@@ -15,7 +15,10 @@
       "Bash(python test_fixed_filter.py:*)",
       "Bash(del debug_filter.py test_fixed_filter.py)",
       "Bash(grep:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(set DJANGO_SETTINGS_MODULE=salon_system.settings:*)",
+      "Bash(curl:*)",
+      "Bash(dir /b:*)"
     ],
     "deny": [],
     "ask": []
