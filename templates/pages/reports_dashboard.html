@@ -53,6 +53,23 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-8">
+        <!-- Revenue Trend Chart -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-light-text mb-6">Revenue Trend (Last 30 Days)</h2>
+          {% if daily_revenue_values %}
+            <div style="height: 300px;">
+              <canvas id="revenueTrendChart"></canvas>
+            </div>
+          {% else %}
+            <div class="flex flex-col items-center justify-center py-12 text-light-muted">
+              <svg class="w-12 h-12 mb-3 text-light-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <p>No revenue data for this period</p>
+            </div>
+          {% endif %}
+        </div>
+
         <!-- Quick Stats -->
         <div class="card p-6">
           <h2 class="text-2xl font-bold text-light-text mb-6">Quick Overview</h2>
@@ -121,6 +138,23 @@
 
       <!-- Sidebar -->
       <div class="space-y-8">
+        <!-- Payment Methods Chart -->
+        <div class="card p-6">
+          <h3 class="text-xl font-bold text-light-text mb-4">Payment Methods</h3>
+          {% if payment_method_values %}
+            <div style="height: 280px;">
+              <canvas id="paymentMethodsChart"></canvas>
+            </div>
+          {% else %}
+            <div class="flex flex-col items-center justify-center py-8 text-light-muted">
+              <svg class="w-10 h-10 mb-2 text-light-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+              </svg>
+              <p class="text-sm">No payment data</p>
+            </div>
+          {% endif %}
+        </div>
+
         <!-- Recent Reports -->
         <div class="card p-6">
           <h3 class="text-xl font-bold text-light-text mb-4">Recent Reports</h3>
@@ -254,4 +288,124 @@
       </div>
     </div>
   </div>
+
+  <!-- Chart.js Scripts -->
+  {% if daily_revenue_values or payment_method_values %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Revenue Trend Line Chart
+      {% if daily_revenue_values %}
+      const revenueCtx = document.getElementById('revenueTrendChart');
+      if (revenueCtx) {
+        new Chart(revenueCtx, {
+          type: 'line',
+          data: {
+            labels: {{ daily_revenue_labels|safe }},
+            datasets: [{
+              label: 'Daily Revenue (₱)',
+              data: {{ daily_revenue_values|safe }},
+              borderColor: '#d4af37',
+              backgroundColor: 'rgba(212, 175, 55, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#d4af37',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                titleColor: '#d4af37',
+                bodyColor: '#f3f4f6',
+                borderColor: '#d4af37',
+                borderWidth: 1,
+                callbacks: {
+                  label: function(context) {
+                    return '₱' + context.parsed.y.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(107, 114, 128, 0.1)' },
+                ticks: {
+                  color: '#9ca3af',
+                  callback: function(value) {
+                    return '₱' + value.toLocaleString();
+                  }
+                }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#9ca3af' }
+              }
+            }
+          }
+        });
+      }
+      {% endif %}
+
+      // Payment Methods Doughnut Chart
+      {% if payment_method_values %}
+      const methodsCtx = document.getElementById('paymentMethodsChart');
+      if (methodsCtx) {
+        new Chart(methodsCtx, {
+          type: 'doughnut',
+          data: {
+            labels: {{ payment_method_labels|safe }},
+            datasets: [{
+              data: {{ payment_method_values|safe }},
+              backgroundColor: ['#d4af37', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b'],
+              borderWidth: 0,
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                  color: '#9ca3af',
+                  font: { size: 11 },
+                  padding: 15,
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                titleColor: '#d4af37',
+                bodyColor: '#f3f4f6',
+                borderColor: '#d4af37',
+                borderWidth: 1,
+                callbacks: {
+                  label: function(context) {
+                    const value = context.parsed;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return context.label + ': ₱' + value.toLocaleString('en-PH', {minimumFractionDigits: 2}) + ' (' + percentage + '%)';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      {% endif %}
+    });
+  </script>
+  {% endif %}
 {% endblock %}

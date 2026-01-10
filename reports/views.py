@@ -61,6 +61,42 @@ class ReportDashboardView(StaffOnlyMixin, TemplateView):
             created_at__date__lte=end_date
         ).select_related('appointment__service', 'appointment__customer').order_by('-created_at')[:15]
 
+        # Daily revenue for chart (last 30 days)
+        daily_revenue_data = Payment.objects.filter(
+            status=Payment.Status.PAID,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).annotate(
+            date=TruncDate('created_at')
+        ).values('date').annotate(
+            total=Sum('amount')
+        ).order_by('date')
+
+        # Convert to lists for Chart.js
+        daily_revenue_labels = [d['date'].strftime('%b %d') for d in daily_revenue_data]
+        daily_revenue_values = [float(d['total']) for d in daily_revenue_data]
+
+        # Payment method distribution for pie chart
+        payment_method_data = Payment.objects.filter(
+            status=Payment.Status.PAID,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).values('method').annotate(
+            total=Sum('amount'),
+            count=Count('id')
+        ).order_by('-total')
+
+        # Convert to lists for Chart.js
+        method_labels = {
+            'CASH': 'Cash',
+            'GCASH': 'GCash',
+            'BANK': 'Bank Transfer',
+            'CARD': 'Card',
+        }
+        payment_method_labels = [method_labels.get(d['method'], d['method']) for d in payment_method_data]
+        payment_method_values = [float(d['total']) for d in payment_method_data]
+        payment_method_counts = [d['count'] for d in payment_method_data]
+
         context.update({
             'report': report,
             'recent_reports': recent_reports,
@@ -69,6 +105,11 @@ class ReportDashboardView(StaffOnlyMixin, TemplateView):
             'sales_history': sales_history,
             'start_date': start_date,
             'end_date': end_date,
+            'daily_revenue_labels': daily_revenue_labels,
+            'daily_revenue_values': daily_revenue_values,
+            'payment_method_labels': payment_method_labels,
+            'payment_method_values': payment_method_values,
+            'payment_method_counts': payment_method_counts,
         })
 
         return context
