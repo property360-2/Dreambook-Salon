@@ -188,7 +188,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
             'appointment',
             'appointment__service',
             'appointment__customer'
-        ).order_by('-created_at')
+        )
 
         # Customers only see their own
         if self.request.user.role == 'customer':
@@ -213,6 +213,17 @@ class PaymentListView(LoginRequiredMixin, ListView):
         if to_date:
             qs = qs.filter(created_at__date__lte=to_date)
 
+        # Sort functionality
+        sort_by = self.request.GET.get('sort', 'newest')
+        if sort_by == 'oldest':
+            qs = qs.order_by('created_at')
+        elif sort_by == 'amount_asc':
+            qs = qs.order_by('amount')
+        elif sort_by == 'amount_desc':
+            qs = qs.order_by('-amount')
+        else:  # newest (default)
+            qs = qs.order_by('-created_at')
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -223,6 +234,16 @@ class PaymentListView(LoginRequiredMixin, ListView):
         context['current_method'] = self.request.GET.get('method', '')
         context['from_date'] = self.request.GET.get('from_date', '')
         context['to_date'] = self.request.GET.get('to_date', '')
+
+        # Sort options
+        context['sort_by'] = self.request.GET.get('sort', 'newest')
+        context['sort_options'] = [
+            ('newest', 'Date: Newest First'),
+            ('oldest', 'Date: Oldest First'),
+            ('amount_desc', 'Amount: High to Low'),
+            ('amount_asc', 'Amount: Low to High'),
+        ]
+
         return context
 
     def render_to_response(self, context, **response_kwargs):

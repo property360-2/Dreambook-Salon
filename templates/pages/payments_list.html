@@ -54,6 +54,15 @@
           <input type="date" name="to_date" value="{{ to_date }}" class="input">
         </div>
 
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-light-text mb-2">Sort By:</label>
+          <select name="sort" class="input">
+            {% for value, label in sort_options %}
+              <option value="{{ value }}" {% if value == sort_by %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
         <div class="flex gap-2 w-full sm:w-auto">
           <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Filter</button>
           <button type="button" data-async-clear class="btn btn-ghost flex-1 sm:flex-initial">Clear</button>

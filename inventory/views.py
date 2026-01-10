@@ -6,6 +6,8 @@ from django.urls import reverse_lazy
 from django.db.models import Q, F
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.utils import timezone
+from datetime import timedelta
 from core.mixins import StaffOrAdminRequiredMixin
 from .models import Item
 from .forms import ItemForm, RestockForm, AdjustStockForm
@@ -21,7 +23,12 @@ class InventoryListView(StaffOrAdminRequiredMixin, ListView):
 
     def get_queryset(self):
         """Show all items with filters."""
-        qs = Item.objects.all().order_by('name')
+        qs = Item.objects.all()
+
+        # Filter by category
+        category = self.request.GET.get('category', '').strip()
+        if category:
+            qs = qs.filter(category=category)
 
         # Filter by stock status
         stock_status = self.request.GET.get('stock_status')
@@ -32,10 +39,39 @@ class InventoryListView(StaffOrAdminRequiredMixin, ListView):
         elif stock_status == 'in':
             qs = qs.filter(stock__gt=F('threshold'))
 
+        # Filter by expiry status
+        expiry_status = self.request.GET.get('expiry_status', '').strip()
+        if expiry_status:
+            today = timezone.now().date()
+            if expiry_status == 'expiring_soon':
+                qs = qs.filter(
+                    expiry_date__isnull=False,
+                    expiry_date__gte=today,
+                    expiry_date__lte=today + timedelta(days=30)
+                )
+            elif expiry_status == 'expired':
+                qs = qs.filter(
+                    expiry_date__isnull=False,
+                    expiry_date__lt=today
+                )
+
         # Search by name
         search = self.request.GET.get('search')
         if search:
             qs = qs.filter(name__icontains=search)
+
+        # Sort functionality
+        sort_by = self.request.GET.get('sort', 'name')
+        if sort_by == 'stock_asc':
+            qs = qs.order_by('stock')
+        elif sort_by == 'stock_desc':
+            qs = qs.order_by('-stock')
+        elif sort_by == 'expiry':
+            qs = qs.order_by(F('expiry_date').asc(nulls_last=True))
+        elif sort_by == 'newest':
+            qs = qs.order_by('-created_at')
+        else:  # name (default)
+            qs = qs.order_by('name')
 
         return qs
 
@@ -43,6 +79,27 @@ class InventoryListView(StaffOrAdminRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['stock_status'] = self.request.GET.get('stock_status', '')
         context['search'] = self.request.GET.get('search', '')
+
+        # Category filter options
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['categories'] = Item.Category.choices
+
+        # Expiry status filter options
+        context['selected_expiry_status'] = self.request.GET.get('expiry_status', '')
+        context['expiry_statuses'] = [
+            ('expiring_soon', 'Expiring Soon (30 days)'),
+            ('expired', 'Expired'),
+        ]
+
+        # Sort options
+        context['sort_by'] = self.request.GET.get('sort', 'name')
+        context['sort_options'] = [
+            ('name', 'Name (A-Z)'),
+            ('stock_asc', 'Stock (Low to High)'),
+            ('stock_desc', 'Stock (High to Low)'),
+            ('expiry', 'Expiry Date'),
+            ('newest', 'Newest First'),
+        ]
 
         # Stock counts
         context['low_stock_count'] = Item.objects.filter(

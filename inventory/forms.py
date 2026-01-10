@@ -7,11 +7,14 @@ class ItemForm(forms.ModelForm):
 
     class Meta:
         model = Item
-        fields = ['name', 'description', 'unit', 'stock', 'threshold', 'is_active']
+        fields = ['name', 'category', 'description', 'unit', 'stock', 'threshold', 'expiry_date', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'input',
                 'placeholder': 'e.g., Shampoo',
+            }),
+            'category': forms.Select(attrs={
+                'class': 'input',
             }),
             'description': forms.Textarea(attrs={
                 'class': 'input',
@@ -34,16 +37,22 @@ class ItemForm(forms.ModelForm):
                 'min': '0',
                 'placeholder': '10.00'
             }),
+            'expiry_date': forms.DateInput(attrs={
+                'class': 'input',
+                'type': 'date',
+            }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-primary-600 bg-dark-elevated border-dark-border rounded focus:ring-primary-500'
             }),
         }
         labels = {
             'name': 'Item Name',
+            'category': 'Category',
             'description': 'Description',
             'unit': 'Unit of Measurement',
             'stock': 'Current Stock',
             'threshold': 'Low Stock Threshold',
+            'expiry_date': 'Expiration Date',
             'is_active': 'Active (tracked in inventory)',
         }
 

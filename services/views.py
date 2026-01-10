@@ -45,6 +45,30 @@ class ServiceListView(ListView):
         if category:
             qs = qs.filter(category=category)
 
+        # Add price range filter
+        price_range = self.request.GET.get('price_range', '').strip()
+        if price_range:
+            if price_range == 'under_500':
+                qs = qs.filter(price__lt=500)
+            elif price_range == '500_1000':
+                qs = qs.filter(price__gte=500, price__lt=1000)
+            elif price_range == '1000_2000':
+                qs = qs.filter(price__gte=1000, price__lt=2000)
+            elif price_range == 'over_2000':
+                qs = qs.filter(price__gte=2000)
+
+        # Add duration range filter
+        duration_range = self.request.GET.get('duration_range', '').strip()
+        if duration_range:
+            if duration_range == '0_30':
+                qs = qs.filter(duration_minutes__lte=30)
+            elif duration_range == '30_60':
+                qs = qs.filter(duration_minutes__gt=30, duration_minutes__lte=60)
+            elif duration_range == '60_120':
+                qs = qs.filter(duration_minutes__gt=60, duration_minutes__lte=120)
+            elif duration_range == 'over_120':
+                qs = qs.filter(duration_minutes__gt=120)
+
         # Add sort functionality
         sort_by = self.request.GET.get('sort', 'name')
         if sort_by == 'price_asc':
@@ -69,6 +93,25 @@ class ServiceListView(ListView):
         context['sort_by'] = self.request.GET.get('sort', 'name')
         context['selected_category'] = self.request.GET.get('category', '')
         context['categories'] = Service.Category.choices
+
+        # Price range filter options
+        context['selected_price_range'] = self.request.GET.get('price_range', '')
+        context['price_ranges'] = [
+            ('under_500', 'Under ₱500'),
+            ('500_1000', '₱500 - ₱1,000'),
+            ('1000_2000', '₱1,000 - ₱2,000'),
+            ('over_2000', '₱2,000+'),
+        ]
+
+        # Duration range filter options
+        context['selected_duration_range'] = self.request.GET.get('duration_range', '')
+        context['duration_ranges'] = [
+            ('0_30', '0-30 min'),
+            ('30_60', '30-60 min'),
+            ('60_120', '60-120 min'),
+            ('over_120', '2+ hours'),
+        ]
+
         return context
 
     def render_to_response(self, context, **response_kwargs):

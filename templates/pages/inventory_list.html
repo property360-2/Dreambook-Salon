@@ -30,25 +30,60 @@
 
     <!-- Filters -->
     <div class="card p-6 mb-8">
-      <form id="filterForm" method="get" action="{% url 'inventory:list' %}" class="flex flex-col sm:flex-row gap-4 items-end">
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-light-text mb-2">Search:</label>
-          <input type="search" name="search" value="{{ search }}" placeholder="Search by item name..." class="input">
+      <form id="filterForm" method="get" action="{% url 'inventory:list' %}" class="space-y-4">
+        <!-- Search Row -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <label class="block text-sm font-semibold text-light-text mb-2">Search:</label>
+            <input type="search" name="search" value="{{ search }}" placeholder="Search by item name..." class="input w-full">
+          </div>
         </div>
 
-        <div class="flex-1">
-          <label class="block text-sm font-semibold text-light-text mb-2">Stock Status:</label>
-          <select name="stock_status" class="input">
-            <option value="">All</option>
-            <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Low Stock</option>
-            <option value="out" {% if stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
-            <option value="in" {% if stock_status == 'in' %}selected{% endif %}>In Stock</option>
-          </select>
-        </div>
+        <!-- Filter Row -->
+        <div class="flex flex-col sm:flex-row gap-4 items-end flex-wrap">
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-sm font-semibold text-light-text mb-2">Category:</label>
+            <select name="category" class="input w-full">
+              <option value="">All Categories</option>
+              {% for value, label in categories %}
+                <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-        <div class="flex gap-2 w-full sm:w-auto">
-          <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Filter</button>
-          <button type="button" data-async-clear class="btn btn-ghost flex-1 sm:flex-initial">Clear</button>
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-sm font-semibold text-light-text mb-2">Stock Status:</label>
+            <select name="stock_status" class="input w-full">
+              <option value="">All</option>
+              <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Low Stock</option>
+              <option value="out" {% if stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
+              <option value="in" {% if stock_status == 'in' %}selected{% endif %}>In Stock</option>
+            </select>
+          </div>
+
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-sm font-semibold text-light-text mb-2">Expiry Status:</label>
+            <select name="expiry_status" class="input w-full">
+              <option value="">All</option>
+              {% for value, label in expiry_statuses %}
+                <option value="{{ value }}" {% if value == selected_expiry_status %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-sm font-semibold text-light-text mb-2">Sort By:</label>
+            <select name="sort" class="input w-full">
+              {% for value, label in sort_options %}
+                <option value="{{ value }}" {% if value == sort_by %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button type="submit" class="btn btn-primary flex-1 sm:flex-initial">Filter</button>
+            <button type="button" data-async-clear class="btn btn-ghost flex-1 sm:flex-initial">Clear</button>
+          </div>
         </div>
       </form>
     </div>
