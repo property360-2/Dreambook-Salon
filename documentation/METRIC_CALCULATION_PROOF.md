@@ -1,3 +1,4 @@
+<!-- documentation\METRIC_CALCULATION_PROOF.md -->
 # Metric Calculation Proof and Implementation
 
 This document provides the mathematical formulas and Python implementation details for the metrics used in Chapter 4.
