@@ -1,6 +1,6 @@
 # CHAPTER 4: DATASET OVERVIEW
 
-This document provides a comprehensive description of the dataset used for the predictive modeling component of the Dreambook Salon Management System. The dataset forms the foundation for both **Regression** (predicting `Amount_Spent`) and **Classification** (predicting `Returned`) tasks, as reported in [Chapter 4: Results and Discussion](file:///c:/Users/Administrator/Desktop/projects/Dreambook-Salon/documentation/CHAPTER_4_RESULTS_AND_DISCUSSION.md).
+This document provides a comprehensive description of the dataset used for the predictive modeling component of the Dreambook Salon Management System. The dataset forms the foundation for the **Classification** task (predicting `Returned`) using **Linear Logistic Regression**, as reported in [Chapter 4: Results and Discussion](file:///c:/Users/Administrator/Desktop/projects/Dreambook-Salon/documentation/CHAPTER_4_RESULTS_AND_DISCUSSION.md).
 
 ---
 
@@ -19,10 +19,9 @@ The dataset is derived from the following Django models within the Dreambook Sal
 
 ### 4.0.2 Purpose
 
-The dataset supports the following predictive modeling tasks:
+The dataset supports the following predictive modeling task:
 
-1. **Regression Task**: Predicting `Amount_Spent` — the total monetary amount a customer will spend during a salon visit.
-2. **Classification Task**: Predicting `Returned` — a binary variable indicating whether a customer will return within 30 days of their last visit.
+1. **Classification Task**: Predicting `Returned` — a binary variable indicating whether a customer will return within 30 days of their last visit, using **Linear Logistic Regression**.
 
 ---
 
@@ -58,8 +57,8 @@ The following table describes the features used in the predictive models:
 | `Appointment_Status` | Categorical | Status of appointment (Confirmed, Completed, No Show, Cancelled) | Completed: ~75%, Cancelled: ~15%, No Show: ~10% |
 | `Day_of_Week` | Integer | Day of the week (0=Monday, 6=Sunday) | Peak: Saturday (6) |
 | `Hour_of_Day` | Integer | Hour of appointment booking (0-23) | Peak: 10:00 AM - 2:00 PM |
-| `Amount_Spent` | Float (₱) | **Target (Regression)**: Total amount spent | Mean: ~₱1,400; Std: ~₱700 |
-| `Returned` | Binary (0/1) | **Target (Classification)**: 1 if customer returned within 30 days | 1: ~65%, 0: ~35% |
+| `Amount_Spent` | Float (₱) | Total amount spent | Mean: ~₱1,400; Std: ~₱700 |
+| `Returned` | Binary (0/1) | **Target**: 1 if customer returned within 30 days | 1: ~65%, 0: ~35% |
 
 > [!IMPORTANT]
 > **Class Imbalance Note**: The `Returned` target variable shows a moderate imbalance (~65% returned vs. ~35% did not return). This was addressed during model training using stratified sampling to ensure representative distribution in both training and testing sets.
@@ -149,21 +148,6 @@ df[['Service_Price', 'Service_Duration', 'Avg_Previous_Spending', 'Visit_Frequen
 ```
 
 ### 4.3.4 Constructing Target Variables
-
-#### Regression Target: `Amount_Spent`
-
-The `Amount_Spent` target is derived from the `Payment.amount` field for completed appointments:
-
-```python
-# Amount_Spent = Sum of all paid payments for a completed appointment
-df['Amount_Spent'] = df.apply(
-    lambda row: Payment.objects.filter(
-        appointment_id=row['appointment_id'], 
-        status='paid'
-    ).aggregate(total=Sum('amount'))['total'] or 0,
-    axis=1
-)
-```
 
 #### Classification Target: `Returned`
 
@@ -298,9 +282,8 @@ This dataset documentation is part of the comprehensive Chapter 4 analysis. For 
 
 The dataset used for the Dreambook Salon Management System's predictive modeling component is derived from operational data stored in Django models: `User`, `Service`, `Appointment`, and `Payment`. Features include customer visit frequency, service type and pricing, payment method, and temporal attributes (day of week, hour of day).
 
-The dataset supports two predictive tasks:
-1. **Regression**: Predicting the total amount a customer will spend (`Amount_Spent`), with the model achieving an **R² score of 0.82** and **MAE of ₱150.50**.
-2. **Classification**: Predicting whether a customer will return within 30 days (`Returned`), with the model achieving an **accuracy of 84.5%** and **F1-score of 80.9%**.
+The dataset supports the predictive task:
+1. **Classification**: Predicting whether a customer will return within 30 days (`Returned`) using **Linear Logistic Regression**, with the model achieving an **accuracy of 84.5%** and **F1-score of 80.9%**.
 
 Preprocessing steps include handling missing values, encoding categorical variables using one-hot encoding, and normalizing numeric features using StandardScaler. The dataset was split into 70% training and 30% testing subsets, with stratified sampling applied for the classification task to address class imbalance.
 
