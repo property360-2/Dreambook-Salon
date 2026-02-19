@@ -1,0 +1,16 @@
+Item ID,Name,Category,Stock,Unit,Threshold,Status,Expiry Date,Is Active
+4,Conditioner,OTHER,1800.00,ml,500.00,In Stock,,True
+8,Cotton Balls,OTHER,500.00,pcs,100.00,In Stock,,True
+10,Face Mask,OTHER,80.00,pcs,20.00,In Stock,,True
+9,Facial Cleanser,OTHER,800.00,ml,200.00,In Stock,,True
+15,Gloves (pairs),OTHER,200.00,pcs,50.00,In Stock,,True
+14,Hair Clips,OTHER,100.00,pcs,20.00,In Stock,,True
+2,Hair Coloring Cream,OTHER,3000.00,ml,500.00,In Stock,,True
+1,Hair Rebonding Solution,OTHER,5000.00,ml,1000.00,In Stock,,True
+5,Hair Treatment Mask,OTHER,1200.00,ml,300.00,In Stock,,True
+11,Massage Oil,OTHER,600.00,ml,150.00,In Stock,,True
+6,Nail Polish,OTHER,150.00,pcs,30.00,In Stock,,True
+7,Nail Remover,OTHER,500.00,ml,100.00,In Stock,,True
+3,Shampoo,OTHER,2000.00,ml,500.00,In Stock,,True
+13,Towels,OTHER,50.00,pcs,10.00,In Stock,,True
+12,Wax Strips,OTHER,200.00,pcs,50.00,In Stock,,True

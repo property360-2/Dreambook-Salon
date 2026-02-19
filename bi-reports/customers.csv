@@ -1,0 +1,4 @@
+User ID,Email,First Name,Last Name,Date Joined,Total Bookings,Last Booking Date,Is Active
+3,customer1@example.com,Maria,Santos,2026-02-02T13:11:24.116053+00:00,13,2026-02-11T23:11:27.685879+00:00,True
+4,customer2@example.com,Juan,Dela Cruz,2026-02-02T13:11:25.425991+00:00,11,2026-02-17T05:11:27.685879+00:00,True
+5,customer3@example.com,Ana,Reyes,2026-02-02T13:11:26.532906+00:00,16,2026-02-17T04:11:27.685879+00:00,True
